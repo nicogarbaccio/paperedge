@@ -15,10 +15,22 @@ import {
   formatDate,
   getStatusColorClass,
 } from "@/lib/utils";
+import { CreateBetDialog } from "@/components/CreateBetDialog";
+import { useState } from "react";
 
 export function NotebookDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { notebook, bets, loading, error } = useNotebook(id || "");
+  const { notebook, bets, loading, error, addBet } = useNotebook(id || "");
+  const [isCreateBetDialogOpen, setIsCreateBetDialogOpen] = useState(false);
+
+  const handleCreateBet = async (data: {
+    date: string;
+    description: string;
+    odds: number;
+    wager_amount: number;
+  }) => {
+    await addBet(data);
+  };
 
   if (loading) {
     return (
@@ -98,7 +110,10 @@ export function NotebookDetailPage() {
             {notebook.description || "No description"}
           </p>
         </div>
-        <Button className="flex items-center space-x-2">
+        <Button
+          className="flex items-center space-x-2"
+          onClick={() => setIsCreateBetDialogOpen(true)}
+        >
           <Plus className="h-4 w-4" />
           <span>Add Bet</span>
         </Button>
@@ -192,7 +207,10 @@ export function NotebookDetailPage() {
           {bets.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-text-secondary mb-4">No bets recorded yet</p>
-              <Button className="flex items-center space-x-2">
+              <Button
+                className="flex items-center space-x-2"
+                onClick={() => setIsCreateBetDialogOpen(true)}
+              >
                 <Plus className="h-4 w-4" />
                 <span>Add Your First Bet</span>
               </Button>
@@ -249,6 +267,13 @@ export function NotebookDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Create Bet Dialog */}
+      <CreateBetDialog
+        open={isCreateBetDialogOpen}
+        onOpenChange={setIsCreateBetDialogOpen}
+        onCreateBet={handleCreateBet}
+      />
     </div>
   );
 }
