@@ -2,26 +2,33 @@
  * Calculate the potential return from a bet based on American odds
  * @param odds American odds (e.g., +110, -150)
  * @param wager The wager amount
- * @returns The potential profit (not including the original wager)
+ * @returns The potential profit (not including the original wager), rounded to 2 decimal places
  */
 export function calculateReturn(odds: number, wager: number): number {
+  let profit: number;
+  
   if (odds > 0) {
     // Positive odds: (odds/100) * wager
-    return (odds / 100) * wager
+    profit = (odds / 100) * wager;
   } else {
     // Negative odds: (100/|odds|) * wager
-    return (100 / Math.abs(odds)) * wager
+    profit = (100 / Math.abs(odds)) * wager;
   }
+  
+  // Round to 2 decimal places for currency
+  return Math.round(profit * 100) / 100;
 }
 
 /**
  * Calculate the total payout (original wager + profit)
  * @param odds American odds
  * @param wager The wager amount
- * @returns Total payout if bet wins
+ * @returns Total payout if bet wins, rounded to 2 decimal places
  */
 export function calculatePayout(odds: number, wager: number): number {
-  return wager + calculateReturn(odds, wager)
+  const payout = wager + calculateReturn(odds, wager);
+  // Round to 2 decimal places for currency
+  return Math.round(payout * 100) / 100;
 }
 
 /**

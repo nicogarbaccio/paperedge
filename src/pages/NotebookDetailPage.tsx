@@ -23,8 +23,16 @@ import { useState } from "react";
 
 export function NotebookDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { notebook, bets, loading, error, addBet, updateBet, refetch } =
-    useNotebook(id || "");
+  const {
+    notebook,
+    bets,
+    loading,
+    error,
+    addBet,
+    updateBet,
+    deleteBet,
+    refetch,
+  } = useNotebook(id || "");
   const { updateNotebook } = useNotebooks();
   const [isCreateBetDialogOpen, setIsCreateBetDialogOpen] = useState(false);
   const [isEditBetDialogOpen, setIsEditBetDialogOpen] = useState(false);
@@ -63,6 +71,10 @@ export function NotebookDetailPage() {
 
   const handleUpdateBet = async (betId: string, updates: any) => {
     await updateBet(betId, updates);
+  };
+
+  const handleDeleteBet = async (betId: string) => {
+    await deleteBet(betId);
   };
 
   const handleUpdateNotebook = async (
@@ -344,6 +356,7 @@ export function NotebookDetailPage() {
         onOpenChange={setIsEditBetDialogOpen}
         bet={selectedBet}
         onUpdateBet={handleUpdateBet}
+        onDeleteBet={handleDeleteBet}
       />
 
       {/* Edit Notebook Dialog */}

@@ -18,6 +18,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { NotebooksPage } from "./pages/NotebooksPage";
 import { NotebookDetailPage } from "./pages/NotebookDetailPage";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
+import { CalculatorsPage } from "./pages/CalculatorsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
 // Protected route wrapper
@@ -95,6 +96,7 @@ function App() {
           <Route path="notebooks" element={<NotebooksPage />} />
           <Route path="notebooks/:id" element={<NotebookDetailPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="calculators" element={<CalculatorsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
