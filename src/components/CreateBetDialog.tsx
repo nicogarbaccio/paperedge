@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { DateInput } from "@/components/ui/DateInput";
 import { Label } from "@/components/ui/Label";
 import { Loader2 } from "lucide-react";
 import { calculateReturn, isValidAmericanOdds } from "@/lib/betting";
@@ -134,9 +135,8 @@ export function CreateBetDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="date">Date *</Label>
-            <Input
+            <DateInput
               id="date"
-              type="date"
               value={formData.date}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, date: e.target.value }))
@@ -159,6 +159,7 @@ export function CreateBetDialog({
                 }))
               }
               disabled={loading}
+              autoFocus
               required
             />
             <p className="text-xs text-text-secondary">
