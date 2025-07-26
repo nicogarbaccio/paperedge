@@ -15,7 +15,7 @@ export function Header() {
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center space-x-2">
           <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center">
-            <span className="text-xs font-bold text-accent-foreground">PE</span>
+            <span className="text-lg">📊</span>
           </div>
           <div>
             <h1 className="text-xl font-bold text-text-primary">PaperEdge</h1>

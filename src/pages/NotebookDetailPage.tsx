@@ -16,12 +16,25 @@ import {
   getStatusColorClass,
 } from "@/lib/utils";
 import { CreateBetDialog } from "@/components/CreateBetDialog";
+import { EditBetDialog } from "@/components/EditBetDialog";
 import { useState } from "react";
 
 export function NotebookDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { notebook, bets, loading, error, addBet } = useNotebook(id || "");
+  const { notebook, bets, loading, error, addBet, updateBet } = useNotebook(
+    id || ""
+  );
   const [isCreateBetDialogOpen, setIsCreateBetDialogOpen] = useState(false);
+  const [isEditBetDialogOpen, setIsEditBetDialogOpen] = useState(false);
+  const [selectedBet, setSelectedBet] = useState<any>(null);
+
+  // Form state for create bet dialog - persists across tab switches
+  const [createBetFormData, setCreateBetFormData] = useState({
+    date: new Date().toISOString().split("T")[0],
+    description: "",
+    odds: 0,
+    wager_amount: 0,
+  });
 
   const handleCreateBet = async (data: {
     date: string;
@@ -30,6 +43,22 @@ export function NotebookDetailPage() {
     wager_amount: number;
   }) => {
     await addBet(data);
+    // Reset form after successful creation
+    setCreateBetFormData({
+      date: new Date().toISOString().split("T")[0],
+      description: "",
+      odds: 0,
+      wager_amount: 0,
+    });
+  };
+
+  const handleEditBet = (bet: any) => {
+    setSelectedBet(bet);
+    setIsEditBetDialogOpen(true);
+  };
+
+  const handleUpdateBet = async (betId: string, updates: any) => {
+    await updateBet(betId, updates);
   };
 
   if (loading) {
@@ -220,17 +249,26 @@ export function NotebookDetailPage() {
               {bets.map((bet) => (
                 <div
                   key={bet.id}
-                  className="border border-border rounded-lg p-4"
+                  className="border border-border rounded-lg p-4 hover:bg-surface-secondary/30 transition-colors cursor-pointer"
+                  onClick={() => handleEditBet(bet)}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium">{bet.description}</h4>
-                    <span
-                      className={`text-sm font-medium ${getStatusColorClass(
-                        bet.status
-                      )}`}
-                    >
-                      {bet.status.charAt(0).toUpperCase() + bet.status.slice(1)}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span
+                        className={`text-sm font-medium ${getStatusColorClass(
+                          bet.status
+                        )}`}
+                      >
+                        {bet.status.charAt(0).toUpperCase() +
+                          bet.status.slice(1)}
+                      </span>
+                      {bet.status === "pending" && (
+                        <span className="text-xs text-text-secondary bg-accent/10 px-2 py-1 rounded">
+                          Click to update
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
@@ -273,6 +311,16 @@ export function NotebookDetailPage() {
         open={isCreateBetDialogOpen}
         onOpenChange={setIsCreateBetDialogOpen}
         onCreateBet={handleCreateBet}
+        formData={createBetFormData}
+        setFormData={setCreateBetFormData}
+      />
+
+      {/* Edit Bet Dialog */}
+      <EditBetDialog
+        open={isEditBetDialogOpen}
+        onOpenChange={setIsEditBetDialogOpen}
+        bet={selectedBet}
+        onUpdateBet={handleUpdateBet}
       />
     </div>
   );

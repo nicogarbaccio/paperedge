@@ -45,7 +45,7 @@ export function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto h-12 w-12 rounded-lg bg-accent flex items-center justify-center mb-4">
-            <span className="text-lg font-bold text-accent-foreground">PE</span>
+            <span className="text-2xl">📊</span>
           </div>
           <CardTitle className="text-2xl">Welcome to PaperEdge</CardTitle>
           <CardDescription>

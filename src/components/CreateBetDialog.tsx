@@ -23,19 +23,29 @@ interface CreateBetDialogProps {
     odds: number;
     wager_amount: number;
   }) => Promise<void>;
+  formData: {
+    date: string;
+    description: string;
+    odds: number;
+    wager_amount: number;
+  };
+  setFormData: React.Dispatch<
+    React.SetStateAction<{
+      date: string;
+      description: string;
+      odds: number;
+      wager_amount: number;
+    }>
+  >;
 }
 
 export function CreateBetDialog({
   open,
   onOpenChange,
   onCreateBet,
+  formData,
+  setFormData,
 }: CreateBetDialogProps) {
-  const [formData, setFormData] = useState({
-    date: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
-    description: "",
-    odds: 0,
-    wager_amount: 0,
-  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,13 +89,7 @@ export function CreateBetDialog({
         wager_amount: formData.wager_amount,
       });
 
-      // Reset form and close dialog
-      setFormData({
-        date: new Date().toISOString().split("T")[0],
-        description: "",
-        odds: 0,
-        wager_amount: 0,
-      });
+      // Form reset is handled by parent component
       onOpenChange(false);
     } catch (error: any) {
       setError(error.message || "Failed to create bet");
@@ -96,6 +100,7 @@ export function CreateBetDialog({
 
   const handleCancel = () => {
     if (!loading) {
+      // Reset form on explicit cancel
       setFormData({
         date: new Date().toISOString().split("T")[0],
         description: "",
@@ -107,8 +112,17 @@ export function CreateBetDialog({
     }
   };
 
+  const handleDialogClose = (open: boolean) => {
+    if (!open && !loading) {
+      // Don't reset form data when dialog closes (tab switch, etc.)
+      // Only clear errors
+      setError(null);
+    }
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Bet</DialogTitle>
