@@ -12,7 +12,11 @@ import { Input } from "@/components/ui/Input";
 import { DateInput } from "@/components/ui/DateInput";
 import { Label } from "@/components/ui/Label";
 import { Loader2, Trash2 } from "lucide-react";
-import { calculateReturn, isValidAmericanOdds } from "@/lib/betting";
+import {
+  calculateReturn,
+  calculatePayout,
+  isValidAmericanOdds,
+} from "@/lib/betting";
 import { formatCurrency } from "@/lib/utils";
 
 interface Bet {
@@ -52,10 +56,15 @@ export function EditBetDialog({
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Calculate expected return based on current odds and wager
-  const expectedReturn =
+  // Calculate expected return and profit based on current odds and wager
+  const expectedProfit =
     formData.wager_amount > 0 && isValidAmericanOdds(formData.odds)
       ? calculateReturn(formData.odds, formData.wager_amount)
+      : 0;
+
+  const expectedReturn =
+    formData.wager_amount > 0 && isValidAmericanOdds(formData.odds)
+      ? calculatePayout(formData.odds, formData.wager_amount)
       : 0;
 
   useEffect(() => {
@@ -174,7 +183,7 @@ export function EditBetDialog({
       // Auto-set return amount based on status
       return_amount:
         status === "won"
-          ? expectedReturn
+          ? expectedProfit
           : status === "lost"
           ? 0
           : status === "push"
@@ -356,8 +365,7 @@ export function EditBetDialog({
                 Expected return: {formatCurrency(expectedReturn)}
                 <span className="text-accent">
                   {" "}
-                  (profit:{" "}
-                  {formatCurrency(expectedReturn - formData.wager_amount)})
+                  (profit: {formatCurrency(expectedProfit)})
                 </span>
               </p>
             </div>
@@ -374,11 +382,10 @@ export function EditBetDialog({
 
           {expectedReturn > 0 && formData.status === "pending" && (
             <div className="text-xs text-accent bg-accent/10 p-3 rounded-md">
-              Potential return: {formatCurrency(expectedReturn)}
+              Expected return: {formatCurrency(expectedReturn)}
               <span className="text-text-secondary">
                 {" "}
-                (profit:{" "}
-                {formatCurrency(expectedReturn - formData.wager_amount)})
+                (profit: {formatCurrency(expectedProfit)})
               </span>
             </div>
           )}

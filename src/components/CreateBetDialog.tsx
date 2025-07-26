@@ -12,7 +12,11 @@ import { Input } from "@/components/ui/Input";
 import { DateInput } from "@/components/ui/DateInput";
 import { Label } from "@/components/ui/Label";
 import { Loader2 } from "lucide-react";
-import { calculateReturn, isValidAmericanOdds } from "@/lib/betting";
+import {
+  calculateReturn,
+  calculatePayout,
+  isValidAmericanOdds,
+} from "@/lib/betting";
 import { formatCurrency } from "@/lib/utils";
 
 interface CreateBetDialogProps {
@@ -50,10 +54,15 @@ export function CreateBetDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Calculate potential return for display
-  const potentialReturn =
+  // Calculate potential return and profit for display
+  const potentialProfit =
     formData.wager_amount > 0 && isValidAmericanOdds(formData.odds)
       ? calculateReturn(formData.odds, formData.wager_amount)
+      : 0;
+
+  const expectedReturn =
+    formData.wager_amount > 0 && isValidAmericanOdds(formData.odds)
+      ? calculatePayout(formData.odds, formData.wager_amount)
       : 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -213,13 +222,12 @@ export function CreateBetDialog({
                 required
               />
             </div>
-            {potentialReturn > 0 && (
+            {expectedReturn > 0 && (
               <p className="text-xs text-accent">
-                Potential return: {formatCurrency(potentialReturn)}
+                Expected return: {formatCurrency(expectedReturn)}
                 <span className="text-text-secondary">
                   {" "}
-                  (profit:{" "}
-                  {formatCurrency(potentialReturn - formData.wager_amount)})
+                  (profit: {formatCurrency(potentialProfit)})
                 </span>
               </p>
             )}
