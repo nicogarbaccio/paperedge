@@ -17,15 +17,19 @@ import {
 } from "@/lib/utils";
 import { CreateBetDialog } from "@/components/CreateBetDialog";
 import { EditBetDialog } from "@/components/EditBetDialog";
+import { EditNotebookDialog } from "@/components/EditNotebookDialog";
+import { useNotebooks } from "@/hooks/useNotebooks";
 import { useState } from "react";
 
 export function NotebookDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { notebook, bets, loading, error, addBet, updateBet } = useNotebook(
-    id || ""
-  );
+  const { notebook, bets, loading, error, addBet, updateBet, refetch } =
+    useNotebook(id || "");
+  const { updateNotebook } = useNotebooks();
   const [isCreateBetDialogOpen, setIsCreateBetDialogOpen] = useState(false);
   const [isEditBetDialogOpen, setIsEditBetDialogOpen] = useState(false);
+  const [isEditNotebookDialogOpen, setIsEditNotebookDialogOpen] =
+    useState(false);
   const [selectedBet, setSelectedBet] = useState<any>(null);
 
   // Form state for create bet dialog - persists across tab switches
@@ -59,6 +63,15 @@ export function NotebookDetailPage() {
 
   const handleUpdateBet = async (betId: string, updates: any) => {
     await updateBet(betId, updates);
+  };
+
+  const handleUpdateNotebook = async (
+    id: string,
+    updates: { name?: string; description?: string }
+  ) => {
+    await updateNotebook(id, updates);
+    // Refresh the current notebook data to show the updates
+    await refetch();
   };
 
   if (loading) {
@@ -131,10 +144,20 @@ export function NotebookDetailPage() {
       </div>
 
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-text-primary">
-            {notebook.name}
-          </h1>
+        <div className="flex-1">
+          <div className="flex items-center space-x-3">
+            <h1 className="text-3xl font-bold text-text-primary">
+              {notebook.name}
+            </h1>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsEditNotebookDialogOpen(true)}
+              className="opacity-70 hover:opacity-100"
+            >
+              Edit
+            </Button>
+          </div>
           <p className="text-text-secondary">
             {notebook.description || "No description"}
           </p>
@@ -321,6 +344,14 @@ export function NotebookDetailPage() {
         onOpenChange={setIsEditBetDialogOpen}
         bet={selectedBet}
         onUpdateBet={handleUpdateBet}
+      />
+
+      {/* Edit Notebook Dialog */}
+      <EditNotebookDialog
+        open={isEditNotebookDialogOpen}
+        onOpenChange={setIsEditNotebookDialogOpen}
+        notebook={notebook}
+        onUpdateNotebook={handleUpdateNotebook}
       />
     </div>
   );
