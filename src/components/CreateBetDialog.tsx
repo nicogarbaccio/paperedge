@@ -17,7 +17,7 @@ import {
   calculatePayout,
   isValidAmericanOdds,
 } from "@/lib/betting";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getCurrentLocalDate } from "@/lib/utils";
 
 interface CreateBetDialogProps {
   open: boolean;
@@ -112,7 +112,7 @@ export function CreateBetDialog({
     if (!loading) {
       // Reset form on explicit cancel
       setFormData({
-        date: new Date().toISOString().split("T")[0],
+        date: getCurrentLocalDate(),
         description: "",
         odds: 0,
         wager_amount: 0,

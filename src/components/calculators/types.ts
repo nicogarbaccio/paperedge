@@ -16,4 +16,26 @@ export interface ValidationErrors {
   unitsToWin?: string;
   odds?: string;
   general?: string;
+}
+
+// Parlay Calculator Types
+export interface ParlayLeg {
+  id: string;
+  description: string;
+  odds: string;
+}
+
+export interface ParlayResult {
+  combinedDecimalOdds: number;
+  combinedAmericanOdds: number;
+  totalPayout: number;
+  profit: number;
+  overallProbability: number;
+  individualProbabilities: number[];
+}
+
+export interface ParlayValidationErrors {
+  wager?: string;
+  legs?: string;
+  general?: string;
 } 

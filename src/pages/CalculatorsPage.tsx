@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import { UnitBettingCalculator } from "@/components/calculators/UnitBettingCalculator";
+import { ParlayCalculator } from "@/components/calculators/ParlayCalculator";
 
 // Betting odds conversion utilities
 function americanToDecimal(americanOdds: number): number {
@@ -92,6 +93,11 @@ export function CalculatorsPage() {
       id: "unit",
       name: "To Win a Unit",
       description: "Calculate bet size to win specific units",
+    },
+    {
+      id: "parlay",
+      name: "Parlay Calculator",
+      description: "Combine multiple bets into one parlay",
     },
   ];
 
@@ -325,6 +331,9 @@ export function CalculatorsPage() {
 
       {/* Unit Betting Calculator */}
       {activeCalculator === "unit" && <UnitBettingCalculator />}
+
+      {/* Parlay Calculator */}
+      {activeCalculator === "parlay" && <ParlayCalculator />}
     </div>
   );
 }

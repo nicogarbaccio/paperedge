@@ -28,12 +28,43 @@ export function formatPercentage(value: number, decimals: number = 1): string {
  * Format date for display
  */
 export function formatDate(date: string | Date): string {
-  const d = typeof date === 'string' ? new Date(date) : date
+  let d: Date
+  if (typeof date === 'string') {
+    // Parse date string as local date to avoid timezone shifting
+    // "2024-07-26" should be treated as July 26th locally, not UTC
+    const [year, month, day] = date.split('-').map(Number)
+    d = new Date(year, month - 1, day) // month is 0-indexed
+  } else {
+    d = date
+  }
+  
   return d.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   })
+}
+
+/**
+ * Get current local date in YYYY-MM-DD format for HTML date inputs
+ * This avoids timezone conversion issues that can occur with toISOString()
+ */
+export function getCurrentLocalDate(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
+ * Convert a Date object to YYYY-MM-DD format in local timezone
+ */
+export function formatDateForInput(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 /**

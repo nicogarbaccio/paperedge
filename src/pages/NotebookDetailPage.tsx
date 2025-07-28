@@ -14,6 +14,7 @@ import {
   formatPercentage,
   formatDate,
   getStatusColorClass,
+  getCurrentLocalDate,
 } from "@/lib/utils";
 import { CreateBetDialog } from "@/components/CreateBetDialog";
 import { EditBetDialog } from "@/components/EditBetDialog";
@@ -42,7 +43,7 @@ export function NotebookDetailPage() {
 
   // Form state for create bet dialog - persists across tab switches
   const [createBetFormData, setCreateBetFormData] = useState({
-    date: new Date().toISOString().split("T")[0],
+    date: getCurrentLocalDate(),
     description: "",
     odds: 0,
     wager_amount: 0,
@@ -57,7 +58,7 @@ export function NotebookDetailPage() {
     await addBet(data);
     // Reset form after successful creation
     setCreateBetFormData({
-      date: new Date().toISOString().split("T")[0],
+      date: getCurrentLocalDate(),
       description: "",
       odds: 0,
       wager_amount: 0,
