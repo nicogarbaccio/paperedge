@@ -21,6 +21,7 @@ import { EditBetDialog } from "@/components/EditBetDialog";
 import { EditNotebookDialog } from "@/components/EditNotebookDialog";
 import { useNotebooks } from "@/hooks/useNotebooks";
 import { useState } from "react";
+import { useToast } from "@/hooks/useToast";
 
 export function NotebookDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -35,6 +36,7 @@ export function NotebookDetailPage() {
     refetch,
   } = useNotebook(id || "");
   const { updateNotebook } = useNotebooks();
+  const { toast } = useToast();
   const [isCreateBetDialogOpen, setIsCreateBetDialogOpen] = useState(false);
   const [isEditBetDialogOpen, setIsEditBetDialogOpen] = useState(false);
   const [isEditNotebookDialogOpen, setIsEditNotebookDialogOpen] =
@@ -56,6 +58,11 @@ export function NotebookDetailPage() {
     wager_amount: number;
   }) => {
     await addBet(data);
+    toast({
+      title: "Bet added",
+      description: `${data.description} has been added to your notebook.`,
+      variant: "success",
+    });
     // Reset form after successful creation
     setCreateBetFormData({
       date: getCurrentLocalDate(),
@@ -72,6 +79,11 @@ export function NotebookDetailPage() {
 
   const handleUpdateBet = async (betId: string, updates: any) => {
     await updateBet(betId, updates);
+    toast({
+      title: "Bet updated",
+      description: "Your bet has been successfully updated.",
+      variant: "success",
+    });
   };
 
   const handleDeleteBet = async (betId: string) => {
@@ -80,9 +92,14 @@ export function NotebookDetailPage() {
 
   const handleUpdateNotebook = async (
     id: string,
-    updates: { name?: string; description?: string }
+    updates: { name?: string; description?: string; color?: string }
   ) => {
     await updateNotebook(id, updates);
+    toast({
+      title: "Notebook updated",
+      description: "Your notebook has been successfully updated.",
+      variant: "success",
+    });
     // Refresh the current notebook data to show the updates
     await refetch();
   };

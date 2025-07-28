@@ -14,10 +14,12 @@ import { CreateNotebookDialog } from "@/components/CreateNotebookDialog";
 import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/useToast";
 
 export function NotebooksPage() {
   const { notebooks, loading, error, createNotebook } = useNotebooks();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleCreateNotebook = async (data: {
     name: string;
@@ -26,6 +28,11 @@ export function NotebooksPage() {
     color?: string;
   }) => {
     await createNotebook(data);
+    toast({
+      title: "Notebook created",
+      description: `"${data.name}" has been successfully created.`,
+      variant: "success",
+    });
   };
 
   if (loading) {

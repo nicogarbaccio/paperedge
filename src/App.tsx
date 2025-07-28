@@ -20,6 +20,8 @@ import { NotebookDetailPage } from "./pages/NotebookDetailPage";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { CalculatorsPage } from "./pages/CalculatorsPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { Toaster } from "./components/ui/Toaster";
+import { toast } from "@/hooks/useToast";
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -53,9 +55,26 @@ function App() {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const newUser = session?.user ?? null;
+      
+      setUser(newUser);
       setLoading(false);
+
+      // Show toast notifications for auth events
+      if (event === 'SIGNED_IN' && newUser) {
+        toast({
+          title: "Welcome back!",
+          description: `Signed in as ${newUser.email}`,
+          variant: "success",
+        });
+      } else if (event === 'SIGNED_OUT') {
+        toast({
+          title: "Signed out",
+          description: "You have been successfully signed out.",
+          variant: "default",
+        });
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -100,6 +119,7 @@ function App() {
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
+      <Toaster />
     </Router>
   );
 }

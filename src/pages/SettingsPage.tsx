@@ -12,9 +12,11 @@ import { Label } from "@/components/ui/Label";
 import { useAuthStore } from "@/stores/authStore";
 import { supabase } from "@/lib/supabase";
 import { User, Mail, Shield, Database, Download, Upload } from "lucide-react";
+import { useToast } from "@/hooks/useToast";
 
 export function SettingsPage() {
   const { user } = useAuthStore();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -37,6 +39,11 @@ export function SettingsPage() {
       setMessage({
         type: "success",
         text: "Password reset email sent! Check your inbox.",
+      });
+      toast({
+        title: "Password reset email sent",
+        description: "Check your inbox for instructions to reset your password.",
+        variant: "success",
       });
     } catch (error: any) {
       setMessage({
