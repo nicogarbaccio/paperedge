@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import { UnitBettingCalculator } from "@/components/calculators/UnitBettingCalculator";
 import { ParlayCalculator } from "@/components/calculators/ParlayCalculator";
+import { ArbitrageCalculator } from "@/components/calculators/ArbitrageCalculator";
 
 // Betting odds conversion utilities
 function americanToDecimal(americanOdds: number): number {
@@ -98,6 +99,11 @@ export function CalculatorsPage() {
       id: "parlay",
       name: "Parlay Calculator",
       description: "Combine multiple bets into one parlay",
+    },
+    {
+      id: "arbitrage",
+      name: "Arbitrage/Hedge",
+      description: "Find arbitrage opportunities or hedge bets",
     },
   ];
 
@@ -334,6 +340,9 @@ export function CalculatorsPage() {
 
       {/* Parlay Calculator */}
       {activeCalculator === "parlay" && <ParlayCalculator />}
+
+      {/* Arbitrage/Hedge Calculator */}
+      {activeCalculator === "arbitrage" && <ArbitrageCalculator />}
     </div>
   );
 }
