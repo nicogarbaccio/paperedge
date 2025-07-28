@@ -9,6 +9,7 @@ export interface NotebookDetail {
   description: string | null
   starting_bankroll: number
   current_bankroll: number
+  color: string | null
   created_at: string
   updated_at: string
 }

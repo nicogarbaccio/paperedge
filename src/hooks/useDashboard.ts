@@ -28,6 +28,7 @@ export interface TopNotebook {
   win_rate: number
   total_pl: number
   roi: number
+  color: string | null
 }
 
 export function useDashboard() {
@@ -61,6 +62,7 @@ export function useDashboard() {
         .select(`
           id,
           name,
+          color,
           bets (
             id,
             status,
@@ -173,7 +175,8 @@ export function useDashboard() {
             bet_count,
             win_rate,
             total_pl,
-            roi
+            roi,
+            color: notebook.color
           }
         })
         .filter(notebook => notebook.bet_count > 0) // Only include notebooks with bets

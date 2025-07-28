@@ -9,6 +9,7 @@ export interface Notebook {
   description: string | null
   starting_bankroll: number
   current_bankroll: number
+  color: string | null
   created_at: string
   updated_at: string
   // Computed fields
@@ -96,6 +97,7 @@ export function useNotebooks() {
     name: string
     description?: string
     starting_bankroll: number
+    color?: string
   }) => {
     if (!user) throw new Error('User not authenticated')
 

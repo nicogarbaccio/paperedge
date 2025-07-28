@@ -11,7 +11,9 @@ import { Link } from "react-router-dom";
 import { formatCurrency, formatPercentage, getPLColorClass } from "@/lib/utils";
 import { useNotebooks } from "@/hooks/useNotebooks";
 import { CreateNotebookDialog } from "@/components/CreateNotebookDialog";
+import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 export function NotebooksPage() {
   const { notebooks, loading, error, createNotebook } = useNotebooks();
@@ -21,6 +23,7 @@ export function NotebooksPage() {
     name: string;
     description?: string;
     starting_bankroll: number;
+    color?: string;
   }) => {
     await createNotebook(data);
   };
@@ -96,25 +99,33 @@ export function NotebooksPage() {
       ) : (
         // Notebooks grid with add button
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {notebooks.map((notebook) => (
-            <Link key={notebook.id} to={`/notebooks/${notebook.id}`}>
-              <Card className="hover:bg-surface-secondary/50 transition-colors cursor-pointer h-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>{notebook.name}</span>
-                    <span
-                      className={`text-sm font-normal ${getPLColorClass(
-                        notebook.total_pl || 0
-                      )}`}
-                    >
-                      {(notebook.total_pl || 0) > 0 ? "+" : ""}
-                      {formatCurrency(notebook.total_pl || 0)}
-                    </span>
-                  </CardTitle>
-                  <CardDescription>
-                    {notebook.description || "No description"}
-                  </CardDescription>
-                </CardHeader>
+          {notebooks.map((notebook) => {
+            const colorClasses = getNotebookColorClasses(notebook.color);
+            return (
+              <Link key={notebook.id} to={`/notebooks/${notebook.id}`}>
+                <Card className={cn(
+                  "hover:bg-surface-secondary/50 transition-colors cursor-pointer h-full border-l-4",
+                  colorClasses.border
+                )}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={cn("w-3 h-3 rounded-full", colorClasses.accent)} />
+                        <span>{notebook.name}</span>
+                      </div>
+                      <span
+                        className={`text-sm font-normal ${getPLColorClass(
+                          notebook.total_pl || 0
+                        )}`}
+                      >
+                        {(notebook.total_pl || 0) > 0 ? "+" : ""}
+                        {formatCurrency(notebook.total_pl || 0)}
+                      </span>
+                    </CardTitle>
+                    <CardDescription>
+                      {notebook.description || "No description"}
+                    </CardDescription>
+                  </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {/* Bankroll Info */}
@@ -196,7 +207,8 @@ export function NotebooksPage() {
                 </CardContent>
               </Card>
             </Link>
-          ))}
+          );
+          })}
 
           {/* Add New Notebook Card */}
           <Card

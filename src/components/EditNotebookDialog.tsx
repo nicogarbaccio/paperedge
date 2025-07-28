@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Loader2 } from "lucide-react";
+import { NOTEBOOK_COLORS, DEFAULT_NOTEBOOK_COLOR } from "@/lib/notebookColors";
+import { cn } from "@/lib/utils";
 
 interface Notebook {
   id: string;
@@ -18,6 +20,7 @@ interface Notebook {
   description: string | null;
   starting_bankroll: number;
   current_bankroll: number;
+  color: string | null;
 }
 
 interface EditNotebookDialogProps {
@@ -26,7 +29,7 @@ interface EditNotebookDialogProps {
   notebook: Notebook | null;
   onUpdateNotebook: (
     id: string,
-    updates: { name?: string; description?: string }
+    updates: { name?: string; description?: string; color?: string }
   ) => Promise<void>;
 }
 
@@ -39,6 +42,7 @@ export function EditNotebookDialog({
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    color: DEFAULT_NOTEBOOK_COLOR.id,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +52,7 @@ export function EditNotebookDialog({
       setFormData({
         name: notebook.name,
         description: notebook.description || "",
+        color: notebook.color || DEFAULT_NOTEBOOK_COLOR.id,
       });
       setError(null);
     }
@@ -70,6 +75,7 @@ export function EditNotebookDialog({
       await onUpdateNotebook(notebook.id, {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
+        color: formData.color,
       });
 
       onOpenChange(false);
@@ -85,6 +91,7 @@ export function EditNotebookDialog({
       setFormData({
         name: notebook.name,
         description: notebook.description || "",
+        color: notebook.color || DEFAULT_NOTEBOOK_COLOR.id,
       });
       setError(null);
       onOpenChange(false);
@@ -132,6 +139,34 @@ export function EditNotebookDialog({
               }
               disabled={loading}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Color</Label>
+            <div className="grid grid-cols-9 gap-2">
+              {NOTEBOOK_COLORS.map((color) => (
+                <button
+                  key={color.id}
+                  type="button"
+                  className={cn(
+                    "w-8 h-8 rounded-full border-2 transition-all hover:scale-110",
+                    color.preview,
+                    formData.color === color.id
+                      ? "border-text-primary ring-2 ring-accent ring-offset-2"
+                      : "border-border hover:border-text-secondary"
+                  )}
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, color: color.id }))
+                  }
+                  disabled={loading}
+                  title={color.name}
+                  aria-label={`Select ${color.name} color`}
+                />
+              ))}
+            </div>
+            <p className="text-xs text-text-secondary">
+              Choose a color to help organize your notebooks
+            </p>
           </div>
 
           {error && (

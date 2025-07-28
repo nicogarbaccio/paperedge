@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Loader2 } from "lucide-react";
+import { NOTEBOOK_COLORS, DEFAULT_NOTEBOOK_COLOR } from "@/lib/notebookColors";
+import { cn } from "@/lib/utils";
 
 interface CreateNotebookDialogProps {
   open: boolean;
@@ -19,6 +21,7 @@ interface CreateNotebookDialogProps {
     name: string;
     description?: string;
     starting_bankroll: number;
+    color?: string;
   }) => Promise<void>;
 }
 
@@ -31,6 +34,7 @@ export function CreateNotebookDialog({
     name: "",
     description: "",
     starting_bankroll: 1000,
+    color: DEFAULT_NOTEBOOK_COLOR.id,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,10 +60,11 @@ export function CreateNotebookDialog({
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         starting_bankroll: formData.starting_bankroll,
+        color: formData.color,
       });
 
       // Reset form and close dialog
-      setFormData({ name: "", description: "", starting_bankroll: 1000 });
+      setFormData({ name: "", description: "", starting_bankroll: 1000, color: DEFAULT_NOTEBOOK_COLOR.id });
       onOpenChange(false);
     } catch (error: any) {
       setError(error.message || "Failed to create notebook");
@@ -70,7 +75,7 @@ export function CreateNotebookDialog({
 
   const handleCancel = () => {
     if (!loading) {
-      setFormData({ name: "", description: "", starting_bankroll: 1000 });
+      setFormData({ name: "", description: "", starting_bankroll: 1000, color: DEFAULT_NOTEBOOK_COLOR.id });
       setError(null);
       onOpenChange(false);
     }
@@ -143,6 +148,34 @@ export function CreateNotebookDialog({
             </div>
             <p className="text-xs text-text-secondary">
               Your hypothetical starting bankroll for this strategy
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Color</Label>
+            <div className="grid grid-cols-9 gap-2">
+              {NOTEBOOK_COLORS.map((color) => (
+                <button
+                  key={color.id}
+                  type="button"
+                  className={cn(
+                    "w-8 h-8 rounded-full border-2 transition-all hover:scale-110",
+                    color.preview,
+                    formData.color === color.id
+                      ? "border-text-primary ring-2 ring-accent ring-offset-2"
+                      : "border-border hover:border-text-secondary"
+                  )}
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, color: color.id }))
+                  }
+                  disabled={loading}
+                  title={color.name}
+                  aria-label={`Select ${color.name} color`}
+                />
+              ))}
+            </div>
+            <p className="text-xs text-text-secondary">
+              Choose a color to help organize your notebooks
             </p>
           </div>
 

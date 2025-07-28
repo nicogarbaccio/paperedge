@@ -10,8 +10,10 @@ import {
   formatPercentage,
   formatDate,
   getStatusColorClass,
+  cn,
 } from "@/lib/utils";
 import { useDashboard } from "@/hooks/useDashboard";
+import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { Loader2 } from "lucide-react";
 
 export function DashboardPage() {
@@ -238,37 +240,43 @@ export function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {topNotebooks.map((notebook) => (
-                  <div
-                    key={notebook.id}
-                    className="flex items-center justify-between"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{notebook.name}</p>
-                      <p className="text-xs text-text-secondary">
-                        {notebook.bet_count} bets •{" "}
-                        {formatPercentage(notebook.win_rate)} win rate
-                      </p>
+                {topNotebooks.map((notebook) => {
+                  const colorClasses = getNotebookColorClasses(notebook.color);
+                  return (
+                    <div
+                      key={notebook.id}
+                      className="flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={cn("w-2 h-2 rounded-full", colorClasses.accent)} />
+                        <div>
+                          <p className="text-sm font-medium">{notebook.name}</p>
+                          <p className="text-xs text-text-secondary">
+                            {notebook.bet_count} bets •{" "}
+                            {formatPercentage(notebook.win_rate)} win rate
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p
+                          className={`text-sm font-medium ${
+                            notebook.total_pl > 0
+                              ? "text-profit"
+                              : notebook.total_pl < 0
+                              ? "text-loss"
+                              : "text-text-secondary"
+                          }`}
+                        >
+                          {notebook.total_pl > 0 ? "+" : ""}
+                          {formatCurrency(notebook.total_pl)}
+                        </p>
+                        <p className="text-xs text-text-secondary">
+                          {formatPercentage(notebook.roi)} ROI
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p
-                        className={`text-sm font-medium ${
-                          notebook.total_pl > 0
-                            ? "text-profit"
-                            : notebook.total_pl < 0
-                            ? "text-loss"
-                            : "text-text-secondary"
-                        }`}
-                      >
-                        {notebook.total_pl > 0 ? "+" : ""}
-                        {formatCurrency(notebook.total_pl)}
-                      </p>
-                      <p className="text-xs text-text-secondary">
-                        {formatPercentage(notebook.roi)} ROI
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
