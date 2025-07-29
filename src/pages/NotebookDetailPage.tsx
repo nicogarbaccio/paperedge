@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Loader2, Calendar, History } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useNotebook } from "@/hooks/useNotebook";
 import {
@@ -19,6 +19,7 @@ import {
 import { CreateBetDialog } from "@/components/CreateBetDialog";
 import { EditBetDialog } from "@/components/EditBetDialog";
 import { EditNotebookDialog } from "@/components/EditNotebookDialog";
+import { CalendarView } from "@/components/CalendarView";
 import { useNotebooks } from "@/hooks/useNotebooks";
 import { useState } from "react";
 import { useToast } from "@/hooks/useToast";
@@ -42,6 +43,9 @@ export function NotebookDetailPage() {
   const [isEditNotebookDialogOpen, setIsEditNotebookDialogOpen] =
     useState(false);
   const [selectedBet, setSelectedBet] = useState<any>(null);
+  const [activeView, setActiveView] = useState<"history" | "calendar">(
+    "history"
+  );
 
   // Form state for create bet dialog - persists across tab switches
   const [createBetFormData, setCreateBetFormData] = useState({
@@ -279,85 +283,113 @@ export function NotebookDetailPage() {
         </Card>
       </div>
 
-      {/* Bets Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Betting History</CardTitle>
-          <CardDescription>All bets for this notebook</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {bets.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-text-secondary mb-4">No bets recorded yet</p>
-              <Button
-                className="flex items-center space-x-2"
-                onClick={() => setIsCreateBetDialogOpen(true)}
-              >
-                <Plus className="h-4 w-4" />
-                <span>Add Your First Bet</span>
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {bets.map((bet) => (
-                <div
-                  key={bet.id}
-                  className="border border-border rounded-lg p-4 hover:bg-surface-secondary/30 transition-colors cursor-pointer"
-                  onClick={() => handleEditBet(bet)}
+      {/* View Toggle Tabs */}
+      <div className="flex space-x-1 p-1 bg-surface rounded-lg w-fit">
+        <Button
+          variant={activeView === "history" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setActiveView("history")}
+          className="flex items-center space-x-2"
+        >
+          <History className="h-4 w-4" />
+          <span>History</span>
+        </Button>
+        <Button
+          variant={activeView === "calendar" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setActiveView("calendar")}
+          className="flex items-center space-x-2"
+        >
+          <Calendar className="h-4 w-4" />
+          <span>Calendar</span>
+        </Button>
+      </div>
+
+      {/* Content based on active view */}
+      {activeView === "history" ? (
+        /* Bets Table */
+        <Card>
+          <CardHeader>
+            <CardTitle>Betting History</CardTitle>
+            <CardDescription>All bets for this notebook</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {bets.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-text-secondary mb-4">No bets recorded yet</p>
+                <Button
+                  className="flex items-center space-x-2"
+                  onClick={() => setIsCreateBetDialogOpen(true)}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">{bet.description}</h4>
-                    <div className="flex items-center space-x-2">
-                      <span
-                        className={`text-sm font-medium ${getStatusColorClass(
-                          bet.status
-                        )}`}
-                      >
-                        {bet.status.charAt(0).toUpperCase() +
-                          bet.status.slice(1)}
-                      </span>
-                      {bet.status === "pending" && (
-                        <span className="text-xs text-text-secondary bg-accent/10 px-2 py-1 rounded">
-                          Click to update
+                  <Plus className="h-4 w-4" />
+                  <span>Add Your First Bet</span>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {bets.map((bet) => (
+                  <div
+                    key={bet.id}
+                    className="border border-border rounded-lg p-4 hover:bg-surface-secondary/30 transition-colors cursor-pointer"
+                    onClick={() => handleEditBet(bet)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium">{bet.description}</h4>
+                      <div className="flex items-center space-x-2">
+                        <span
+                          className={`text-sm font-medium ${getStatusColorClass(
+                            bet.status
+                          )}`}
+                        >
+                          {bet.status.charAt(0).toUpperCase() +
+                            bet.status.slice(1)}
                         </span>
-                      )}
+                        {bet.status === "pending" && (
+                          <span className="text-xs text-text-secondary bg-accent/10 px-2 py-1 rounded">
+                            Click to update
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <span className="text-text-secondary">Date: </span>
+                        <span>{formatDate(bet.date)}</span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary">Odds: </span>
+                        <span>
+                          {bet.odds > 0 ? "+" : ""}
+                          {bet.odds}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary">Wager: </span>
+                        <span>{formatCurrency(bet.wager_amount)}</span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary">Return: </span>
+                        <span className={getStatusColorClass(bet.status)}>
+                          {bet.status === "won" && bet.return_amount
+                            ? `+${formatCurrency(bet.return_amount)}`
+                            : bet.status === "lost"
+                            ? `-${formatCurrency(bet.wager_amount)}`
+                            : bet.status === "push"
+                            ? formatCurrency(0)
+                            : "Pending"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <span className="text-text-secondary">Date: </span>
-                      <span>{formatDate(bet.date)}</span>
-                    </div>
-                    <div>
-                      <span className="text-text-secondary">Odds: </span>
-                      <span>
-                        {bet.odds > 0 ? "+" : ""}
-                        {bet.odds}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-text-secondary">Wager: </span>
-                      <span>{formatCurrency(bet.wager_amount)}</span>
-                    </div>
-                    <div>
-                      <span className="text-text-secondary">Return: </span>
-                      <span className={getStatusColorClass(bet.status)}>
-                        {bet.status === "won" && bet.return_amount
-                          ? `+${formatCurrency(bet.return_amount)}`
-                          : bet.status === "lost"
-                          ? `-${formatCurrency(bet.wager_amount)}`
-                          : bet.status === "push"
-                          ? formatCurrency(0)
-                          : "Pending"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        /* Calendar View */
+        <CalendarView bets={bets} />
+      )}
 
       {/* Create Bet Dialog */}
       <CreateBetDialog
