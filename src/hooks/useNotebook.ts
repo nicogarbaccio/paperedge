@@ -35,7 +35,7 @@ export function useNotebook(notebookId: string) {
   const { user } = useAuthStore()
 
   const fetchNotebook = async () => {
-    if (!user || !notebookId) {
+    if (!user || !user.id || !notebookId) {
       setLoading(false)
       return
     }
@@ -80,7 +80,7 @@ export function useNotebook(notebookId: string) {
     odds: number
     wager_amount: number
   }) => {
-    if (!user || !notebookId) throw new Error('User not authenticated or notebook not found')
+    if (!user || !user.id || !notebookId) throw new Error('User not authenticated or notebook not found')
 
     try {
       const { data, error } = await supabase
@@ -143,7 +143,7 @@ export function useNotebook(notebookId: string) {
 
   useEffect(() => {
     fetchNotebook()
-  }, [user, notebookId])
+  }, [user?.id, notebookId])
 
   return {
     notebook,

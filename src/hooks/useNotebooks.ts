@@ -26,7 +26,7 @@ export function useNotebooks() {
   const { user } = useAuthStore()
 
   const fetchNotebooks = async () => {
-    if (!user) {
+    if (!user || !user.id) {
       setNotebooks([])
       setLoading(false)
       return
@@ -99,7 +99,7 @@ export function useNotebooks() {
     starting_bankroll: number
     color?: string
   }) => {
-    if (!user) throw new Error('User not authenticated')
+    if (!user || !user.id) throw new Error('User not authenticated')
 
     try {
       const { data, error } = await supabase
@@ -162,7 +162,7 @@ export function useNotebooks() {
 
   useEffect(() => {
     fetchNotebooks()
-  }, [user])
+  }, [user?.id])
 
   return {
     notebooks,

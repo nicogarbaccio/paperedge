@@ -5,8 +5,9 @@ import {
   Navigate,
 } from "react-router-dom";
 import { useAuthStore } from "./stores/authStore";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { supabase } from "./lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 // Layout components
 import { Layout } from "./components/layout/Layout";
@@ -44,12 +45,18 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   const { user, setUser, setLoading, loading } = useAuthStore();
+  const hasShownInitialAuth = useRef(false);
+  const previousUser = useRef<User | null>(null);
+  const previousEvent = useRef<string | null>(null);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
       setLoading(false);
+      hasShownInitialAuth.current = true;
+      previousUser.current = currentUser;
     });
 
     // Listen for auth changes
@@ -57,24 +64,46 @@ function App() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       const newUser = session?.user ?? null;
-      
+
       setUser(newUser);
       setLoading(false);
 
-      // Show toast notifications for auth events
-      if (event === 'SIGNED_IN' && newUser) {
-        toast({
-          title: "Welcome back!",
-          description: `Signed in as ${newUser.email}`,
-          variant: "success",
-        });
-      } else if (event === 'SIGNED_OUT') {
-        toast({
-          title: "Signed out",
-          description: "You have been successfully signed out.",
-          variant: "default",
-        });
+      // Debug logging
+      console.log(
+        "Auth event:",
+        event,
+        "Previous event:",
+        previousEvent.current,
+        "Has shown initial:",
+        hasShownInitialAuth.current
+      );
+
+      // Show toast notifications for auth events (but not on initial load or token refreshes)
+      if (hasShownInitialAuth.current) {
+        // Show welcome toast for genuine sign-ins (INITIAL_SESSION) or SIGNED_IN (but not after TOKEN_REFRESHED)
+        if (
+          (event === "INITIAL_SESSION" || event === "SIGNED_IN") &&
+          newUser &&
+          previousEvent.current !== "TOKEN_REFRESHED"
+        ) {
+          console.log("Showing welcome toast");
+          toast({
+            title: "Welcome back!",
+            description: `Signed in as ${newUser.email}`,
+            variant: "success",
+          });
+        } else if (event === "SIGNED_OUT") {
+          toast({
+            title: "Signed out",
+            description: "You have been successfully signed out.",
+            variant: "default",
+          });
+        }
       }
+
+      // Update previous references
+      previousUser.current = newUser;
+      previousEvent.current = event;
     });
 
     return () => subscription.unsubscribe();

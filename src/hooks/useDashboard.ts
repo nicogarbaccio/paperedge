@@ -194,7 +194,7 @@ export function useDashboard() {
 
   useEffect(() => {
     fetchDashboardData()
-  }, [user])
+  }, [user?.id])
 
   return {
     stats,
