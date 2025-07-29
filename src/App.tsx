@@ -48,15 +48,44 @@ function App() {
   const hasShownInitialAuth = useRef(false);
   const previousUser = useRef<User | null>(null);
   const previousEvent = useRef<string | null>(null);
+  const hasShownToastForSession = useRef<string | null>(null);
+  const initialSessionUser = useRef<User | null>(null);
+  const isOAuthRedirect = useRef(false);
 
   useEffect(() => {
+    // Check if this is an OAuth redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessToken = urlParams.get("access_token");
+    const refreshToken = urlParams.get("refresh_token");
+    const error = urlParams.get("error");
+    const errorDescription = urlParams.get("error_description");
+
+    console.log("URL params on load:", {
+      accessToken: !!accessToken,
+      refreshToken: !!refreshToken,
+      error,
+      errorDescription,
+      allParams: Object.fromEntries(urlParams.entries()),
+    });
+
+    isOAuthRedirect.current = !!(accessToken || refreshToken);
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       setLoading(false);
       hasShownInitialAuth.current = true;
-      previousUser.current = currentUser;
+      initialSessionUser.current = currentUser;
+
+      // Check if we've already shown the toast for this user in this browser session
+      if (currentUser) {
+        const sessionKey = `toast_shown_${currentUser.id}`;
+        hasShownToastForSession.current =
+          sessionStorage.getItem(sessionKey) || null;
+      }
+
+      // Don't set previousUser here - let the auth state change handler manage it
     });
 
     // Listen for auth changes
@@ -74,17 +103,25 @@ function App() {
         event,
         "Previous event:",
         previousEvent.current,
+        "Previous user:",
+        previousUser.current?.id,
+        "Initial session user:",
+        initialSessionUser.current?.id,
         "Has shown initial:",
-        hasShownInitialAuth.current
+        hasShownInitialAuth.current,
+        "User ID:",
+        newUser?.id,
+        "Has shown toast for session:",
+        hasShownToastForSession.current
       );
 
       // Show toast notifications for auth events (but not on initial load or token refreshes)
       if (hasShownInitialAuth.current) {
-        // Show welcome toast for genuine sign-ins (INITIAL_SESSION) or SIGNED_IN (but not after TOKEN_REFRESHED)
+        // Show welcome toast for genuine sign-ins (not page refreshes)
         if (
-          (event === "INITIAL_SESSION" || event === "SIGNED_IN") &&
+          event === "INITIAL_SESSION" &&
           newUser &&
-          previousEvent.current !== "TOKEN_REFRESHED"
+          hasShownToastForSession.current !== newUser.id
         ) {
           console.log("Showing welcome toast");
           toast({
@@ -92,12 +129,25 @@ function App() {
             description: `Signed in as ${newUser.email}`,
             variant: "success",
           });
+          hasShownToastForSession.current = newUser.id;
+          // Store in session storage so it persists across page refreshes
+          sessionStorage.setItem(`toast_shown_${newUser.id}`, newUser.id);
+        } else if (event === "INITIAL_SESSION" && newUser) {
+          console.log("Not showing toast because:", {
+            hasShownToast: hasShownToastForSession.current,
+            condition: hasShownToastForSession.current !== newUser.id,
+          });
         } else if (event === "SIGNED_OUT") {
           toast({
             title: "Signed out",
             description: "You have been successfully signed out.",
             variant: "default",
           });
+          hasShownToastForSession.current = null;
+          // Clear session storage when user signs out
+          if (previousUser.current) {
+            sessionStorage.removeItem(`toast_shown_${previousUser.current.id}`);
+          }
         }
       }
 
