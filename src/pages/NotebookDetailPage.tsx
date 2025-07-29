@@ -16,6 +16,7 @@ import {
   getStatusColorClass,
   getCurrentLocalDate,
 } from "@/lib/utils";
+import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { CreateBetDialog } from "@/components/CreateBetDialog";
 import { EditBetDialog } from "@/components/EditBetDialog";
 import { EditNotebookDialog } from "@/components/EditNotebookDialog";
@@ -137,6 +138,9 @@ export function NotebookDetailPage() {
     );
   }
 
+  // Get notebook color classes
+  const colorClasses = getNotebookColorClasses(notebook.color);
+
   // Calculate stats
   const completedBets = bets.filter((bet) =>
     ["won", "lost", "push"].includes(bet.status)
@@ -180,6 +184,7 @@ export function NotebookDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center space-x-3">
+            <div className={`w-4 h-4 rounded-full ${colorClasses.accent}`}></div>
             <h1 className="text-3xl font-bold text-text-primary">
               {notebook.name}
             </h1>
