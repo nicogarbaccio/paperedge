@@ -6,8 +6,15 @@ import {
   CardTitle,
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft, Plus, Loader2, Calendar, History } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  Plus,
+  Loader2,
+  Calendar,
+  History,
+  Trash2,
+} from "lucide-react";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useNotebook } from "@/hooks/useNotebook";
 import {
   formatCurrency,
@@ -20,6 +27,7 @@ import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { CreateBetDialog } from "@/components/CreateBetDialog";
 import { EditBetDialog } from "@/components/EditBetDialog";
 import { EditNotebookDialog } from "@/components/EditNotebookDialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CalendarView } from "@/components/CalendarView";
 import { useNotebooks } from "@/hooks/useNotebooks";
 import { useState } from "react";
@@ -37,7 +45,8 @@ export function NotebookDetailPage() {
     deleteBet,
     refetch,
   } = useNotebook(id || "");
-  const { updateNotebook } = useNotebooks();
+  const { updateNotebook, deleteNotebook } = useNotebooks();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [isCreateBetDialogOpen, setIsCreateBetDialogOpen] = useState(false);
   const [isEditBetDialogOpen, setIsEditBetDialogOpen] = useState(false);
@@ -47,6 +56,7 @@ export function NotebookDetailPage() {
   const [activeView, setActiveView] = useState<"history" | "calendar">(
     "history"
   );
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Form state for create bet dialog - persists across tab switches
   const [createBetFormData, setCreateBetFormData] = useState({
@@ -107,6 +117,24 @@ export function NotebookDetailPage() {
     });
     // Refresh the current notebook data to show the updates
     await refetch();
+  };
+
+  const handleDeleteNotebook = async () => {
+    try {
+      await deleteNotebook(id || "");
+      toast({
+        title: "Notebook deleted",
+        description: "Your notebook has been successfully deleted.",
+        variant: "success",
+      });
+      navigate("/notebooks");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete notebook",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -184,18 +212,30 @@ export function NotebookDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center space-x-3">
-            <div className={`w-4 h-4 rounded-full ${colorClasses.accent}`}></div>
+            <div
+              className={`w-4 h-4 rounded-full ${colorClasses.accent}`}
+            ></div>
             <h1 className="text-3xl font-bold text-text-primary">
               {notebook.name}
             </h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsEditNotebookDialogOpen(true)}
-              className="opacity-70 hover:opacity-100"
-            >
-              Edit
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditNotebookDialogOpen(true)}
+                className="opacity-70 hover:opacity-100"
+              >
+                Edit
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsDeleteDialogOpen(true)}
+                className="opacity-70 hover:opacity-100 text-loss"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           <p className="text-text-secondary">
             {notebook.description || "No description"}
@@ -420,6 +460,17 @@ export function NotebookDetailPage() {
         onOpenChange={setIsEditNotebookDialogOpen}
         notebook={notebook}
         onUpdateNotebook={handleUpdateNotebook}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Delete Notebook"
+        description="Are you sure you want to delete this notebook? This action cannot be undone and all associated bets will be permanently deleted."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={handleDeleteNotebook}
       />
     </div>
   );
