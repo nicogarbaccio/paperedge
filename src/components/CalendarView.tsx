@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils";
@@ -37,9 +37,6 @@ export function CalendarView({ bets }: CalendarViewProps) {
 
   // Calculate overall stats
   const stats = useMemo(() => {
-    const completedBets = bets.filter((bet) =>
-      ["won", "lost", "push"].includes(bet.status)
-    );
     const wonBets = bets.filter((bet) => bet.status === "won");
     const lostBets = bets.filter((bet) => bet.status === "lost");
     const pushBets = bets.filter((bet) => bet.status === "push");
@@ -65,7 +62,7 @@ export function CalendarView({ bets }: CalendarViewProps) {
     const month = currentDate.getMonth();
 
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
+
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay()); // Start from Sunday
 

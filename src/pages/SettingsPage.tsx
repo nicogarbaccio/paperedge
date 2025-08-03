@@ -42,7 +42,8 @@ export function SettingsPage() {
       });
       toast({
         title: "Password reset email sent",
-        description: "Check your inbox for instructions to reset your password.",
+        description:
+          "Check your inbox for instructions to reset your password.",
         variant: "success",
       });
     } catch (error: any) {
@@ -115,16 +116,6 @@ export function SettingsPage() {
               <p className="text-xs text-text-secondary">
                 Email address cannot be changed
               </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="userId">User ID</Label>
-              <Input
-                id="userId"
-                value={user?.id || ""}
-                disabled
-                className="bg-surface-secondary font-mono text-xs"
-              />
             </div>
 
             <div className="space-y-2">
@@ -257,28 +248,14 @@ export function SettingsPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium">Theme</h4>
+                  <h4 className="font-medium">Currency</h4>
                   <p className="text-sm text-text-secondary">
-                    Currently using Terminal Green dark theme
+                    Display currency for betting amounts
                   </p>
                 </div>
                 <Button variant="outline" size="sm" disabled>
-                  Dark
+                  USD ($)
                 </Button>
-              </div>
-
-              <div className="border-t border-border pt-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Currency</h4>
-                    <p className="text-sm text-text-secondary">
-                      Display currency for betting amounts
-                    </p>
-                  </div>
-                  <Button variant="outline" size="sm" disabled>
-                    USD ($)
-                  </Button>
-                </div>
               </div>
 
               <div className="border-t border-border pt-3">

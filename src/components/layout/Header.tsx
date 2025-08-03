@@ -26,7 +26,7 @@ export function Header() {
               PaperEdge
             </h1>
             <p className="text-xs text-text-secondary hidden sm:block">
-              Gain Your Edge Through Paper Trading
+              Gain Your Edge Through Paper Betting
             </p>
           </div>
         </Link>
