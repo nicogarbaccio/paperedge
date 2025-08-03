@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
 import { LogOut, User } from "lucide-react";
 import { Link } from "react-router-dom";
+import { MobileNav } from "./MobileNav";
 
 export function Header() {
   const { user } = useAuthStore();
@@ -14,22 +15,27 @@ export function Header() {
   return (
     <header className="border-b border-border bg-surface">
       <div className="flex h-16 items-center justify-between px-3 sm:px-6">
-        <Link
-          to="/dashboard"
-          className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
-        >
-          <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-surface-secondary flex items-center justify-center">
-            <span className="text-base sm:text-lg">📊</span>
+        <div className="flex items-center">
+          <div className="md:hidden mr-4">
+            <MobileNav />
           </div>
-          <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl font-bold text-text-primary">
-              PaperEdge
-            </h1>
-            <p className="text-xs text-text-secondary hidden sm:block">
-              Gain Your Edge Through Paper Betting
-            </p>
-          </div>
-        </Link>
+          <Link
+            to="/dashboard"
+            className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-surface-secondary flex items-center justify-center">
+              <span className="text-base sm:text-lg">📊</span>
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold text-text-primary">
+                PaperEdge
+              </h1>
+              <p className="text-xs text-text-secondary hidden sm:block">
+                Gain Your Edge Through Paper Betting
+              </p>
+            </div>
+          </Link>
+        </div>
 
         <div className="flex items-center space-x-2 sm:space-x-4">
           {user && (
