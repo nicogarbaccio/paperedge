@@ -11,12 +11,3 @@
   from = "/*"
   to = "/index.html"
   status = 200
-
-[context.production]
-  base = "main"
-
-[context.deploy-preview]
-  base = "main"
-
-[context.branch-deploy]
-  base = "main"
