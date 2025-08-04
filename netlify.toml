@@ -3,10 +3,19 @@
   publish = "dist"
   environment = { NODE_VERSION = "18" }
 
+[build.environment]
+  NPM_FLAGS = "--legacy-peer-deps"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-[build.environment]
-  NPM_FLAGS = "--legacy-peer-deps"
+[context.production]
+  base = "main"
+
+[context.deploy-preview]
+  base = "main"
+
+[context.branch-deploy]
+  base = "main"
