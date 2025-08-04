@@ -1,13 +1,10 @@
 [build]
-  command = "CI=false NODE_ENV=development npm run netlify-build"
+  command = "npm install && npm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "18"
-  NPM_VERSION = "9"
-  SHARP_IGNORE_GLOBAL_LIBVIPS = "1"
   CI = "false"
-  NODE_ENV = "development"
 
 [[redirects]]
   from = "/*"
