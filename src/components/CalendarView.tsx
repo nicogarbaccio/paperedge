@@ -11,6 +11,21 @@ interface CalendarViewProps {
 export function CalendarView({ bets }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
   // Calculate daily P&L from bets
   const dailyPL = useMemo(() => {
     const dailyData: Record<string, { profit: number; bets: Bet[] }> = {};
@@ -34,6 +49,34 @@ export function CalendarView({ bets }: CalendarViewProps) {
 
     return dailyData;
   }, [bets]);
+
+  // Calculate monthly profit for current month
+  const monthlyProfit = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    // Use the same logic as dailyPL calculation
+    let totalProfit = 0;
+
+    bets.forEach((bet) => {
+      // Parse date without timezone conversion by splitting the date string
+      const [betYearStr, betMonthStr, betDayStr] = bet.date.split("-");
+      const betYear = parseInt(betYearStr, 10);
+      const betMonth = parseInt(betMonthStr, 10) - 1; // Month is 0-indexed in JavaScript
+
+      // Only include bets from the current month being viewed
+      if (betYear === year && betMonth === month) {
+        if (bet.status === "won" && bet.return_amount) {
+          totalProfit += bet.return_amount;
+        } else if (bet.status === "lost") {
+          totalProfit -= bet.wager_amount;
+        }
+        // Push and pending bets don't affect P&L
+      }
+    });
+
+    return totalProfit;
+  }, [bets, currentDate]);
 
   // Calculate overall stats
   const stats = useMemo(() => {
@@ -102,21 +145,6 @@ export function CalendarView({ bets }: CalendarViewProps) {
     });
   };
 
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
   const dayNames = ["S", "M", "T", "W", "TH", "F", "S"];
 
   return (
@@ -124,12 +152,30 @@ export function CalendarView({ bets }: CalendarViewProps) {
       {/* Month Navigation */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <h2 className="text-2xl font-bold text-text-primary">
-            {monthNames[currentDate.getMonth()].toUpperCase()}
-          </h2>
-          <span className="text-2xl font-light text-text-secondary">
-            {currentDate.getFullYear()}
-          </span>
+          <div className="flex items-center space-x-3">
+            <h2 className="text-2xl font-bold text-text-primary">
+              {monthNames[currentDate.getMonth()].toUpperCase()}
+            </h2>
+            <span className="text-2xl font-light text-text-secondary">
+              {currentDate.getFullYear()}
+            </span>
+            {/* Monthly Profit Display */}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-text-secondary">•</span>
+              <span
+                className={`text-lg font-semibold ${
+                  monthlyProfit > 0
+                    ? "text-profit"
+                    : monthlyProfit < 0
+                    ? "text-loss"
+                    : "text-text-secondary"
+                }`}
+              >
+                {monthlyProfit > 0 ? "+" : ""}
+                {formatCurrency(monthlyProfit)}
+              </span>
+            </div>
+          </div>
         </div>
         <div className="flex items-center space-x-2">
           <Button
