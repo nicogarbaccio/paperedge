@@ -1,11 +1,12 @@
 [build]
   base = "/"
   publish = "dist"
-  command = "npm ci && npm run build"
+  command = "NODE_ENV=production npm ci && npm run build"
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_CONFIG_LEGACY_PEER_DEPS = "true"
+  VITE_USER_NODE_ENV = "production"
 
 [[redirects]]
   from = "/*"
