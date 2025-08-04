@@ -5,10 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit --skipLibCheck && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "netlify-build": "npm run build"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
