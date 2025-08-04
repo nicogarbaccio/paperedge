@@ -1,11 +1,11 @@
 [build]
-  command = "npm install && npm run build"
+  base = "/"
   publish = "dist"
+  command = "npm ci && npm run build"
 
 [build.environment]
   NODE_VERSION = "18"
-  CI = "false"
-  NODE_OPTIONS = "--max-old-space-size=4096"
+  NPM_CONFIG_LEGACY_PEER_DEPS = "true"
 
 [[redirects]]
   from = "/*"
