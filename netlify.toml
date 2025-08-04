@@ -1,12 +1,19 @@
+# Build settings
 [build]
-  command = "npm run build"
+  command = "npm run netlify-build"
   publish = "dist"
+
+# Production context
+[context.production]
   environment = { NODE_VERSION = "18" }
 
+# Environment variables
 [build.environment]
+  NODE_VERSION = "18"
   NPM_FLAGS = "--legacy-peer-deps"
   SHARP_IGNORE_GLOBAL_LIBVIPS = "1"
 
+# Redirects
 [[redirects]]
   from = "/*"
   to = "/index.html"
