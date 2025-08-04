@@ -10,4 +10,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-}) 
+  optimizeDeps: {
+    include: ['sharp'],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/sharp/, /node_modules/],
+    },
+  },
+})

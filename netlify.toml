@@ -5,6 +5,7 @@
 
 [build.environment]
   NPM_FLAGS = "--legacy-peer-deps"
+  SHARP_IGNORE_GLOBAL_LIBVIPS = "1"
 
 [[redirects]]
   from = "/*"
