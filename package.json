@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "netlify-build": "npm ci && npm run build"
+    "netlify-build": "npm install sharp && npm install && npm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",

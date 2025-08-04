@@ -1,17 +1,14 @@
-# Build settings
 [build]
   command = "CI=false npm run netlify-build"
   publish = "dist"
 
-# Environment variables
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "9"
-  NPM_FLAGS = "--no-optional --no-audit --no-fund"
   SHARP_IGNORE_GLOBAL_LIBVIPS = "1"
+  SHARP_LIBVIPS_VERSION = "8.14.2"
   CI = "false"
 
-# Redirects
 [[redirects]]
   from = "/*"
   to = "/index.html"
