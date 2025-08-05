@@ -22,6 +22,26 @@ try {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Utility function to get the correct redirect URL for auth
+export function getAuthRedirectUrl(path: string = '/dashboard'): string {
+  // In development, use localhost:5173 (Vite's default port)
+  if (import.meta.env.DEV) {
+    return `http://localhost:5173${path}`
+  }
+  
+  // In production, use the current origin
+  return `${window.location.origin}${path}`
+}
+
+// Debug function to log current redirect URL (remove in production)
+export function debugAuthRedirect(path: string = '/dashboard'): void {
+  if (import.meta.env.DEV) {
+    console.log('🔗 Auth Redirect URL:', getAuthRedirectUrl(path))
+    console.log('🌍 Current Origin:', window.location.origin)
+    console.log('🔧 Environment:', import.meta.env.MODE)
+  }
+}
+
 // Database types
 export interface Database {
   public: {

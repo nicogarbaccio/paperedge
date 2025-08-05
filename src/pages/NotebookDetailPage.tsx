@@ -32,6 +32,8 @@ import { CalendarView } from "@/components/CalendarView";
 import { useNotebooks } from "@/hooks/useNotebooks";
 import { useState } from "react";
 import { useToast } from "@/hooks/useToast";
+import { BetSearch, SearchFilters } from "@/components/BetSearch";
+import { useBetSearch } from "@/hooks/useBetSearch";
 
 export function NotebookDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -57,6 +59,18 @@ export function NotebookDetailPage() {
     "history"
   );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // Search filters state
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>({
+    query: "",
+    status: "",
+    dateFrom: "",
+    dateTo: "",
+    oddsMin: null,
+    oddsMax: null,
+    wagerMin: null,
+    wagerMax: null,
+  });
 
   // Form state for create bet dialog - persists across tab switches
   const [createBetFormData, setCreateBetFormData] = useState({
@@ -137,6 +151,26 @@ export function NotebookDetailPage() {
     }
   };
 
+  // Get filtered bets using the search hook
+  const { filteredBets, totalBets, filteredCount } = useBetSearch(
+    bets,
+    searchFilters
+  );
+
+  // Helper function to check if any filters are active
+  const hasActiveFilters = () => {
+    return (
+      searchFilters.query ||
+      searchFilters.status ||
+      searchFilters.dateFrom ||
+      searchFilters.dateTo ||
+      searchFilters.oddsMin !== null ||
+      searchFilters.oddsMax !== null ||
+      searchFilters.wagerMin !== null ||
+      searchFilters.wagerMax !== null
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -169,7 +203,7 @@ export function NotebookDetailPage() {
   // Get notebook color classes
   const colorClasses = getNotebookColorClasses(notebook.color);
 
-  // Calculate stats
+  // Calculate stats for all bets (not filtered)
   const completedBets = bets.filter((bet) =>
     ["won", "lost", "push"].includes(bet.status)
   );
@@ -359,6 +393,15 @@ export function NotebookDetailPage() {
             <CardDescription>All bets for this notebook</CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Search Component */}
+            <div className="mb-6">
+              <BetSearch
+                filters={searchFilters}
+                onFiltersChange={setSearchFilters}
+                totalBets={totalBets}
+                filteredCount={filteredCount}
+              />
+            </div>
             {bets.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-text-secondary mb-4">No bets recorded yet</p>
@@ -370,9 +413,32 @@ export function NotebookDetailPage() {
                   <span>Add Your First Bet</span>
                 </Button>
               </div>
+            ) : filteredBets.length === 0 && hasActiveFilters() ? (
+              <div className="text-center py-8">
+                <p className="text-text-secondary mb-4">
+                  No bets match your search criteria
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setSearchFilters({
+                      query: "",
+                      status: "",
+                      dateFrom: "",
+                      dateTo: "",
+                      oddsMin: null,
+                      oddsMax: null,
+                      wagerMin: null,
+                      wagerMax: null,
+                    })
+                  }
+                >
+                  Clear filters
+                </Button>
+              </div>
             ) : (
               <div className="space-y-4">
-                {bets.map((bet) => (
+                {filteredBets.map((bet) => (
                   <div
                     key={bet.id}
                     className="border border-border rounded-lg p-4 hover:bg-surface-secondary/30 transition-colors cursor-pointer"
@@ -433,7 +499,7 @@ export function NotebookDetailPage() {
         </Card>
       ) : (
         /* Calendar View */
-        <CalendarView bets={bets} />
+        <CalendarView bets={filteredBets} />
       )}
 
       {/* Create Bet Dialog */}

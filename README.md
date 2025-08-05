@@ -160,3 +160,24 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **PaperEdge** - Master your betting strategies without the risk. Start paper trading today! 🎯 
+
+## Development Setup
+
+### Authentication Configuration
+
+To run the app in development mode without redirect issues:
+
+1. **Configure Supabase Redirect URLs:**
+   - Go to your Supabase dashboard: https://supabase.com/dashboard/project/jirbuorgigynnohhlntw
+   - Navigate to **Authentication** → **URL Configuration**
+   - Add these URLs to the **Redirect URLs** section:
+     - `http://localhost:5173/**` (for development)
+     - `http://localhost:5173/dashboard` (specific redirect)
+     - Your production URL (if not already there)
+
+2. **Environment Variables:**
+   - Ensure your `.env` file contains the correct Supabase credentials
+   - The app will automatically use `http://localhost:5173` for redirects in development
+
+3. **Debug Information:**
+   - When you click "Continue with Google" in development, check the browser console for debug information about the redirect URL 
