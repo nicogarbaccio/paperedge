@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatCurrency, formatPercentage, getPLColorClass } from "@/lib/utils";
 import { useNotebooks } from "@/hooks/useNotebooks";
@@ -15,6 +15,7 @@ import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/useToast";
+import { NotebooksSkeleton } from "@/components/skeletons/NotebooksSkeleton";
 
 export function NotebooksPage() {
   const { notebooks, loading, error, createNotebook } = useNotebooks();
@@ -36,14 +37,7 @@ export function NotebooksPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center space-x-2 text-text-secondary">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading notebooks...</span>
-        </div>
-      </div>
-    );
+    return <NotebooksSkeleton />;
   }
 
   if (error) {

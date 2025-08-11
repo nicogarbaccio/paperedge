@@ -7,7 +7,13 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { ChevronLeft, ChevronRight, Plus, ArrowUpRight } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  ArrowUpRight,
+  HelpCircle,
+} from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useDailyPL } from "@/hooks/useDailyPL";
@@ -22,11 +28,14 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/Tooltip";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { TrackerSkeleton } from "@/components/skeletons/TrackerSkeleton";
 
 export function TrackerPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editDate, setEditDate] = useState<string | null>(null);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const { accounts, createAccount, updateAccount } = useAccounts();
   const [isEditAccountOpen, setIsEditAccountOpen] = useState(false);
@@ -48,10 +57,8 @@ export function TrackerPage() {
     return d;
   }, [gridStart]);
 
-  const { byDate, upsertValue, fetchAllTimeTotal, fetchYearTotal } = useDailyPL(
-    gridStart,
-    gridEnd
-  );
+  const { byDate, loading, upsertValue, fetchAllTimeTotal, fetchYearTotal } =
+    useDailyPL(gridStart, gridEnd);
   const [allTimeTotal, setAllTimeTotal] = useState<number>(0);
   const [yearTotal, setYearTotal] = useState<number>(0);
 
@@ -147,6 +154,10 @@ export function TrackerPage() {
     }
   }
 
+  if (loading) {
+    return <TrackerSkeleton />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -156,23 +167,31 @@ export function TrackerPage() {
               Bet Tracker
             </h1>
             <TooltipProvider>
-              <Tooltip>
+              <Tooltip open={isHelpOpen} onOpenChange={setIsHelpOpen}>
                 <TooltipTrigger asChild>
                   <Button
                     aria-label="How to use tracker"
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-7 w-7 p-0"
+                    className="h-8 w-8 p-0 rounded-full border-2 hover:bg-surface-secondary transition-colors"
+                    onClick={() => setIsHelpOpen((v) => !v)}
                   >
-                    ?
+                    <HelpCircle className="h-4 w-4 text-text-secondary" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <div className="text-sm leading-relaxed">
-                    - Add accounts (Main/Offshore) to track each book
-                    <br />- Click a date to enter daily profit/loss per account
-                    <br />- View totals: Monthly, YTD, and All-time
-                    <br />- Click an account to see its own calendar
+                <TooltipContent className="bg-surface border-2 border-border shadow-lg px-4 py-3 max-w-sm">
+                  <div className="text-sm leading-relaxed space-y-2">
+                    <div className="font-medium text-text-primary">
+                      How to use the Bet Tracker
+                    </div>
+                    <ul className="list-disc pl-4 space-y-1 text-text-secondary">
+                      <li>Add accounts (Main/Offshore) to track each book</li>
+                      <li>
+                        Click a date to enter daily profit/loss per account
+                      </li>
+                      <li>View totals: Monthly, YTD, and All-time</li>
+                      <li>Click an account to see its own calendar</li>
+                    </ul>
                   </div>
                 </TooltipContent>
               </Tooltip>

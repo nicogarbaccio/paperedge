@@ -14,6 +14,7 @@ import { useAccount, useAccounts } from "@/hooks/useAccounts";
 import { useDailyPL } from "@/hooks/useDailyPL";
 import { EditDailyPLDialog } from "@/components/tracker/EditDailyPLDialog";
 import EditAccountDialog from "@/components/tracker/EditAccountDialog";
+import { AccountTrackerSkeleton } from "@/components/skeletons/AccountTrackerSkeleton";
 
 export function AccountTrackerPage() {
   const { id } = useParams<{ id: string }>();
@@ -45,11 +46,13 @@ export function AccountTrackerPage() {
     return d;
   }, [gridStart]);
 
-  const { byDate, upsertValue, fetchAllTimeTotal, fetchYearTotal } = useDailyPL(
-    gridStart,
-    gridEnd,
-    id || undefined
-  );
+  const {
+    byDate,
+    loading: plLoading,
+    upsertValue,
+    fetchAllTimeTotal,
+    fetchYearTotal,
+  } = useDailyPL(gridStart, gridEnd, id || undefined);
   const [allTimeTotal, setAllTimeTotal] = useState<number>(0);
   const [yearTotal, setYearTotal] = useState<number>(0);
 
@@ -151,12 +154,8 @@ export function AccountTrackerPage() {
     }
   }
 
-  if (accountLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[300px] text-text-secondary">
-        Loading...
-      </div>
-    );
+  if (accountLoading || plLoading) {
+    return <AccountTrackerSkeleton />;
   }
   if (accountError || !account) {
     return <div className="text-loss">Account not found or error loading.</div>;

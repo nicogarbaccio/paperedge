@@ -13,6 +13,7 @@ import {
   cn,
 } from "@/lib/utils";
 import { useDashboard } from "@/hooks/useDashboard";
+import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
 import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -21,14 +22,7 @@ export function DashboardPage() {
   const { stats, recentBets, topNotebooks, loading, error } = useDashboard();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center space-x-2 text-text-secondary">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading dashboard...</span>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {

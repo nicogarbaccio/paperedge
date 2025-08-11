@@ -6,14 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import {
-  ArrowLeft,
-  Plus,
-  Loader2,
-  Calendar,
-  History,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, Plus, Calendar, History, Trash2 } from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useNotebook } from "@/hooks/useNotebook";
 import {
@@ -34,6 +27,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/useToast";
 import { BetSearch, SearchFilters } from "@/components/BetSearch";
 import { useBetSearch } from "@/hooks/useBetSearch";
+import { NotebookDetailSkeleton } from "@/components/skeletons/NotebookDetailSkeleton";
 
 export function NotebookDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -172,14 +166,7 @@ export function NotebookDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center space-x-2 text-text-secondary">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading notebook...</span>
-        </div>
-      </div>
-    );
+    return <NotebookDetailSkeleton />;
   }
 
   if (error || !notebook) {

@@ -7,6 +7,7 @@ import {
   Calculator,
   Calendar,
   Settings,
+  HelpCircle,
 } from "lucide-react";
 
 const navigation = [
@@ -39,6 +40,11 @@ const navigation = [
     name: "Settings",
     href: "/settings",
     icon: Settings,
+  },
+  {
+    name: "FAQs",
+    href: "/faqs",
+    icon: HelpCircle,
   },
 ];
 
