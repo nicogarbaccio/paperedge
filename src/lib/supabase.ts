@@ -116,6 +116,61 @@ export interface Database {
           updated_at?: string
         }
       }
+      accounts: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          kind: 'main' | 'offshore' | 'other'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          kind: 'main' | 'offshore' | 'other'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          kind?: 'main' | 'offshore' | 'other'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      account_daily_pl: {
+        Row: {
+          id: string
+          account_id: string
+          date: string
+          amount: number
+          note: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          account_id: string
+          date: string
+          amount: number
+          note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          account_id?: string
+          date?: string
+          amount?: number
+          note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       custom_columns: {
         Row: {
           id: string

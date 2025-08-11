@@ -444,9 +444,11 @@ export function NotebookDetailPage() {
                     className="border border-border rounded-lg p-4 hover:bg-surface-secondary/30 transition-colors cursor-pointer"
                     onClick={() => handleEditBet(bet)}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium">{bet.description}</h4>
-                      <div className="flex items-center space-x-2">
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-base sm:text-lg">
+                          {bet.description}
+                        </h4>
                         <span
                           className={`text-sm font-medium ${getStatusColorClass(
                             bet.status
@@ -455,32 +457,50 @@ export function NotebookDetailPage() {
                           {bet.status.charAt(0).toUpperCase() +
                             bet.status.slice(1)}
                         </span>
-                        {bet.status === "pending" && (
-                          <span className="text-xs text-text-secondary bg-accent/10 px-2 py-1 rounded">
+                      </div>
+                      {bet.status === "pending" && (
+                        <div className="flex justify-end">
+                          <span className="text-xs text-text-secondary bg-accent/10 px-2 py-1 rounded whitespace-nowrap">
                             Click to update
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <span className="text-text-secondary">Date: </span>
-                        <span>{formatDate(bet.date)}</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
+                      <div className="flex justify-between sm:block">
+                        <span className="text-text-secondary sm:inline">
+                          Date:{" "}
+                        </span>
+                        <span className="font-medium sm:font-normal">
+                          {formatDate(bet.date)}
+                        </span>
                       </div>
-                      <div>
-                        <span className="text-text-secondary">Odds: </span>
-                        <span>
+                      <div className="flex justify-between sm:block">
+                        <span className="text-text-secondary sm:inline">
+                          Odds:{" "}
+                        </span>
+                        <span className="font-medium sm:font-normal">
                           {bet.odds > 0 ? "+" : ""}
                           {bet.odds}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-text-secondary">Wager: </span>
-                        <span>{formatCurrency(bet.wager_amount)}</span>
+                      <div className="flex justify-between sm:block">
+                        <span className="text-text-secondary sm:inline">
+                          Wager:{" "}
+                        </span>
+                        <span className="font-medium sm:font-normal">
+                          {formatCurrency(bet.wager_amount)}
+                        </span>
                       </div>
-                      <div>
-                        <span className="text-text-secondary">Return: </span>
-                        <span className={getStatusColorClass(bet.status)}>
+                      <div className="flex justify-between sm:block">
+                        <span className="text-text-secondary sm:inline">
+                          Return:{" "}
+                        </span>
+                        <span
+                          className={`font-medium sm:font-normal ${getStatusColorClass(
+                            bet.status
+                          )}`}
+                        >
                           {bet.status === "won" && bet.return_amount
                             ? `+${formatCurrency(bet.return_amount)}`
                             : bet.status === "lost"

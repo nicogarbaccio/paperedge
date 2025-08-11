@@ -1,0 +1,352 @@
+import { useEffect, useMemo, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
+import { useAccount, useAccounts } from "@/hooks/useAccounts";
+import { useDailyPL } from "@/hooks/useDailyPL";
+import { EditDailyPLDialog } from "@/components/tracker/EditDailyPLDialog";
+import EditAccountDialog from "@/components/tracker/EditAccountDialog";
+
+export function AccountTrackerPage() {
+  const { id } = useParams<{ id: string }>();
+  const {
+    account,
+    loading: accountLoading,
+    error: accountError,
+    refetch,
+  } = useAccount(id || null);
+
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [editDate, setEditDate] = useState<string | null>(null);
+  const [isEditAccountOpen, setIsEditAccountOpen] = useState(false);
+  const { updateAccount } = useAccounts();
+
+  const monthStart = useMemo(
+    () => new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+    [currentDate]
+  );
+  const firstDayOffset = monthStart.getDay();
+  const gridStart = useMemo(() => {
+    const d = new Date(monthStart);
+    d.setDate(d.getDate() - firstDayOffset);
+    return d;
+  }, [monthStart, firstDayOffset]);
+  const gridEnd = useMemo(() => {
+    const d = new Date(gridStart);
+    d.setDate(d.getDate() + 41);
+    return d;
+  }, [gridStart]);
+
+  const { byDate, upsertValue, fetchAllTimeTotal, fetchYearTotal } = useDailyPL(
+    gridStart,
+    gridEnd,
+    id || undefined
+  );
+  const [allTimeTotal, setAllTimeTotal] = useState<number>(0);
+  const [yearTotal, setYearTotal] = useState<number>(0);
+
+  useEffect(() => {
+    if (id) {
+      fetchAllTimeTotal(id)
+        .then(setAllTimeTotal)
+        .catch(() => setAllTimeTotal(0));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      const year = currentDate.getFullYear();
+      fetchYearTotal(year, id)
+        .then(setYearTotal)
+        .catch(() => setYearTotal(0));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, currentDate.getFullYear()]);
+
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const dayNames = ["S", "M", "T", "W", "TH", "F", "S"];
+
+  const monthlyTotal = useMemo(() => {
+    let total = 0;
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(gridStart);
+      d.setDate(d.getDate() + i);
+      const key = d.toISOString().split("T")[0];
+      const sameMonth = d.getMonth() === currentDate.getMonth();
+      if (sameMonth) total += byDate[key]?.total ?? 0;
+    }
+    return total;
+  }, [byDate, gridStart, currentDate]);
+
+  function navigateMonth(dir: "prev" | "next") {
+    setCurrentDate((prev) => {
+      const n = new Date(prev);
+      n.setMonth(n.getMonth() + (dir === "prev" ? -1 : 1));
+      return n;
+    });
+  }
+
+  const days = useMemo(() => {
+    const list: Array<{
+      date: Date;
+      key: string;
+      isCurrentMonth: boolean;
+      total: number;
+    }> = [];
+    const start = new Date(gridStart);
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const key = d.toISOString().split("T")[0];
+      list.push({
+        date: d,
+        key,
+        isCurrentMonth: d.getMonth() === currentDate.getMonth(),
+        total: byDate[key]?.total ?? 0,
+      });
+    }
+    return list;
+  }, [gridStart, currentDate, byDate]);
+
+  async function handleSaveDaily(
+    updates: Array<{ accountId: string; amount: number }>
+  ) {
+    if (!editDate || !id) return;
+    // Only save for this account id
+    const target = updates.find((u) => u.accountId === id);
+    if (target) {
+      await upsertValue(id, editDate, target.amount);
+      try {
+        const [all, ytd] = await Promise.all([
+          fetchAllTimeTotal(id),
+          fetchYearTotal(currentDate.getFullYear(), id),
+        ]);
+        setAllTimeTotal(all);
+        setYearTotal(ytd);
+      } catch {
+        // ignore transient errors when refreshing totals
+      }
+    }
+  }
+
+  if (accountLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[300px] text-text-secondary">
+        Loading...
+      </div>
+    );
+  }
+  if (accountError || !account) {
+    return <div className="text-loss">Account not found or error loading.</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link
+            to="/tracker"
+            className="text-text-secondary hover:text-text-primary inline-flex items-center"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back
+          </Link>
+          <h1 className="text-3xl font-bold text-text-primary">
+            {account.name}
+          </h1>
+          <span className="text-sm capitalize text-text-secondary">
+            {account.kind}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditAccountOpen(true)}
+          >
+            Edit
+          </Button>
+        </div>
+        <div className="flex items-center gap-4">
+          <div
+            className={`text-sm font-medium ${
+              yearTotal > 0
+                ? "text-profit"
+                : yearTotal < 0
+                ? "text-loss"
+                : "text-text-secondary"
+            }`}
+          >
+            YTD: {yearTotal > 0 ? "+" : ""}
+            {formatCurrency(yearTotal)}
+          </div>
+          <div
+            className={`text-sm font-medium ${
+              allTimeTotal > 0
+                ? "text-profit"
+                : allTimeTotal < 0
+                ? "text-loss"
+                : "text-text-secondary"
+            }`}
+          >
+            All-time: {allTimeTotal > 0 ? "+" : ""}
+            {formatCurrency(allTimeTotal)}
+          </div>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <h2 className="text-2xl font-bold">
+              {monthNames[currentDate.getMonth()].toUpperCase()}
+            </h2>
+            <span className="text-2xl font-light text-text-secondary">
+              {currentDate.getFullYear()}
+            </span>
+            <span
+              className={`text-lg font-semibold ${
+                monthlyTotal > 0
+                  ? "text-profit"
+                  : monthlyTotal < 0
+                  ? "text-loss"
+                  : "text-text-secondary"
+              }`}
+            >
+              {monthlyTotal > 0 ? "+" : ""}
+              {formatCurrency(monthlyTotal)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigateMonth("prev")}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigateMonth("next")}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-surface rounded-lg overflow-hidden border border-border">
+            <div className="grid grid-cols-7 border-b border-border bg-surface-secondary">
+              {dayNames.map((d) => (
+                <div
+                  key={d}
+                  className="p-3 text-center text-sm font-medium text-text-secondary border-r border-border last:border-r-0"
+                >
+                  {d}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7">
+              {days.map((d, idx) => {
+                const isRightmost = (idx + 1) % 7 === 0;
+                const isBottomRow = idx >= 35;
+                return (
+                  <div
+                    key={d.key}
+                    className={`
+                      h-24 w-full p-2 flex flex-col border-border relative
+                      ${!isRightmost ? "border-r" : ""}
+                      ${!isBottomRow ? "border-b" : ""}
+                      ${
+                        d.isCurrentMonth
+                          ? d.total !== 0
+                            ? d.total > 0
+                              ? "bg-profit/10 hover:bg-profit/20"
+                              : "bg-loss/10 hover:bg-loss/20"
+                            : "bg-surface hover:bg-surface-secondary"
+                          : "bg-background"
+                      }
+                      transition-colors cursor-pointer
+                    `}
+                    onClick={() => setEditDate(d.key)}
+                  >
+                    <div
+                      className={`text-sm font-medium ${
+                        d.isCurrentMonth
+                          ? "text-text-primary"
+                          : "text-text-secondary opacity-50"
+                      }`}
+                    >
+                      {d.date.getDate()}
+                    </div>
+                    {d.isCurrentMonth && (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div
+                          className={`text-sm font-bold ${
+                            d.total > 0
+                              ? "text-profit"
+                              : d.total < 0
+                              ? "text-loss"
+                              : "text-text-secondary"
+                          }`}
+                        >
+                          {d.total > 0 ? "+" : ""}
+                          {formatCurrency(d.total)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <CardDescription className="mt-3">
+            Click any date to enter or edit P/L for this account.
+          </CardDescription>
+        </CardContent>
+      </Card>
+
+      <EditDailyPLDialog
+        open={!!editDate}
+        onOpenChange={(v) => !v && setEditDate(null)}
+        date={editDate || ""}
+        accounts={account ? [account] : []}
+        valuesForDate={editDate ? byDate[editDate] : undefined}
+        onSave={handleSaveDaily}
+      />
+
+      <EditAccountDialog
+        open={isEditAccountOpen}
+        onOpenChange={(v) => setIsEditAccountOpen(v)}
+        account={account}
+        onUpdate={async (accId, updates) => {
+          await updateAccount(accId, updates);
+          await refetch();
+        }}
+      />
+    </div>
+  );
+}
+
+export default AccountTrackerPage;

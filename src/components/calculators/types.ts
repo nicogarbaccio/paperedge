@@ -72,4 +72,68 @@ export interface ArbitrageValidationErrors {
   originalBet?: string;
   originalOdds?: string;
   general?: string;
+}
+
+// Kelly Criterion Calculator Types
+export interface KellyInputs {
+  bettingBookLine: string;
+  bettingBookOdds: string;
+  sharpBookLine: string;
+  sharpBookOdds: string;
+  bankroll: number;
+  maxBetPercentage: number;
+  kellyFraction: number; // 0.25 = 25%, 0.5 = 50%, etc.
+}
+
+export interface KellyResult {
+  bettingBookImpliedProb: number;
+  sharpBookImpliedProb: number;
+  edge: number;
+  kellyPercentage: number;
+  recommendedBetAmount: number;
+  finalBetAmount: number;
+  expectedValue: number;
+  isPositiveEdge: boolean;
+  maxBetReached: boolean;
+}
+
+export interface KellyValidationErrors {
+  bettingBookLine?: string;
+  bettingBookOdds?: string;
+  sharpBookLine?: string;
+  sharpBookOdds?: string;
+  bankroll?: string;
+  maxBetPercentage?: string;
+  kellyFraction?: string;
+  general?: string;
 } 
+
+// Line Discrepancy EV Calculator Types
+export interface LineDiscrepancyInputs {
+  mode: 'spread' | 'total';
+  yourLine: number;
+  yourOdds: string;
+  sharpLine: number;
+  sharpOdds: string;
+  totalSide?: 'over' | 'under'; // required when mode === 'total'
+}
+
+export interface LineDiscrepancyResult {
+  yourImpliedProb: number; // from your odds (% 0-100)
+  sharpProbAtSharpLine: number; // from sharp odds at sharp line (% 0-100)
+  modeledProbAtYourLine: number; // modeled probability at your line using normal model (% 0-100)
+  edge: number; // modeledProb - yourImpliedProb (% points)
+  expectedValuePerDollar: number; // EV for a $1 stake
+  decimalOdds: number; // your odds in decimal
+  kellyPercentage: number; // full Kelly % of bankroll (0-100)
+  quarterKellyUnits: number; // in units where 1.0 QK = 1 unit
+}
+
+export interface LineDiscrepancyValidationErrors {
+  yourLine?: string;
+  yourOdds?: string;
+  sharpLine?: string;
+  sharpOdds?: string;
+  totalSide?: string;
+  general?: string;
+}

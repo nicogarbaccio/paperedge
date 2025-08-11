@@ -15,6 +15,7 @@ import {
 import { useDashboard } from "@/hooks/useDashboard";
 import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function DashboardPage() {
   const { stats, recentBets, topNotebooks, loading, error } = useDashboard();
@@ -243,12 +244,18 @@ export function DashboardPage() {
                 {topNotebooks.map((notebook) => {
                   const colorClasses = getNotebookColorClasses(notebook.color);
                   return (
-                    <div
+                    <Link
                       key={notebook.id}
-                      className="flex items-center justify-between"
+                      to={`/notebooks/${notebook.id}`}
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-surface-secondary/30 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
-                        <div className={cn("w-2 h-2 rounded-full", colorClasses.accent)} />
+                        <div
+                          className={cn(
+                            "w-2 h-2 rounded-full",
+                            colorClasses.accent
+                          )}
+                        />
                         <div>
                           <p className="text-sm font-medium">{notebook.name}</p>
                           <p className="text-xs text-text-secondary">
@@ -274,7 +281,7 @@ export function DashboardPage() {
                           {formatPercentage(notebook.roi)} ROI
                         </p>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>

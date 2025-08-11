@@ -5,6 +5,7 @@ import {
   BookOpen,
   BarChart3,
   Calculator,
+  Calendar,
   Settings,
 } from "lucide-react";
 
@@ -28,6 +29,11 @@ const navigation = [
     name: "Calculators",
     href: "/calculators",
     icon: Calculator,
+  },
+  {
+    name: "Tracker",
+    href: "/tracker",
+    icon: Calendar,
   },
   {
     name: "Settings",
