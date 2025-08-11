@@ -27,9 +27,22 @@ export interface Bet {
   updated_at: string
 }
 
+export interface CustomColumn {
+  id: string
+  notebook_id: string
+  column_name: string
+  column_type: 'text' | 'number' | 'select'
+  select_options: string[] | null
+  created_at: string
+}
+
+export type BetCustomMap = Record<string, Record<string, string>>
+
 export function useNotebook(notebookId: string) {
   const [notebook, setNotebook] = useState<NotebookDetail | null>(null)
   const [bets, setBets] = useState<Bet[]>([])
+  const [customColumns, setCustomColumns] = useState<CustomColumn[]>([])
+  const [betCustomData, setBetCustomData] = useState<BetCustomMap>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuthStore()
@@ -64,22 +77,85 @@ export function useNotebook(notebookId: string) {
       if (betsError) throw betsError
 
       setNotebook(notebookData)
-      setBets(betsData || [])
+      const notebookBets = betsData || []
+      setBets(notebookBets)
+
+      // Fetch custom columns for this notebook
+      const { data: columnsData, error: columnsError } = await supabase
+        .from('custom_columns')
+        .select('*')
+        .eq('notebook_id', notebookId)
+        .order('created_at', { ascending: true })
+      if (columnsError) throw columnsError
+
+      let columns = columnsData || []
+
+      // Auto-seed recommended fields if none exist yet for this notebook
+      if (columns.length === 0) {
+        const { error: seedError } = await supabase.rpc('add_recommended_fields', {
+          target_notebook: notebookId
+        })
+        if (seedError) throw seedError
+
+        const { data: seededColumns, error: seededFetchError } = await supabase
+          .from('custom_columns')
+          .select('*')
+          .eq('notebook_id', notebookId)
+          .order('created_at', { ascending: true })
+        if (seededFetchError) throw seededFetchError
+        columns = seededColumns || []
+      }
+
+      // Dedupe by column_name (case-insensitive) as a guard
+      const seenNames = new Set<string>()
+      const dedupedColumns: CustomColumn[] = []
+      for (const col of columns) {
+        const key = (col.column_name || '').trim().toLowerCase()
+        if (key && !seenNames.has(key)) {
+          seenNames.add(key)
+          dedupedColumns.push(col)
+        }
+      }
+      setCustomColumns(dedupedColumns)
+
+      // Fetch custom data for bets
+      if ((notebookBets?.length || 0) > 0) {
+        const betIds = notebookBets.map(b => b.id)
+        const { data: customDataRows, error: customDataError } = await supabase
+          .from('bet_custom_data')
+          .select('*')
+          .in('bet_id', betIds)
+        if (customDataError) throw customDataError
+
+        const map: BetCustomMap = {}
+        for (const row of customDataRows || []) {
+          if (!map[row.bet_id]) map[row.bet_id] = {}
+          map[row.bet_id][row.column_id] = row.value
+        }
+        setBetCustomData(map)
+      } else {
+        setBetCustomData({})
+      }
     } catch (error: any) {
       setError(error.message)
       setNotebook(null)
       setBets([])
+      setCustomColumns([])
+      setBetCustomData({})
     } finally {
       setLoading(false)
     }
   }
 
-  const addBet = async (betData: {
-    date: string
-    description: string
-    odds: number
-    wager_amount: number
-  }) => {
+  const addBet = async (
+    betData: {
+      date: string
+      description: string
+      odds: number
+      wager_amount: number
+    },
+    customData?: Record<string, string>
+  ) => {
     if (!user || !user.id || !notebookId) throw new Error('User not authenticated or notebook not found')
 
     try {
@@ -96,6 +172,19 @@ export function useNotebook(notebookId: string) {
         .single()
 
       if (error) throw error
+
+      // If there is custom data, insert it for the created bet
+      if (data && customData && Object.keys(customData).length > 0) {
+        const rows = Object.entries(customData)
+          .filter(([, v]) => v !== undefined && v !== null && `${v}`.trim() !== '')
+          .map(([columnId, value]) => ({ bet_id: data.id, column_id: columnId, value: `${value}` }))
+        if (rows.length > 0) {
+          const { error: cdError } = await supabase
+            .from('bet_custom_data')
+            .upsert(rows, { onConflict: 'bet_id,column_id' })
+          if (cdError) throw cdError
+        }
+      }
 
       // Refresh data
       await fetchNotebook()
@@ -125,6 +214,73 @@ export function useNotebook(notebookId: string) {
     }
   }
 
+  const upsertBetCustomData = async (betId: string, customData: Record<string, string>) => {
+    try {
+      const rows = Object.entries(customData)
+        .map(([columnId, value]) => ({ bet_id: betId, column_id: columnId, value: `${value ?? ''}` }))
+      if (rows.length === 0) return
+      const { error } = await supabase
+        .from('bet_custom_data')
+        .upsert(rows, { onConflict: 'bet_id,column_id' })
+      if (error) throw error
+      await fetchNotebook()
+    } catch (error: any) {
+      throw new Error(error.message)
+    }
+  }
+
+  const createColumn = async (input: { column_name: string; column_type: 'text' | 'number' | 'select'; select_options?: string[] }) => {
+    try {
+      const { error } = await supabase
+        .from('custom_columns')
+        .insert([{ notebook_id: notebookId, column_name: input.column_name, column_type: input.column_type, select_options: input.select_options ?? null }])
+      if (error) throw error
+      await fetchNotebook()
+    } catch (error: any) {
+      throw new Error(error.message)
+    }
+  }
+
+  const updateColumn = async (columnId: string, updates: Partial<CustomColumn>) => {
+    try {
+      const { error } = await supabase
+        .from('custom_columns')
+        .update({
+          column_name: updates.column_name,
+          column_type: updates.column_type,
+          select_options: updates.select_options ?? null
+        })
+        .eq('id', columnId)
+      if (error) throw error
+      await fetchNotebook()
+    } catch (error: any) {
+      throw new Error(error.message)
+    }
+  }
+
+  const deleteColumn = async (columnId: string) => {
+    try {
+      const { error } = await supabase
+        .from('custom_columns')
+        .delete()
+        .eq('id', columnId)
+      if (error) throw error
+      await fetchNotebook()
+    } catch (error: any) {
+      throw new Error(error.message)
+    }
+  }
+
+  const addRecommendedFields = async () => {
+    try {
+      const { error } = await supabase.rpc('add_recommended_fields', { target_notebook: notebookId })
+      if (error) throw error
+      await fetchNotebook()
+    } catch (error: any) {
+      throw new Error(error.message)
+    }
+  }
+
   const deleteBet = async (betId: string) => {
     try {
       const { error } = await supabase
@@ -148,11 +304,18 @@ export function useNotebook(notebookId: string) {
   return {
     notebook,
     bets,
+    customColumns,
+    betCustomData,
     loading,
     error,
     addBet,
     updateBet,
     deleteBet,
+    upsertBetCustomData,
+    createColumn,
+    updateColumn,
+    deleteColumn,
+    addRecommendedFields,
     refetch: fetchNotebook
   }
 } 

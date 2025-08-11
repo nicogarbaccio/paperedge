@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { capitalizeFirst } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -22,12 +23,15 @@ import { formatCurrency, getCurrentLocalDate } from "@/lib/utils";
 interface CreateBetDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateBet: (data: {
-    date: string;
-    description: string;
-    odds: number;
-    wager_amount: number;
-  }) => Promise<void>;
+  onCreateBet: (
+    data: {
+      date: string;
+      description: string;
+      odds: number;
+      wager_amount: number;
+    },
+    customData?: Record<string, string>
+  ) => Promise<void>;
   formData: {
     date: string;
     description: string;
@@ -42,6 +46,16 @@ interface CreateBetDialogProps {
       wager_amount: number;
     }>
   >;
+  customColumns?: Array<{
+    id: string;
+    column_name: string;
+    column_type: "text" | "number" | "select";
+    select_options: string[] | null;
+  }>;
+  customValues?: Record<string, string>;
+  setCustomValues?: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  >;
 }
 
 export function CreateBetDialog({
@@ -50,9 +64,14 @@ export function CreateBetDialog({
   onCreateBet,
   formData,
   setFormData,
+  customColumns = [],
+  customValues,
+  setCustomValues,
 }: CreateBetDialogProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAdditional, setShowAdditional] = useState(false);
+  const [otherMode, setOtherMode] = useState<Record<string, boolean>>({});
 
   // Calculate potential return and profit for display
   const potentialProfit =
@@ -92,12 +111,15 @@ export function CreateBetDialog({
       setLoading(true);
       setError(null);
 
-      await onCreateBet({
-        date: formData.date,
-        description: formData.description.trim(),
-        odds: formData.odds,
-        wager_amount: formData.wager_amount,
-      });
+      await onCreateBet(
+        {
+          date: formData.date,
+          description: formData.description.trim(),
+          odds: formData.odds,
+          wager_amount: formData.wager_amount,
+        },
+        customValues
+      );
 
       // Form reset is handled by parent component
       onOpenChange(false);
@@ -117,6 +139,7 @@ export function CreateBetDialog({
         odds: 0,
         wager_amount: 0,
       });
+      if (setCustomValues) setCustomValues({});
       setError(null);
       onOpenChange(false);
     }
@@ -141,7 +164,10 @@ export function CreateBetDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 max-h-[70vh] overflow-y-auto pr-1"
+        >
           <div className="space-y-2">
             <Label htmlFor="date">Date *</Label>
             <DateInput
@@ -232,6 +258,120 @@ export function CreateBetDialog({
               </p>
             )}
           </div>
+
+          {customColumns?.length > 0 && (
+            <div className="space-y-2">
+              <button
+                type="button"
+                className="text-sm text-accent underline"
+                onClick={() => setShowAdditional((s) => !s)}
+              >
+                {showAdditional ? "Hide" : "Show"} additional fields
+              </button>
+              {showAdditional && (
+                <div className="space-y-3">
+                  {customColumns
+                    .filter(
+                      (col, idx, arr) =>
+                        arr.findIndex(
+                          (c) =>
+                            c.column_name.toLowerCase() ===
+                            col.column_name.toLowerCase()
+                        ) === idx
+                    )
+                    .map((col) => {
+                      const options = col.select_options || [];
+                      const currentVal = customValues?.[col.id] ?? "";
+                      const isInOptions = options.includes(currentVal);
+                      const isOtherSelected =
+                        otherMode[col.id] || (!!currentVal && !isInOptions);
+                      const selectValue = isOtherSelected
+                        ? "__OTHER__"
+                        : currentVal;
+
+                      return (
+                        <div key={col.id} className="space-y-1">
+                          <Label htmlFor={`col-${col.id}`}>
+                            {capitalizeFirst(col.column_name)}
+                          </Label>
+                          {col.column_type === "select" ? (
+                            <>
+                              <select
+                                id={`col-${col.id}`}
+                                className="w-full rounded-md border border-border bg-surface p-2 text-sm"
+                                disabled={loading}
+                                value={selectValue}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (value === "__OTHER__") {
+                                    setOtherMode((prev) => ({
+                                      ...prev,
+                                      [col.id]: true,
+                                    }));
+                                    // Keep existing text if any; otherwise empty string
+                                    setCustomValues?.((prev) => ({
+                                      ...(prev || {}),
+                                      [col.id]: prev?.[col.id] ?? "",
+                                    }));
+                                  } else {
+                                    setOtherMode((prev) => ({
+                                      ...prev,
+                                      [col.id]: false,
+                                    }));
+                                    setCustomValues?.((prev) => ({
+                                      ...(prev || {}),
+                                      [col.id]: value,
+                                    }));
+                                  }
+                                }}
+                              >
+                                <option value="">Select...</option>
+                                {options.map((opt) => (
+                                  <option key={opt} value={opt}>
+                                    {opt}
+                                  </option>
+                                ))}
+                                <option value="__OTHER__">Other…</option>
+                              </select>
+                              {isOtherSelected && (
+                                <Input
+                                  id={`col-${col.id}-other`}
+                                  placeholder={`Enter ${col.column_name}`}
+                                  value={currentVal}
+                                  onChange={(e) =>
+                                    setCustomValues?.((prev) => ({
+                                      ...(prev || {}),
+                                      [col.id]: e.target.value,
+                                    }))
+                                  }
+                                  disabled={loading}
+                                  className="mt-2"
+                                />
+                              )}
+                            </>
+                          ) : (
+                            <Input
+                              id={`col-${col.id}`}
+                              type={
+                                col.column_type === "number" ? "number" : "text"
+                              }
+                              value={currentVal}
+                              onChange={(e) =>
+                                setCustomValues?.((prev) => ({
+                                  ...(prev || {}),
+                                  [col.id]: e.target.value,
+                                }))
+                              }
+                              disabled={loading}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          )}
 
           {error && (
             <div className="text-sm text-loss bg-loss/10 p-3 rounded-md">

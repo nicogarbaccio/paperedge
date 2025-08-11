@@ -95,6 +95,14 @@ export function getStatusColorClass(status: string): string {
 }
 
 /**
+ * Capitalize the first letter of a string (leaves the rest unchanged)
+ */
+export function capitalizeFirst(value: string): string {
+  if (!value) return value
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+/**
  * Debounce function
  */
 export function debounce<T extends (...args: any[]) => any>(

@@ -6,7 +6,14 @@ import {
   CardTitle,
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft, Plus, Calendar, History, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Calendar,
+  History,
+  Trash2,
+  Pencil,
+} from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useNotebook } from "@/hooks/useNotebook";
 import {
@@ -34,11 +41,14 @@ export function NotebookDetailPage() {
   const {
     notebook,
     bets,
+    customColumns,
+    betCustomData,
     loading,
     error,
     addBet,
     updateBet,
     deleteBet,
+    upsertBetCustomData,
     refetch,
   } = useNotebook(id || "");
   const { updateNotebook, deleteNotebook } = useNotebooks();
@@ -73,6 +83,9 @@ export function NotebookDetailPage() {
     odds: 0,
     wager_amount: 0,
   });
+  const [createBetCustomValues, setCreateBetCustomValues] = useState<
+    Record<string, string>
+  >({});
 
   const handleCreateBet = async (data: {
     date: string;
@@ -80,7 +93,7 @@ export function NotebookDetailPage() {
     odds: number;
     wager_amount: number;
   }) => {
-    await addBet(data);
+    await addBet(data, createBetCustomValues);
     toast({
       title: "Bet added",
       description: `${data.description} has been added to your notebook.`,
@@ -93,6 +106,7 @@ export function NotebookDetailPage() {
       odds: 0,
       wager_amount: 0,
     });
+    setCreateBetCustomValues({});
   };
 
   const handleEditBet = (bet: any) => {
@@ -241,20 +255,24 @@ export function NotebookDetailPage() {
             </h1>
             <div className="flex items-center space-x-2">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
+                aria-label="Edit notebook"
                 onClick={() => setIsEditNotebookDialogOpen(true)}
-                className="opacity-70 hover:opacity-100"
+                className="gap-1 rounded-full border-border/60 text-text-primary/80 hover:text-text-primary hover:bg-surface-secondary/60 focus-visible:ring-2 focus-visible:ring-accent/40"
               >
-                Edit
+                <Pencil className="h-3.5 w-3.5 opacity-80" />
+                <span className="hidden sm:inline">Edit</span>
               </Button>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
+                aria-label="Delete notebook"
                 onClick={() => setIsDeleteDialogOpen(true)}
-                className="opacity-70 hover:opacity-100 text-loss"
+                className="gap-1 rounded-full border-loss/40 text-loss hover:bg-loss/10 hover:text-loss focus-visible:ring-2 focus-visible:ring-loss/30"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Delete</span>
               </Button>
             </div>
           </div>
@@ -445,6 +463,32 @@ export function NotebookDetailPage() {
                             bet.status.slice(1)}
                         </span>
                       </div>
+                      {customColumns && customColumns.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {customColumns
+                            // guard: dedupe by name at render too
+                            .filter(
+                              (col, idx, arr) =>
+                                arr.findIndex(
+                                  (c) =>
+                                    c.column_name.toLowerCase() ===
+                                    col.column_name.toLowerCase()
+                                ) === idx
+                            )
+                            .map((col) => {
+                              const value = betCustomData[bet.id]?.[col.id];
+                              if (!value) return null;
+                              return (
+                                <span
+                                  key={col.id}
+                                  className="text-xs bg-surface-secondary/50 text-text-secondary px-2 py-0.5 rounded"
+                                >
+                                  {value}
+                                </span>
+                              );
+                            })}
+                        </div>
+                      )}
                       {bet.status === "pending" && (
                         <div className="flex justify-end">
                           <span className="text-xs text-text-secondary bg-accent/10 px-2 py-1 rounded whitespace-nowrap">
@@ -516,6 +560,9 @@ export function NotebookDetailPage() {
         onCreateBet={handleCreateBet}
         formData={createBetFormData}
         setFormData={setCreateBetFormData}
+        customColumns={customColumns}
+        customValues={createBetCustomValues}
+        setCustomValues={setCreateBetCustomValues}
       />
 
       {/* Edit Bet Dialog */}
@@ -525,6 +572,11 @@ export function NotebookDetailPage() {
         bet={selectedBet}
         onUpdateBet={handleUpdateBet}
         onDeleteBet={handleDeleteBet}
+        customColumns={customColumns}
+        initialCustomValues={
+          selectedBet ? betCustomData[selectedBet.id] || {} : {}
+        }
+        onUpsertBetCustomData={upsertBetCustomData}
       />
 
       {/* Edit Notebook Dialog */}

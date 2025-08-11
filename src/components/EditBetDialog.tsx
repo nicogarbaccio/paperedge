@@ -17,7 +17,7 @@ import {
   calculatePayout,
   isValidAmericanOdds,
 } from "@/lib/betting";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, capitalizeFirst } from "@/lib/utils";
 
 interface Bet {
   id: string;
@@ -35,6 +35,17 @@ interface EditBetDialogProps {
   bet: Bet | null;
   onUpdateBet: (betId: string, updates: Partial<Bet>) => Promise<void>;
   onDeleteBet: (betId: string) => Promise<void>;
+  customColumns?: Array<{
+    id: string;
+    column_name: string;
+    column_type: "text" | "number" | "select";
+    select_options: string[] | null;
+  }>;
+  initialCustomValues?: Record<string, string>;
+  onUpsertBetCustomData?: (
+    betId: string,
+    customValues: Record<string, string>
+  ) => Promise<void>;
 }
 
 export function EditBetDialog({
@@ -43,6 +54,9 @@ export function EditBetDialog({
   bet,
   onUpdateBet,
   onDeleteBet,
+  customColumns = [],
+  initialCustomValues = {},
+  onUpsertBetCustomData,
 }: EditBetDialogProps) {
   const [formData, setFormData] = useState({
     date: "",
@@ -55,6 +69,9 @@ export function EditBetDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [customValues, setCustomValues] =
+    useState<Record<string, string>>(initialCustomValues);
+  const [otherMode, setOtherMode] = useState<Record<string, boolean>>({});
 
   // Calculate expected return and profit based on current odds and wager
   const expectedProfit =
@@ -79,8 +96,9 @@ export function EditBetDialog({
       });
       setError(null);
       setShowDeleteConfirm(false);
+      setCustomValues(initialCustomValues || {});
     }
-  }, [bet, open]);
+  }, [bet, open, initialCustomValues]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,6 +155,9 @@ export function EditBetDialog({
       }
 
       await onUpdateBet(bet.id, updates);
+      if (onUpsertBetCustomData) {
+        await onUpsertBetCustomData(bet.id, customValues);
+      }
       onOpenChange(false);
     } catch (error: any) {
       setError(error.message || "Failed to update bet");
@@ -204,7 +225,10 @@ export function EditBetDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 max-h-[70vh] overflow-y-auto pr-1"
+        >
           <div className="space-y-2">
             <Label htmlFor="date">Date *</Label>
             <DateInput
@@ -387,6 +411,111 @@ export function EditBetDialog({
                 {" "}
                 (profit: {formatCurrency(expectedProfit)})
               </span>
+            </div>
+          )}
+
+          {customColumns?.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm text-text-secondary">Additional fields</p>
+              <div className="space-y-3">
+                {customColumns
+                  .filter(
+                    (col, idx, arr) =>
+                      arr.findIndex(
+                        (c) =>
+                          c.column_name.toLowerCase() ===
+                          col.column_name.toLowerCase()
+                      ) === idx
+                  )
+                  .map((col) => {
+                    const options = col.select_options || [];
+                    const currentVal = customValues[col.id] ?? "";
+                    const isInOptions = options.includes(currentVal);
+                    const isOtherSelected =
+                      otherMode[col.id] || (!!currentVal && !isInOptions);
+                    const selectValue = isOtherSelected
+                      ? "__OTHER__"
+                      : currentVal;
+
+                    return (
+                      <div key={col.id} className="space-y-1">
+                        <Label htmlFor={`col-${col.id}`}>
+                          {capitalizeFirst(col.column_name)}
+                        </Label>
+                        {col.column_type === "select" ? (
+                          <>
+                            <select
+                              id={`col-${col.id}`}
+                              className="w-full rounded-md border border-border bg-surface p-2 text-sm"
+                              disabled={loading}
+                              value={selectValue}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === "__OTHER__") {
+                                  setOtherMode((prev) => ({
+                                    ...prev,
+                                    [col.id]: true,
+                                  }));
+                                  setCustomValues((prev) => ({
+                                    ...(prev || {}),
+                                    [col.id]: prev?.[col.id] ?? "",
+                                  }));
+                                } else {
+                                  setOtherMode((prev) => ({
+                                    ...prev,
+                                    [col.id]: false,
+                                  }));
+                                  setCustomValues((prev) => ({
+                                    ...(prev || {}),
+                                    [col.id]: value,
+                                  }));
+                                }
+                              }}
+                            >
+                              <option value="">Select...</option>
+                              {options.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                              <option value="__OTHER__">Other…</option>
+                            </select>
+                            {isOtherSelected && (
+                              <Input
+                                id={`col-${col.id}-other`}
+                                placeholder={`Enter ${col.column_name}`}
+                                value={currentVal}
+                                onChange={(e) =>
+                                  setCustomValues((prev) => ({
+                                    ...(prev || {}),
+                                    [col.id]: e.target.value,
+                                  }))
+                                }
+                                disabled={loading}
+                                className="mt-2"
+                              />
+                            )}
+                          </>
+                        ) : (
+                          <Input
+                            id={`col-${col.id}`}
+                            type={
+                              col.column_type === "number" ? "number" : "text"
+                            }
+                            value={currentVal}
+                            onChange={(e) =>
+                              setCustomValues((prev) => ({
+                                ...(prev || {}),
+                                [col.id]: e.target.value,
+                              }))
+                            }
+                            disabled={loading}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
             </div>
           )}
 
