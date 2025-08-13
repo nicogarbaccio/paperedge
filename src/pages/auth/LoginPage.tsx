@@ -182,14 +182,14 @@ export function LoginPage() {
                 Reset link sent! Check your email to continue.
               </div>
             )}
-            <div className="flex items-center justify-between gap-3">
-              <Button
-                type="submit"
-                className="flex-1"
-                disabled={loading || googleLoading}
-              >
-                {loading ? "Signing in..." : "Sign In"}
-              </Button>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading || googleLoading}
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </Button>
+            <div className="mt-2">
               <Button
                 type="button"
                 variant="link"
