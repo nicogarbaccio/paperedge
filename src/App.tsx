@@ -15,6 +15,7 @@ import { Layout } from "./components/layout/Layout";
 // Page components
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
+import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { NotebooksPage } from "./pages/NotebooksPage";
 import { NotebookDetailPage } from "./pages/NotebookDetailPage";
@@ -182,6 +183,7 @@ function App() {
           path="/register"
           element={user ? <Navigate to="/dashboard" /> : <RegisterPage />}
         />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Protected routes */}
         <Route

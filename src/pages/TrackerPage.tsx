@@ -210,7 +210,7 @@ export function TrackerPage() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center space-x-3">
             <h2 className="text-2xl font-bold">
               {monthNames[currentDate.getMonth()].toUpperCase()}
@@ -231,30 +231,33 @@ export function TrackerPage() {
               {formatCurrency(monthlyTotal)}
             </span>
           </div>
-          <div className="flex items-center gap-4">
-            <div
-              className={`text-sm font-medium ${
-                allTimeTotal > 0
-                  ? "text-profit"
-                  : allTimeTotal < 0
-                  ? "text-loss"
-                  : "text-text-secondary"
-              }`}
-            >
-              All-time: {allTimeTotal > 0 ? "+" : ""}
-              {formatCurrency(allTimeTotal)}
-            </div>
-            <div
-              className={`text-sm font-medium ${
-                yearTotal > 0
-                  ? "text-profit"
-                  : yearTotal < 0
-                  ? "text-loss"
-                  : "text-text-secondary"
-              }`}
-            >
-              YTD: {yearTotal > 0 ? "+" : ""}
-              {formatCurrency(yearTotal)}
+
+          <div className="flex items-end sm:items-center justify-between sm:justify-end gap-2 sm:gap-4 w-full sm:w-auto">
+            <div className="flex flex-row items-center gap-4 text-xs sm:text-sm font-medium">
+              <div
+                className={`${
+                  allTimeTotal > 0
+                    ? "text-profit"
+                    : allTimeTotal < 0
+                    ? "text-loss"
+                    : "text-text-secondary"
+                }`}
+              >
+                All-time: {allTimeTotal > 0 ? "+" : ""}
+                {formatCurrency(allTimeTotal)}
+              </div>
+              <div
+                className={`${
+                  yearTotal > 0
+                    ? "text-profit"
+                    : yearTotal < 0
+                    ? "text-loss"
+                    : "text-text-secondary"
+                }`}
+              >
+                YTD: {yearTotal > 0 ? "+" : ""}
+                {formatCurrency(yearTotal)}
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -323,7 +326,7 @@ export function TrackerPage() {
               {dayNames.map((d) => (
                 <div
                   key={d}
-                  className="p-3 text-center text-sm font-medium text-text-secondary border-r border-border last:border-r-0"
+                  className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium text-text-secondary border-r border-border last:border-r-0"
                 >
                   {d}
                 </div>
@@ -333,28 +336,33 @@ export function TrackerPage() {
               {days.map((d, idx) => {
                 const isRightmost = (idx + 1) % 7 === 0;
                 const isBottomRow = idx >= 35;
+                const colorBg = d.isCurrentMonth
+                  ? d.total !== 0
+                    ? d.total > 0
+                      ? "bg-profit/10 hover:bg-profit/20"
+                      : "bg-loss/10 hover:bg-loss/20"
+                    : "bg-surface hover:bg-surface-secondary"
+                  : "bg-background";
+                const valueColor =
+                  d.total > 0
+                    ? "text-profit"
+                    : d.total < 0
+                    ? "text-loss"
+                    : "text-text-secondary";
                 return (
                   <div
                     key={d.key}
                     className={`
-                      h-24 w-full p-2 flex flex-col border-border relative
+                      min-w-0 overflow-hidden aspect-square sm:aspect-auto h-16 sm:h-24 w-full p-1 sm:p-2 flex flex-col border-border relative
                       ${!isRightmost ? "border-r" : ""}
                       ${!isBottomRow ? "border-b" : ""}
-                      ${
-                        d.isCurrentMonth
-                          ? d.total !== 0
-                            ? d.total > 0
-                              ? "bg-profit/10 hover:bg-profit/20"
-                              : "bg-loss/10 hover:bg-loss/20"
-                            : "bg-surface hover:bg-surface-secondary"
-                          : "bg-background"
-                      }
+                      ${colorBg}
                       transition-colors cursor-pointer
                     `}
                     onClick={() => setEditDate(d.key)}
                   >
                     <div
-                      className={`text-sm font-medium ${
+                      className={`text-[10px] sm:text-sm font-medium ${
                         d.isCurrentMonth
                           ? "text-text-primary"
                           : "text-text-secondary opacity-50"
@@ -365,13 +373,7 @@ export function TrackerPage() {
                     {d.isCurrentMonth && (
                       <div className="flex-1 flex items-center justify-center">
                         <div
-                          className={`text-sm font-bold ${
-                            d.total > 0
-                              ? "text-profit"
-                              : d.total < 0
-                              ? "text-loss"
-                              : "text-text-secondary"
-                          }`}
+                          className={`text-[10px] sm:text-xs md:text-sm lg:text-base font-bold leading-tight ${valueColor}`}
                         >
                           {d.total > 0 ? "+" : ""}
                           {formatCurrency(d.total)}

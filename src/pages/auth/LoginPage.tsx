@@ -21,6 +21,8 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -64,6 +66,29 @@ export function LoginPage() {
     } catch (error: any) {
       setError(error.message);
       setGoogleLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setError(null);
+    setResetSent(false);
+
+    if (!email) {
+      setError("Please enter your email above to receive a reset link.");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: getAuthRedirectUrl("/reset-password"),
+      });
+      if (error) throw error;
+      setResetSent(true);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -152,6 +177,11 @@ export function LoginPage() {
                 {error}
               </div>
             )}
+            {resetSent && (
+              <div className="text-sm text-profit bg-profit/10 border border-profit/20 rounded-md p-3">
+                Reset link sent! Check your email to continue.
+              </div>
+            )}
             <Button
               type="submit"
               className="w-full"
@@ -159,6 +189,18 @@ export function LoginPage() {
             >
               {loading ? "Signing in..." : "Sign In"}
             </Button>
+            <div className="mt-2 flex justify-center">
+              <Button
+                type="button"
+                variant="link"
+                className="whitespace-nowrap"
+                onClick={handleForgotPassword}
+                disabled={resetLoading}
+                aria-label="Forgot password"
+              >
+                {resetLoading ? "Sending..." : "Forgot password?"}
+              </Button>
+            </div>
           </form>
           <div className="mt-6 text-center text-sm">
             <span className="text-text-secondary">Don't have an account? </span>

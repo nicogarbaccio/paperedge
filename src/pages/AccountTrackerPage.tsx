@@ -301,7 +301,7 @@ export function AccountTrackerPage() {
               {dayNames.map((d) => (
                 <div
                   key={d}
-                  className="p-3 text-center text-sm font-medium text-text-secondary border-r border-border last:border-r-0"
+                  className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium text-text-secondary border-r border-border last:border-r-0"
                 >
                   {d}
                 </div>
@@ -311,28 +311,33 @@ export function AccountTrackerPage() {
               {days.map((d, idx) => {
                 const isRightmost = (idx + 1) % 7 === 0;
                 const isBottomRow = idx >= 35;
+                const colorBg = d.isCurrentMonth
+                  ? d.total !== 0
+                    ? d.total > 0
+                      ? "bg-profit/10 hover:bg-profit/20"
+                      : "bg-loss/10 hover:bg-loss/20"
+                    : "bg-surface hover:bg-surface-secondary"
+                  : "bg-background";
+                const valueColor =
+                  d.total > 0
+                    ? "text-profit"
+                    : d.total < 0
+                    ? "text-loss"
+                    : "text-text-secondary";
                 return (
                   <div
                     key={d.key}
                     className={`
-                      h-24 w-full p-2 flex flex-col border-border relative
+                      min-w-0 overflow-hidden aspect-square sm:aspect-auto h-16 sm:h-24 w-full p-1 sm:p-2 flex flex-col border-border relative
                       ${!isRightmost ? "border-r" : ""}
                       ${!isBottomRow ? "border-b" : ""}
-                      ${
-                        d.isCurrentMonth
-                          ? d.total !== 0
-                            ? d.total > 0
-                              ? "bg-profit/10 hover:bg-profit/20"
-                              : "bg-loss/10 hover:bg-loss/20"
-                            : "bg-surface hover:bg-surface-secondary"
-                          : "bg-background"
-                      }
+                      ${colorBg}
                       transition-colors cursor-pointer
                     `}
                     onClick={() => setEditDate(d.key)}
                   >
                     <div
-                      className={`text-sm font-medium ${
+                      className={`text-[10px] sm:text-sm font-medium ${
                         d.isCurrentMonth
                           ? "text-text-primary"
                           : "text-text-secondary opacity-50"
@@ -343,13 +348,7 @@ export function AccountTrackerPage() {
                     {d.isCurrentMonth && (
                       <div className="flex-1 flex items-center justify-center">
                         <div
-                          className={`text-sm font-bold ${
-                            d.total > 0
-                              ? "text-profit"
-                              : d.total < 0
-                              ? "text-loss"
-                              : "text-text-secondary"
-                          }`}
+                          className={`text-[10px] sm:text-xs md:text-sm lg:text-base font-bold leading-tight ${valueColor}`}
                         >
                           {d.total > 0 ? "+" : ""}
                           {formatCurrency(d.total)}
