@@ -14,7 +14,7 @@ import {
   ArrowUpRight,
   HelpCircle,
 } from "lucide-react";
-import { formatCurrency, formatCurrencyNoCents } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useDailyPL } from "@/hooks/useDailyPL";
 import { CreateAccountDialog } from "@/components/tracker/CreateAccountDialog";
@@ -343,6 +343,11 @@ export function TrackerPage() {
                       : "bg-loss/10 hover:bg-loss/20"
                     : "bg-surface hover:bg-surface-secondary"
                   : "bg-background";
+                const valueColor = d.total > 0
+                  ? "text-profit"
+                  : d.total < 0
+                  ? "text-loss"
+                  : "text-text-secondary";
                 return (
                   <div
                     key={d.key}
@@ -366,28 +371,10 @@ export function TrackerPage() {
                     </div>
                     {d.isCurrentMonth && (
                       <div className="flex-1 flex items-center justify-center">
-                        {d.total !== 0 ? (
-                          <div
-                            className={`inline-flex items-center justify-center px-1.5 py-0.5 rounded-md font-semibold text-xs sm:text-sm whitespace-nowrap overflow-hidden text-ellipsis ${
-                              d.total > 0
-                                ? "bg-profit/15 text-profit"
-                                : "bg-loss/15 text-loss"
-                            }`}
-                          >
-                            <span className="sm:hidden">
-                              {d.total > 0 ? "+" : ""}
-                              {formatCurrencyNoCents(d.total)}
-                            </span>
-                            <span className="hidden sm:inline">
-                              {d.total > 0 ? "+" : ""}
-                              {formatCurrency(d.total)}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="hidden sm:flex text-text-secondary text-sm font-bold">
-                            {formatCurrency(0)}
-                          </div>
-                        )}
+                        <div className={`text-xs sm:text-sm font-bold ${valueColor}`}>
+                          {d.total > 0 ? "+" : ""}
+                          {formatCurrency(d.total)}
+                        </div>
                       </div>
                     )}
                   </div>
