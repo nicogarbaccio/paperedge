@@ -210,7 +210,7 @@ export function TrackerPage() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center space-x-3">
             <h2 className="text-2xl font-bold">
               {monthNames[currentDate.getMonth()].toUpperCase()}
@@ -231,8 +231,9 @@ export function TrackerPage() {
               {formatCurrency(monthlyTotal)}
             </span>
           </div>
-          <div className="flex items-end sm:items-center gap-2 sm:gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 text-xs sm:text-sm font-medium text-right sm:text-left">
+
+          <div className="flex items-end sm:items-center justify-between sm:justify-end gap-2 sm:gap-4 w-full sm:w-auto">
+            <div className="flex flex-row items-center gap-4 text-xs sm:text-sm font-medium">
               <div
                 className={`${
                   allTimeTotal > 0
