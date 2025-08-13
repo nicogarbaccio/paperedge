@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -30,16 +30,35 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
   const { user } = useAuthStore()
   const [data, setData] = useState<DailyPLEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
+  const [isFetching, setIsFetching] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const cacheRef = useRef<Map<string, DailyPLEntry[]>>(new Map())
+
+  function makeKey(start: Date, end: Date, accId?: string) {
+    return `${toISODate(start)}|${toISODate(end)}|${accId ?? ''}`
+  }
 
   async function fetchRange() {
     if (!user?.id) {
       setData([])
       setLoading(false)
+      setInitialized(true)
+      setIsFetching(false)
       return
     }
     try {
-      setLoading(true)
+      if (!initialized) {
+        setLoading(true)
+      } else {
+        setIsFetching(true)
+        // If we have a prefetched cache for the upcoming range, show it immediately
+        const key = makeKey(rangeStart, rangeEnd, accountId)
+        const cached = cacheRef.current.get(key)
+        if (cached) {
+          setData(cached)
+        }
+      }
       setError(null)
       let query = supabase
         .from('account_daily_pl')
@@ -64,11 +83,16 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
         .map(({ accounts, ...rest }) => rest as DailyPLEntry)
 
       setData(filtered)
+      // Update cache for this range
+      const key = makeKey(rangeStart, rangeEnd, accountId)
+      cacheRef.current.set(key, filtered)
     } catch (e: any) {
       setError(e.message)
       setData([])
     } finally {
       setLoading(false)
+      setInitialized(true)
+      setIsFetching(false)
     }
   }
 
@@ -152,7 +176,36 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, rangeStart.getTime(), rangeEnd.getTime(), accountId])
 
-  return { data, byDate, loading, error, refetch: fetchRange, upsertValue, deleteValue, fetchAllTimeTotal, fetchYearTotal }
+  async function prefetchRange(targetStart: Date, targetEnd: Date, targetAccountId?: string) {
+    if (!user?.id) return
+    const key = makeKey(targetStart, targetEnd, targetAccountId)
+    if (cacheRef.current.has(key)) return
+    try {
+      let query = supabase
+        .from('account_daily_pl')
+        .select(`
+          id, account_id, date, amount, note, created_at, updated_at,
+          accounts!inner ( user_id )
+        `)
+        .gte('date', toISODate(targetStart))
+        .lte('date', toISODate(targetEnd))
+
+      if (targetAccountId) {
+        query = query.eq('account_id', targetAccountId)
+      }
+
+      const { data, error } = await query
+      if (error) throw error
+      const filtered = (data as any[])
+        .filter((row) => row.accounts?.user_id === user.id)
+        .map(({ accounts, ...rest }) => rest as DailyPLEntry)
+      cacheRef.current.set(key, filtered)
+    } catch (_) {
+      // ignore prefetch errors
+    }
+  }
+
+  return { data, byDate, loading, initialized, isFetching, error, refetch: fetchRange, prefetchRange, upsertValue, deleteValue, fetchAllTimeTotal, fetchYearTotal }
 }
 
 

@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   BookOpen,
-  BarChart3,
   Calculator,
   Calendar,
   Settings,
@@ -20,11 +19,6 @@ const navigation = [
     name: "Notebooks",
     href: "/notebooks",
     icon: BookOpen,
-  },
-  {
-    name: "Analytics",
-    href: "/analytics",
-    icon: BarChart3,
   },
   {
     name: "Calculators",

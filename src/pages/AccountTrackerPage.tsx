@@ -49,6 +49,9 @@ export function AccountTrackerPage() {
   const {
     byDate,
     loading: plLoading,
+    initialized: plInitialized,
+    isFetching: plIsFetching,
+    prefetchRange,
     upsertValue,
     fetchAllTimeTotal,
     fetchYearTotal,
@@ -111,6 +114,28 @@ export function AccountTrackerPage() {
     });
   }
 
+  // Prefetch adjacent months when currentDate changes
+  useEffect(() => {
+    if (!id) return;
+    const makeRange = (d: Date) => {
+      const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+      const firstDayOffset = monthStart.getDay();
+      const start = new Date(monthStart);
+      start.setDate(start.getDate() - firstDayOffset);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 41);
+      return { start, end };
+    };
+    const prevDate = new Date(currentDate);
+    prevDate.setMonth(prevDate.getMonth() - 1);
+    const nextDate = new Date(currentDate);
+    nextDate.setMonth(nextDate.getMonth() + 1);
+    const { start: prevStart, end: prevEnd } = makeRange(prevDate);
+    const { start: nextStart, end: nextEnd } = makeRange(nextDate);
+    prefetchRange(prevStart, prevEnd, id);
+    prefetchRange(nextStart, nextEnd, id);
+  }, [currentDate, id, prefetchRange]);
+
   const days = useMemo(() => {
     const list: Array<{
       date: Date;
@@ -154,7 +179,7 @@ export function AccountTrackerPage() {
     }
   }
 
-  if (accountLoading || plLoading) {
+  if (accountLoading || !plInitialized || plLoading) {
     return <AccountTrackerSkeleton />;
   }
   if (accountError || !account) {
@@ -163,52 +188,58 @@ export function AccountTrackerPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="space-y-2">
+        <div>
           <Link
             to="/tracker"
-            className="text-text-secondary hover:text-text-primary inline-flex items-center"
+            className="text-xs text-text-secondary hover:text-text-primary inline-flex items-center"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" /> Back
+            <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
           </Link>
-          <h1 className="text-3xl font-bold text-text-primary">
-            {account.name}
-          </h1>
-          <span className="text-sm capitalize text-text-secondary">
-            {account.kind}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsEditAccountOpen(true)}
-          >
-            Edit
-          </Button>
         </div>
-        <div className="flex items-center gap-4">
-          <div
-            className={`text-sm font-medium ${
-              yearTotal > 0
-                ? "text-profit"
-                : yearTotal < 0
-                ? "text-loss"
-                : "text-text-secondary"
-            }`}
-          >
-            YTD: {yearTotal > 0 ? "+" : ""}
-            {formatCurrency(yearTotal)}
+
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-text-primary">
+              {account.name}
+            </h1>
+            <span className="text-sm capitalize text-text-secondary">
+              {account.kind}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditAccountOpen(true)}
+            >
+              Edit
+            </Button>
           </div>
-          <div
-            className={`text-sm font-medium ${
-              allTimeTotal > 0
-                ? "text-profit"
-                : allTimeTotal < 0
-                ? "text-loss"
-                : "text-text-secondary"
-            }`}
-          >
-            All-time: {allTimeTotal > 0 ? "+" : ""}
-            {formatCurrency(allTimeTotal)}
+
+          <div className="flex items-center gap-2">
+            <div
+              className={`px-2 py-1 rounded-md text-sm font-medium border ${
+                yearTotal > 0
+                  ? "text-profit border-profit/30"
+                  : yearTotal < 0
+                  ? "text-loss border-loss/30"
+                  : "text-text-secondary border-border"
+              }`}
+            >
+              YTD: {yearTotal > 0 ? "+" : ""}
+              {formatCurrency(yearTotal)}
+            </div>
+            <div
+              className={`px-2 py-1 rounded-md text-sm font-medium border ${
+                allTimeTotal > 0
+                  ? "text-profit border-profit/30"
+                  : allTimeTotal < 0
+                  ? "text-loss border-loss/30"
+                  : "text-text-secondary border-border"
+              }`}
+            >
+              All-time: {allTimeTotal > 0 ? "+" : ""}
+              {formatCurrency(allTimeTotal)}
+            </div>
           </div>
         </div>
       </div>
@@ -229,7 +260,7 @@ export function AccountTrackerPage() {
                   : monthlyTotal < 0
                   ? "text-loss"
                   : "text-text-secondary"
-              }`}
+              } ${plIsFetching ? "opacity-80" : ""}`}
             >
               {monthlyTotal > 0 ? "+" : ""}
               {formatCurrency(monthlyTotal)}
@@ -252,10 +283,20 @@ export function AccountTrackerPage() {
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
+            {plIsFetching && (
+              <div className="ml-1 inline-flex items-center text-text-secondary text-xs">
+                <span className="h-3 w-3 mr-1 animate-spin rounded-full border-2 border-border border-t-transparent" />
+                Updating
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent>
-          <div className="bg-surface rounded-lg overflow-hidden border border-border">
+          <div
+            className={`bg-surface rounded-lg overflow-hidden border border-border ${
+              plIsFetching ? "opacity-80" : ""
+            }`}
+          >
             <div className="grid grid-cols-7 border-b border-border bg-surface-secondary">
               {dayNames.map((d) => (
                 <div
