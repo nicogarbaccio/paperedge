@@ -75,7 +75,7 @@ export function SettingsPage() {
       <div>
         <h1 className="text-3xl font-bold text-text-primary">Settings</h1>
         <p className="text-text-secondary">
-          Manage your account and application preferences
+          Manage your account and data
         </p>
       </div>
 
@@ -236,68 +236,30 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Application Preferences */}
-        <Card>
+        {/* Danger Zone (moved up) */}
+        <Card className="border-loss/20">
           <CardHeader>
-            <CardTitle>Application Preferences</CardTitle>
+            <CardTitle className="text-loss">Danger Zone</CardTitle>
             <CardDescription>
-              Customize your PaperEdge experience
+              Irreversible actions that will affect your account
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">Currency</h4>
-                  <p className="text-sm text-text-secondary">
-                    Display currency for betting amounts
-                  </p>
-                </div>
-                <Button variant="outline" size="sm" disabled>
-                  USD ($)
-                </Button>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium text-loss">Delete Account</h4>
+                <p className="text-sm text-text-secondary">
+                  Permanently delete your account and all data
+                </p>
               </div>
-
-              <div className="border-t border-border pt-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Odds Format</h4>
-                    <p className="text-sm text-text-secondary">
-                      Preferred odds display format
-                    </p>
-                  </div>
-                  <Button variant="outline" size="sm" disabled>
-                    American
-                  </Button>
-                </div>
-              </div>
+              <Button variant="destructive" size="sm" disabled>
+                Delete Account
+              </Button>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Danger Zone */}
-      <Card className="border-loss/20">
-        <CardHeader>
-          <CardTitle className="text-loss">Danger Zone</CardTitle>
-          <CardDescription>
-            Irreversible actions that will affect your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium text-loss">Delete Account</h4>
-              <p className="text-sm text-text-secondary">
-                Permanently delete your account and all data
-              </p>
-            </div>
-            <Button variant="destructive" size="sm" disabled>
-              Delete Account
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      
     </div>
   );
 }
