@@ -318,11 +318,12 @@ export function AccountTrackerPage() {
                       : "bg-loss/10 hover:bg-loss/20"
                     : "bg-surface hover:bg-surface-secondary"
                   : "bg-background";
-                const valueColor = d.total > 0
-                  ? "text-profit"
-                  : d.total < 0
-                  ? "text-loss"
-                  : "text-text-secondary";
+                const valueColor =
+                  d.total > 0
+                    ? "text-profit"
+                    : d.total < 0
+                    ? "text-loss"
+                    : "text-text-secondary";
                 return (
                   <div
                     key={d.key}
@@ -346,7 +347,7 @@ export function AccountTrackerPage() {
                     </div>
                     {d.isCurrentMonth && (
                       <div className="flex-1 flex items-center justify-center">
-                        <div className={`text-xs sm:text-sm font-bold ${valueColor}`}>
+                        <div className={`text-[10px] sm:text-xs font-bold leading-tight ${valueColor}`}>
                           {d.total > 0 ? "+" : ""}
                           {formatCurrency(d.total)}
                         </div>
