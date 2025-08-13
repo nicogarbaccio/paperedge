@@ -347,7 +347,9 @@ export function AccountTrackerPage() {
                     </div>
                     {d.isCurrentMonth && (
                       <div className="flex-1 flex items-center justify-center">
-                        <div className={`text-[10px] sm:text-xs md:text-sm lg:text-base font-bold leading-tight ${valueColor}`}>
+                        <div
+                          className={`text-[10px] sm:text-xs md:text-sm lg:text-base font-bold leading-tight ${valueColor}`}
+                        >
                           {d.total > 0 ? "+" : ""}
                           {formatCurrency(d.total)}
                         </div>
