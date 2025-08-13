@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { useAuthStore } from "@/stores/authStore";
-import { supabase } from "@/lib/supabase";
+import { supabase, getAuthRedirectUrl } from "@/lib/supabase";
 import { User, Mail, Shield, Database, Download, Upload } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 
@@ -31,7 +31,7 @@ export function SettingsPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: getAuthRedirectUrl("/reset-password"),
       });
 
       if (error) throw error;
