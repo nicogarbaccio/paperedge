@@ -30,7 +30,7 @@ import { EditNotebookDialog } from "@/components/EditNotebookDialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CalendarView } from "@/components/CalendarView";
 import { useNotebooks } from "@/hooks/useNotebooks";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/useToast";
 import { BetSearch, SearchFilters } from "@/components/BetSearch";
 import { useBetSearch } from "@/hooks/useBetSearch";
@@ -99,15 +99,20 @@ export function NotebookDetailPage() {
       description: `${data.description} has been added to your notebook.`,
       variant: "success",
     });
-    // Reset form after successful creation
-    setCreateBetFormData({
-      date: getCurrentLocalDate(),
-      description: "",
-      odds: 0,
-      wager_amount: 0,
-    });
-    setCreateBetCustomValues({});
   };
+
+  // Reset create form state only after the dialog has closed to avoid flicker
+  useEffect(() => {
+    if (!isCreateBetDialogOpen) {
+      setCreateBetFormData({
+        date: getCurrentLocalDate(),
+        description: "",
+        odds: 0,
+        wager_amount: 0,
+      });
+      setCreateBetCustomValues({});
+    }
+  }, [isCreateBetDialogOpen]);
 
   const handleEditBet = (bet: any) => {
     setSelectedBet(bet);
@@ -253,7 +258,7 @@ export function NotebookDetailPage() {
             <h1 className="text-3xl font-bold text-text-primary">
               {notebook.name}
             </h1>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 ml-6 sm:ml-8 md:ml-10">
               <Button
                 variant="outline"
                 size="sm"
@@ -276,7 +281,7 @@ export function NotebookDetailPage() {
               </Button>
             </div>
           </div>
-          <p className="text-text-secondary">
+          <p className="text-text-secondary mt-1.5">
             {notebook.description || "No description"}
           </p>
         </div>
@@ -446,7 +451,7 @@ export function NotebookDetailPage() {
                 {filteredBets.map((bet) => (
                   <div
                     key={bet.id}
-                    className="border border-border rounded-lg p-4 hover:bg-surface-secondary/30 transition-colors cursor-pointer"
+                    className="group border border-border rounded-lg p-4 hover:bg-surface-secondary/30 transition-colors cursor-pointer"
                     onClick={() => handleEditBet(bet)}
                   >
                     <div className="space-y-2 mb-3">
@@ -489,13 +494,7 @@ export function NotebookDetailPage() {
                             })}
                         </div>
                       )}
-                      {bet.status === "pending" && (
-                        <div className="flex justify-end">
-                          <span className="text-xs text-text-secondary bg-accent/10 px-2 py-1 rounded whitespace-nowrap">
-                            Click to update
-                          </span>
-                        </div>
-                      )}
+                      {bet.status === "pending" && null}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
                       <div className="flex justify-between sm:block">
@@ -532,13 +531,20 @@ export function NotebookDetailPage() {
                             bet.status
                           )}`}
                         >
-                          {bet.status === "won" && bet.return_amount
-                            ? `+${formatCurrency(bet.return_amount)}`
-                            : bet.status === "lost"
-                            ? `-${formatCurrency(bet.wager_amount)}`
-                            : bet.status === "push"
-                            ? formatCurrency(0)
-                            : "Pending"}
+                          {bet.status === "won" && bet.return_amount ? (
+                            `+${formatCurrency(bet.return_amount)}`
+                          ) : bet.status === "lost" ? (
+                            `-${formatCurrency(bet.wager_amount)}`
+                          ) : bet.status === "push" ? (
+                            formatCurrency(0)
+                          ) : (
+                            <>
+                              Pending
+                              <span className="ml-2 hidden sm:inline text-xs text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                Update
+                              </span>
+                            </>
+                          )}
                         </span>
                       </div>
                     </div>

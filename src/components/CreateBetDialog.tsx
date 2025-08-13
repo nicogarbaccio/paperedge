@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { capitalizeFirst } from "@/lib/utils";
 import {
   Dialog,
@@ -72,6 +72,13 @@ export function CreateBetDialog({
   const [error, setError] = useState<string | null>(null);
   const [showAdditional, setShowAdditional] = useState(false);
   const [otherMode, setOtherMode] = useState<Record<string, boolean>>({});
+  const closingRef = useRef(false);
+
+  useEffect(() => {
+    if (open) {
+      closingRef.current = false;
+    }
+  }, [open]);
 
   // Calculate potential return and profit for display
   const potentialProfit =
@@ -122,11 +129,12 @@ export function CreateBetDialog({
       );
 
       // Form reset is handled by parent component
+      closingRef.current = true;
       onOpenChange(false);
     } catch (error: any) {
       setError(error.message || "Failed to create bet");
     } finally {
-      setLoading(false);
+      if (!closingRef.current) setLoading(false);
     }
   };
 
@@ -166,7 +174,7 @@ export function CreateBetDialog({
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 max-h-[70vh] overflow-y-auto pr-1"
+          className="space-y-4 max-h-[70vh] overflow-y-auto overflow-x-visible px-3 sm:px-4"
         >
           <div className="space-y-2">
             <Label htmlFor="date">Date *</Label>
@@ -281,8 +289,14 @@ export function CreateBetDialog({
                     )
                     .map((col) => {
                       const options = col.select_options || [];
+                      const filteredOptions = options.filter((opt) => {
+                        const o = `${opt}`.trim().toLowerCase();
+                        return (
+                          o !== "other" && o !== "other..." && o !== "other…"
+                        );
+                      });
                       const currentVal = customValues?.[col.id] ?? "";
-                      const isInOptions = options.includes(currentVal);
+                      const isInOptions = filteredOptions.includes(currentVal);
                       const isOtherSelected =
                         otherMode[col.id] || (!!currentVal && !isInOptions);
                       const selectValue = isOtherSelected
@@ -326,7 +340,7 @@ export function CreateBetDialog({
                                 }}
                               >
                                 <option value="">Select...</option>
-                                {options.map((opt) => (
+                                {filteredOptions.map((opt) => (
                                   <option key={opt} value={opt}>
                                     {opt}
                                   </option>
