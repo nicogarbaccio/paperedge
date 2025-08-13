@@ -231,30 +231,32 @@ export function TrackerPage() {
               {formatCurrency(monthlyTotal)}
             </span>
           </div>
-          <div className="flex items-center gap-4">
-            <div
-              className={`text-sm font-medium ${
-                allTimeTotal > 0
-                  ? "text-profit"
-                  : allTimeTotal < 0
-                  ? "text-loss"
-                  : "text-text-secondary"
-              }`}
-            >
-              All-time: {allTimeTotal > 0 ? "+" : ""}
-              {formatCurrency(allTimeTotal)}
-            </div>
-            <div
-              className={`text-sm font-medium ${
-                yearTotal > 0
-                  ? "text-profit"
-                  : yearTotal < 0
-                  ? "text-loss"
-                  : "text-text-secondary"
-              }`}
-            >
-              YTD: {yearTotal > 0 ? "+" : ""}
-              {formatCurrency(yearTotal)}
+          <div className="flex items-end sm:items-center gap-2 sm:gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 text-xs sm:text-sm font-medium text-right sm:text-left">
+              <div
+                className={`${
+                  allTimeTotal > 0
+                    ? "text-profit"
+                    : allTimeTotal < 0
+                    ? "text-loss"
+                    : "text-text-secondary"
+                }`}
+              >
+                All-time: {allTimeTotal > 0 ? "+" : ""}
+                {formatCurrency(allTimeTotal)}
+              </div>
+              <div
+                className={`${
+                  yearTotal > 0
+                    ? "text-profit"
+                    : yearTotal < 0
+                    ? "text-loss"
+                    : "text-text-secondary"
+                }`}
+              >
+                YTD: {yearTotal > 0 ? "+" : ""}
+                {formatCurrency(yearTotal)}
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Button
