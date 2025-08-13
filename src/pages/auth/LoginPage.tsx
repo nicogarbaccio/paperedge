@@ -189,7 +189,7 @@ export function LoginPage() {
             >
               {loading ? "Signing in..." : "Sign In"}
             </Button>
-            <div className="mt-2">
+            <div className="mt-2 flex justify-center">
               <Button
                 type="button"
                 variant="link"
