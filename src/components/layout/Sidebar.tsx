@@ -21,14 +21,14 @@ const navigation = [
     icon: BookOpen,
   },
   {
-    name: "Calculators",
-    href: "/calculators",
-    icon: Calculator,
-  },
-  {
     name: "Tracker",
     href: "/tracker",
     icon: Calendar,
+  },
+  {
+    name: "Calculators",
+    href: "/calculators",
+    icon: Calculator,
   },
   {
     name: "Settings",
