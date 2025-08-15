@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -73,6 +73,10 @@ export function EditBetDialog({
     useState<Record<string, string>>(initialCustomValues);
   const [otherMode, setOtherMode] = useState<Record<string, boolean>>({});
   const [showAdditional, setShowAdditional] = useState(false);
+  // Track whether user has manually modified return_amount
+  const [userModifiedReturn, setUserModifiedReturn] = useState(false);
+  // Add ref to track if dialog is closing
+  const closingRef = useRef(false);
 
   // Calculate expected return and profit based on current odds and wager
   const expectedProfit =
@@ -85,8 +89,32 @@ export function EditBetDialog({
       ? calculatePayout(formData.odds, formData.wager_amount)
       : 0;
 
+  // Auto-update return_amount when odds or wager changes (only if user hasn't manually modified it AND dialog is not closing)
+  useEffect(() => {
+    if (
+      formData.status === "won" &&
+      !userModifiedReturn &&
+      expectedReturn > 0 &&
+      !closingRef.current // Don't auto-calculate when closing
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        return_amount: expectedReturn,
+      }));
+    }
+  }, [
+    formData.odds,
+    formData.wager_amount,
+    expectedReturn,
+    userModifiedReturn,
+    formData.status,
+  ]);
+
   useEffect(() => {
     if (bet && open) {
+      // Reset closing flag when dialog opens
+      closingRef.current = false;
+
       setFormData({
         date: bet.date,
         description: bet.description,
@@ -102,6 +130,8 @@ export function EditBetDialog({
         (v) => v !== undefined && v !== null && `${v}`.trim() !== ""
       );
       setShowAdditional(hasAnyCustomValues);
+      // Reset user modification flag when opening dialog
+      setUserModifiedReturn(false);
     }
   }, [bet, open, initialCustomValues]);
 
@@ -163,6 +193,9 @@ export function EditBetDialog({
       if (onUpsertBetCustomData) {
         await onUpsertBetCustomData(bet.id, customValues);
       }
+
+      // Set closing flag before closing the modal
+      closingRef.current = true;
       onOpenChange(false);
     } catch (error: any) {
       setError(error.message || "Failed to update bet");
@@ -178,6 +211,9 @@ export function EditBetDialog({
       setLoading(true);
       setError(null);
       await onDeleteBet(bet.id);
+
+      // Set closing flag before closing the modal
+      closingRef.current = true;
       onOpenChange(false);
     } catch (error: any) {
       setError(error.message || "Failed to delete bet");
@@ -209,13 +245,27 @@ export function EditBetDialog({
       // Auto-set return amount based on status
       return_amount:
         status === "won"
-          ? expectedProfit
+          ? expectedReturn > 0
+            ? expectedReturn
+            : prev.return_amount
           : status === "lost"
           ? 0
           : status === "push"
           ? 0
           : prev.return_amount,
     }));
+    // Reset user modification flag when status changes
+    setUserModifiedReturn(false);
+  };
+
+  // Handle manual return_amount changes
+  const handleReturnAmountChange = (value: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      return_amount: value,
+    }));
+    // Mark that user has manually modified the return amount
+    setUserModifiedReturn(true);
   };
 
   if (!bet) return null;
@@ -380,23 +430,44 @@ export function EditBetDialog({
                   step="0.01"
                   value={formData.return_amount || ""}
                   onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      return_amount: parseFloat(e.target.value) || 0,
-                    }))
+                    handleReturnAmountChange(parseFloat(e.target.value) || 0)
                   }
                   disabled={loading}
                   className="pl-8"
                   required
                 />
               </div>
-              <p className="text-xs text-text-secondary">
-                Expected return: {formatCurrency(expectedReturn)}
-                <span className="text-accent">
-                  {" "}
-                  (profit: {formatCurrency(expectedProfit)})
-                </span>
-              </p>
+              <div className="flex items-center justify-between text-xs">
+                <p className="text-text-secondary">
+                  Expected return: {formatCurrency(expectedReturn)}
+                  <span className="text-accent">
+                    {" "}
+                    (profit: {formatCurrency(expectedProfit)})
+                  </span>
+                </p>
+                {!userModifiedReturn && expectedReturn > 0 && (
+                  <span className="text-green-600 text-xs">
+                    Auto-calculated
+                  </span>
+                )}
+              </div>
+              {userModifiedReturn &&
+                expectedReturn > 0 &&
+                Math.abs(formData.return_amount - expectedReturn) > 0.01 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        return_amount: expectedReturn,
+                      }));
+                      setUserModifiedReturn(false);
+                    }}
+                    className="text-xs text-accent underline hover:no-underline"
+                  >
+                    Use expected return ({formatCurrency(expectedReturn)})
+                  </button>
+                )}
             </div>
           )}
 
