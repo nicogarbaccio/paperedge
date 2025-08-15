@@ -32,25 +32,15 @@ export function formatCurrencyNoCents(amount: number): string {
 /**
  * Format percentage for display
  */
-export function formatPercentage(value: number, decimals: number = 1): string {
-  return `${value.toFixed(decimals)}%`
+export function formatPercentage(value: number): string {
+  return `${value.toFixed(1)}%`
 }
 
 /**
  * Format date for display
  */
-export function formatDate(date: string | Date): string {
-  let d: Date
-  if (typeof date === 'string') {
-    // Parse date string as local date to avoid timezone shifting
-    // "2024-07-26" should be treated as July 26th locally, not UTC
-    const [year, month, day] = date.split('-').map(Number)
-    d = new Date(year, month - 1, day) // month is 0-indexed
-  } else {
-    d = date
-  }
-  
-  return d.toLocaleDateString('en-US', {
+export function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -58,29 +48,40 @@ export function formatDate(date: string | Date): string {
 }
 
 /**
- * Get current local date in YYYY-MM-DD format for HTML date inputs
- * This avoids timezone conversion issues that can occur with toISOString()
+ * Format date for input fields (YYYY-MM-DD)
+ */
+export function formatDateForInput(date: Date): string {
+  return date.toISOString().split('T')[0]
+}
+
+/**
+ * Get current local date in YYYY-MM-DD format
  */
 export function getCurrentLocalDate(): string {
   const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  return formatDateForInput(now)
 }
 
 /**
- * Convert a Date object to YYYY-MM-DD format in local timezone
+ * Get status color class for bet status
  */
-export function formatDateForInput(date: Date): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+export function getStatusColorClass(status: string): string {
+  switch (status) {
+    case 'won':
+      return 'text-profit'
+    case 'lost':
+      return 'text-loss'
+    case 'push':
+      return 'text-text-secondary'
+    case 'pending':
+      return 'text-orange-400'
+    default:
+      return 'text-text-secondary'
+  }
 }
 
 /**
- * Get color class for profit/loss display
+ * Get P&L color class
  */
 export function getPLColorClass(value: number): string {
   if (value > 0) return 'text-profit'
@@ -89,42 +90,147 @@ export function getPLColorClass(value: number): string {
 }
 
 /**
- * Get status color class
+ * Capitalize first letter of a string
  */
-export function getStatusColorClass(status: string): string {
-  switch (status) {
-    case 'won':
-      return 'text-profit'
-    case 'lost':
-      return 'text-loss'
-    case 'pending':
-      return 'text-pending'
-    case 'push':
-      return 'text-push'
-    default:
-      return 'text-text-secondary'
-  }
+export function capitalizeFirst(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 /**
- * Capitalize the first letter of a string (leaves the rest unchanged)
+ * Clean win rate for display
  */
-export function capitalizeFirst(value: string): string {
-  if (!value) return value
-  return value.charAt(0).toUpperCase() + value.slice(1)
+export function cleanWinRate(winRate: number): number {
+  if (winRate === 0) return 0
+  if (winRate < 0.1) return 0.1
+  if (winRate > 99.9) return 99.9
+  return Math.round(winRate * 10) / 10
 }
 
 /**
- * Debounce function
+ * Clean ROI for display
+ */
+export function cleanROI(roi: number): number {
+  if (Math.abs(roi) < 0.1) return 0
+  return Math.round(roi * 10) / 10
+}
+
+/**
+ * Check if a value is within a range (inclusive)
+ */
+export function isInRange(value: number, min: number | null, max: number | null): boolean {
+  if (min !== null && value < min) return false
+  if (max !== null && value > max) return false
+  return true
+}
+
+/**
+ * Convert string to number safely
+ */
+export function safeNumber(value: string | number | null | undefined): number | null {
+  if (typeof value === 'number') return value
+  if (!value || value === '') return null
+  const num = parseFloat(value.toString())
+  return isNaN(num) ? null : num
+}
+
+/**
+ * Basic debounce function
  */
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout
+  let timeout: NodeJS.Timeout | undefined = undefined
 
   return (...args: Parameters<T>) => {
     clearTimeout(timeout)
     timeout = setTimeout(() => func(...args), wait)
   }
-} 
+}
+
+/**
+ * Custom field categories for visual styling
+ */
+export type CustomFieldCategory = 'game' | 'league' | 'market' | 'sportsbook' | 'notes';
+
+/**
+ * Categorize custom field based on column name
+ * 
+ * DETECTION ORDER IS CRITICAL:
+ * 1. Game (most specific matchup/opponent fields)
+ * 2. Sportsbook (MUST come before league - "sportsbook" contains "sport")
+ * 3. League (after sportsbook to avoid false positives)
+ * 4. Market (bet types and lines)
+ * 5. Notes (fallback for everything else)
+ * 
+ * ⚠️  WARNING: Changing the order can break color coding!
+ */
+export function categorizeCustomField(columnName: string): CustomFieldCategory {
+  const name = columnName.toLowerCase().trim();
+  
+  // Game/Matchup fields
+  if (name.includes('game') || name.includes('matchup') || name.includes('teams') || 
+      name.includes('vs') || name.includes('match') || name.includes('opponent')) {
+    return 'game';
+  }
+  
+  // Sportsbook fields - CHECK FIRST (before league) to avoid 'sport' conflict
+  if (name.includes('book') || name.includes('sportsbook') || name.includes('site') ||
+      name.includes('provider') || name.includes('platform') || name.includes('source') ||
+      name.includes('operator') || name.includes('casino') || name.includes('betting') ||
+      name.includes('wager') || name.includes('bet site') || name.includes('bookmaker')) {
+    return 'sportsbook';
+  }
+  
+  // League/Sport fields - CHECK AFTER sportsbook
+  if (name.includes('league') || name.includes('sport') || name.includes('competition') ||
+      name.includes('tournament') || name.includes('division')) {
+    return 'league';
+  }
+  
+  // Market/Bet Type fields
+  if (name.includes('market') || name.includes('bet type') || name.includes('line') ||
+      name.includes('spread') || name.includes('total') || name.includes('moneyline') ||
+      name.includes('prop') || name.includes('over') || name.includes('under')) {
+    return 'market';
+  }
+  
+  // Default to notes for everything else
+  return 'notes';
+}
+
+/**
+ * Get styling classes for custom field category
+ */
+export function getCustomFieldStyles(category: CustomFieldCategory, isPrimary: boolean = false) {
+  const baseClasses = "inline-flex items-center px-2 py-1 rounded-md text-xs font-medium";
+  const primaryClasses = isPrimary ? "px-3 py-1.5 text-sm" : "";
+  
+  switch (category) {
+    case 'game':
+      return `${baseClasses} ${primaryClasses} bg-blue-500/20 text-blue-300 border border-blue-500/30`;
+    case 'league':
+      return `${baseClasses} ${primaryClasses} bg-green-500/20 text-green-300 border border-green-500/30`;
+    case 'market':
+      return `${baseClasses} ${primaryClasses} bg-purple-500/20 text-purple-300 border border-purple-500/30`;
+    case 'sportsbook':
+      return `${baseClasses} ${primaryClasses} bg-orange-500/20 text-orange-300 border border-orange-500/30`;
+    case 'notes':
+    default:
+      return `${baseClasses} ${primaryClasses} bg-surface-secondary/50 text-text-secondary border border-surface-secondary`;
+  }
+}
+
+/**
+ * Get category priority for field ordering (lower = higher priority)
+ */
+export function getCustomFieldPriority(category: CustomFieldCategory): number {
+  switch (category) {
+    case 'game': return 1;
+    case 'market': return 2;
+    case 'league': return 3;
+    case 'sportsbook': return 4;
+    case 'notes': return 5;
+    default: return 6;
+  }
+}

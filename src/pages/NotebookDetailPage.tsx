@@ -22,6 +22,10 @@ import {
   formatDate,
   getStatusColorClass,
   getCurrentLocalDate,
+  categorizeCustomField,
+  getCustomFieldStyles,
+  getCustomFieldPriority,
+  capitalizeFirst,
 } from "@/lib/utils";
 import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { CreateBetDialog } from "@/components/CreateBetDialog";
@@ -188,374 +192,305 @@ export function NotebookDetailPage() {
     return <NotebookDetailSkeleton />;
   }
 
-  if (error || !notebook) {
+  if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <p className="text-loss mb-2">Error loading notebook</p>
-          <p className="text-text-secondary text-sm">
-            {error || "Notebook not found"}
-          </p>
-          <Link to="/notebooks">
-            <Button variant="outline" className="mt-4">
-              Back to Notebooks
-            </Button>
-          </Link>
+          <p className="text-text-primary mb-2">Error loading notebook</p>
+          <p className="text-text-secondary text-sm">{error}</p>
         </div>
       </div>
     );
   }
 
-  // Get notebook color classes
-  const colorClasses = getNotebookColorClasses(notebook.color);
+  if (!notebook) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-text-primary mb-2">Notebook not found</p>
+          <p className="text-text-secondary text-sm">
+            The requested notebook could not be found.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-  // Calculate stats for all bets (not filtered)
-  const completedBets = bets.filter((bet) =>
-    ["won", "lost", "push"].includes(bet.status)
-  );
-  const wonBets = bets.filter((bet) => bet.status === "won");
-  const winRate =
-    completedBets.length > 0
-      ? (wonBets.length / completedBets.length) * 100
-      : 0;
-
-  const totalPL = bets.reduce((total, bet) => {
-    if (bet.status === "won" && bet.return_amount) {
-      return total + bet.return_amount;
-    } else if (bet.status === "lost") {
-      return total - bet.wager_amount;
-    }
-    return total;
-  }, 0);
-
-  const totalWagered = completedBets.reduce(
-    (total, bet) => total + bet.wager_amount,
-    0
-  );
-  const roi = totalWagered > 0 ? (totalPL / totalWagered) * 100 : 0;
+  const notebookColorClasses = getNotebookColorClasses(notebook.color);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-4">
-        <Link to="/notebooks">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex items-center space-x-2"
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center space-x-4">
+          <Link
+            to="/notebooks"
+            className="flex items-center text-text-secondary hover:text-text-primary transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to Notebooks</span>
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Back to Notebooks
+          </Link>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditNotebookDialogOpen(true)}
+          >
+            <Pencil className="h-4 w-4 mr-2" />
+            Edit Notebook
           </Button>
-        </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsDeleteDialogOpen(true)}
+            className="text-loss border-loss hover:bg-loss hover:text-white"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
+          </Button>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
+      {/* Notebook Info */}
+      <Card>
+        <CardHeader>
           <div className="flex items-center space-x-3">
             <div
-              className={`w-4 h-4 rounded-full ${colorClasses.accent}`}
-            ></div>
-            <h1 className="text-3xl font-bold text-text-primary">
-              {notebook.name}
-            </h1>
-            <div className="flex items-center space-x-2 ml-6 sm:ml-8 md:ml-10">
-              <Button
-                variant="outline"
-                size="sm"
-                aria-label="Edit notebook"
-                onClick={() => setIsEditNotebookDialogOpen(true)}
-                className="gap-1 rounded-full border-border/60 text-text-primary/80 hover:text-text-primary hover:bg-surface-secondary/60 focus-visible:ring-2 focus-visible:ring-accent/40"
-              >
-                <Pencil className="h-3.5 w-3.5 opacity-80" />
-                <span className="hidden sm:inline">Edit</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                aria-label="Delete notebook"
-                onClick={() => setIsDeleteDialogOpen(true)}
-                className="gap-1 rounded-full border-loss/40 text-loss hover:bg-loss/10 hover:text-loss focus-visible:ring-2 focus-visible:ring-loss/30"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Delete</span>
-              </Button>
+              className={`h-4 w-4 rounded-full ${notebookColorClasses.bg}`}
+            />
+            <div>
+              <CardTitle className="text-2xl">{notebook.name}</CardTitle>
+              {notebook.description && (
+                <CardDescription className="mt-1">
+                  {notebook.description}
+                </CardDescription>
+              )}
             </div>
           </div>
-          <p className="text-text-secondary mt-1.5">
-            {notebook.description || "No description"}
-          </p>
+        </CardHeader>
+      </Card>
+
+      {/* View Toggle and Add Bet Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center space-x-2">
+          <Button
+            variant={activeView === "history" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveView("history")}
+          >
+            <History className="h-4 w-4 mr-2" />
+            History
+          </Button>
+          <Button
+            variant={activeView === "calendar" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveView("calendar")}
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Calendar
+          </Button>
         </div>
-        <Button
-          className="flex items-center space-x-2"
-          onClick={() => setIsCreateBetDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Bet</span>
-        </Button>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-text-secondary">Total Bets</p>
-                <p className="text-2xl font-bold">{bets.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-text-secondary">Win Rate</p>
-                <p
-                  className={`text-2xl font-bold ${
-                    winRate >= 55
-                      ? "text-profit"
-                      : winRate >= 45
-                      ? "text-pending"
-                      : "text-loss"
-                  }`}
-                >
-                  {formatPercentage(winRate)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-text-secondary">Total P&L</p>
-                <p
-                  className={`text-2xl font-bold ${
-                    totalPL > 0
-                      ? "text-profit"
-                      : totalPL < 0
-                      ? "text-loss"
-                      : "text-text-secondary"
-                  }`}
-                >
-                  {totalPL > 0 ? "+" : ""}
-                  {formatCurrency(totalPL)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-text-secondary">ROI</p>
-                <p
-                  className={`text-2xl font-bold ${
-                    roi > 0
-                      ? "text-profit"
-                      : roi < 0
-                      ? "text-loss"
-                      : "text-text-secondary"
-                  }`}
-                >
-                  {formatPercentage(roi)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* View Toggle Tabs */}
-      <div className="flex space-x-1 p-1 bg-surface rounded-lg w-fit">
-        <Button
-          variant={activeView === "history" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setActiveView("history")}
-          className="flex items-center space-x-2"
-        >
-          <History className="h-4 w-4" />
-          <span>History</span>
-        </Button>
-        <Button
-          variant={activeView === "calendar" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setActiveView("calendar")}
-          className="flex items-center space-x-2"
-        >
-          <Calendar className="h-4 w-4" />
-          <span>Calendar</span>
+        <Button onClick={() => setIsCreateBetDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Bet
         </Button>
       </div>
 
       {/* Content based on active view */}
       {activeView === "history" ? (
-        /* Bets Table */
-        <Card>
-          <CardHeader>
-            <CardTitle>Betting History</CardTitle>
-            <CardDescription>All bets for this notebook</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Search Component */}
-            <div className="mb-6">
-              <BetSearch
-                filters={searchFilters}
-                onFiltersChange={setSearchFilters}
-                totalBets={totalBets}
-                filteredCount={filteredCount}
-              />
-            </div>
-            {bets.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-text-secondary mb-4">No bets recorded yet</p>
-                <Button
-                  className="flex items-center space-x-2"
-                  onClick={() => setIsCreateBetDialogOpen(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Add Your First Bet</span>
-                </Button>
-              </div>
-            ) : filteredBets.length === 0 && hasActiveFilters() ? (
-              <div className="text-center py-8">
-                <p className="text-text-secondary mb-4">
-                  No bets match your search criteria
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setSearchFilters({
-                      query: "",
-                      status: "",
-                      dateFrom: "",
-                      dateTo: "",
-                      oddsMin: null,
-                      oddsMax: null,
-                      wagerMin: null,
-                      wagerMax: null,
-                    })
-                  }
-                >
-                  Clear filters
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredBets.map((bet) => (
-                  <div
-                    key={bet.id}
-                    className="group border border-border rounded-lg p-4 hover:bg-surface-secondary/30 transition-colors cursor-pointer"
-                    onClick={() => handleEditBet(bet)}
-                  >
-                    <div className="space-y-2 mb-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-base sm:text-lg">
-                          {bet.description}
-                        </h4>
+        <div className="space-y-6">
+          {/* Search and Filters */}
+          <BetSearch
+            filters={searchFilters}
+            onFiltersChange={setSearchFilters}
+            totalBets={totalBets}
+            filteredCount={filteredCount}
+          />
+
+          {/* Betting History */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Betting History</CardTitle>
+              <CardDescription>
+                {hasActiveFilters()
+                  ? `Showing ${filteredCount} of ${totalBets} bets`
+                  : `All bets for this notebook`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {filteredBets.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-text-secondary">
+                    {hasActiveFilters()
+                      ? "No bets match your search criteria"
+                      : "No bets in this notebook yet"}
+                  </p>
+                  <p className="text-xs text-text-secondary mt-1">
+                    {hasActiveFilters()
+                      ? "Try adjusting your filters"
+                      : "Add your first bet to get started"}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredBets.map((bet) => (
+                    <div
+                      key={bet.id}
+                      className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 transition-colors cursor-pointer"
+                      onClick={() => handleEditBet(bet)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-text-primary">
+                            {bet.description}
+                          </h3>
+                        </div>
                         <span
-                          className={`text-sm font-medium ${getStatusColorClass(
+                          className={`px-2 py-1 text-xs font-medium rounded-md ${getStatusColorClass(
                             bet.status
-                          )}`}
+                          )} bg-surface-secondary/30`}
                         >
                           {bet.status.charAt(0).toUpperCase() +
                             bet.status.slice(1)}
                         </span>
                       </div>
+
                       {customColumns && customColumns.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {customColumns
-                            // guard: dedupe by name at render too
-                            .filter(
-                              (col, idx, arr) =>
-                                arr.findIndex(
-                                  (c) =>
-                                    c.column_name.toLowerCase() ===
-                                    col.column_name.toLowerCase()
-                                ) === idx
-                            )
-                            .map((col) => {
-                              const value = betCustomData[bet.id]?.[col.id];
-                              if (!value) return null;
-                              return (
-                                <span
-                                  key={col.id}
-                                  className="text-xs bg-surface-secondary/50 text-text-secondary px-2 py-0.5 rounded"
-                                >
-                                  {value}
-                                </span>
+                        <div className="space-y-2">
+                          {(() => {
+                            // Get all custom fields with values
+                            const fieldsWithValues = customColumns
+                              .filter(
+                                (col, idx, arr) =>
+                                  arr.findIndex(
+                                    (c) =>
+                                      c.column_name.toLowerCase() ===
+                                      col.column_name.toLowerCase()
+                                  ) === idx
+                              )
+                              .map((col) => {
+                                const value = betCustomData[bet.id]?.[col.id];
+                                if (!value) return null;
+                                return {
+                                  ...col,
+                                  value,
+                                  category: categorizeCustomField(
+                                    col.column_name
+                                  ),
+                                };
+                              })
+                              .filter(
+                                (field): field is NonNullable<typeof field> =>
+                                  field !== null
+                              )
+                              .sort(
+                                (a, b) =>
+                                  getCustomFieldPriority(a.category) -
+                                  getCustomFieldPriority(b.category)
                               );
-                            })}
+
+                            if (fieldsWithValues.length === 0) return null;
+
+                            // Separate primary (game) fields from others
+                            const primaryFields = fieldsWithValues.filter(
+                              (field) => field.category === "game"
+                            );
+                            const secondaryFields = fieldsWithValues.filter(
+                              (field) => field.category !== "game"
+                            );
+
+                            return (
+                              <div className="space-y-2">
+                                {/* Primary fields (games) - larger and more prominent */}
+                                {primaryFields.length > 0 && (
+                                  <div className="flex flex-wrap gap-2">
+                                    {primaryFields.map((field) => (
+                                      <span
+                                        key={field.id}
+                                        className={getCustomFieldStyles(
+                                          field.category,
+                                          true
+                                        )}
+                                      >
+                                        {field.value}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Secondary fields - smaller, organized by category */}
+                                {secondaryFields.length > 0 && (
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {secondaryFields.map((field) => (
+                                      <span
+                                        key={field.id}
+                                        className={getCustomFieldStyles(
+                                          field.category,
+                                          false
+                                        )}
+                                        title={`${capitalizeFirst(
+                                          field.column_name
+                                        )}: ${field.value}`}
+                                      >
+                                        {field.value}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
-                      {bet.status === "pending" && null}
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
-                      <div className="flex justify-between sm:block">
-                        <span className="text-text-secondary sm:inline">
-                          Date:{" "}
-                        </span>
-                        <span className="font-medium sm:font-normal">
-                          {formatDate(bet.date)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between sm:block">
-                        <span className="text-text-secondary sm:inline">
-                          Odds:{" "}
-                        </span>
-                        <span className="font-medium sm:font-normal">
-                          {bet.odds > 0 ? "+" : ""}
-                          {bet.odds}
-                        </span>
-                      </div>
-                      <div className="flex justify-between sm:block">
-                        <span className="text-text-secondary sm:inline">
-                          Wager:{" "}
-                        </span>
-                        <span className="font-medium sm:font-normal">
-                          {formatCurrency(bet.wager_amount)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between sm:block">
-                        <span className="text-text-secondary sm:inline">
-                          Return:{" "}
-                        </span>
-                        <span
-                          className={`font-medium sm:font-normal ${getStatusColorClass(
-                            bet.status
-                          )}`}
-                        >
-                          {bet.status === "won" && bet.return_amount ? (
-                            `+${formatCurrency(bet.return_amount)}`
-                          ) : bet.status === "lost" ? (
-                            `-${formatCurrency(bet.wager_amount)}`
-                          ) : bet.status === "push" ? (
-                            formatCurrency(0)
-                          ) : (
-                            <>
-                              Pending
-                              <span className="ml-2 hidden sm:inline text-xs text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                Update
-                              </span>
-                            </>
-                          )}
-                        </span>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
+                        <div>
+                          <p className="text-text-secondary text-xs">Date</p>
+                          <p className="font-medium">{formatDate(bet.date)}</p>
+                        </div>
+                        <div>
+                          <p className="text-text-secondary text-xs">Odds</p>
+                          <p className="font-medium">
+                            {bet.odds > 0 ? "+" : ""}
+                            {bet.odds}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-text-secondary text-xs">Wager</p>
+                          <p className="font-medium">
+                            {formatCurrency(bet.wager_amount)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-text-secondary text-xs">Return</p>
+                          <p
+                            className={`font-medium ${
+                              bet.status === "won"
+                                ? "text-profit"
+                                : bet.status === "lost"
+                                ? "text-loss"
+                                : "text-text-secondary"
+                            }`}
+                          >
+                            {bet.status === "pending"
+                              ? "Pending"
+                              : bet.status === "push"
+                              ? "Push"
+                              : bet.return_amount
+                              ? formatCurrency(bet.return_amount)
+                              : "-"}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       ) : (
-        /* Calendar View */
         <CalendarView bets={filteredBets} />
       )}
 

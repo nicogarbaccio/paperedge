@@ -101,24 +101,6 @@ function App() {
       setUser(newUser);
       setLoading(false);
 
-      // Debug logging
-      console.log(
-        "Auth event:",
-        event,
-        "Previous event:",
-        previousEvent.current,
-        "Previous user:",
-        previousUser.current?.id,
-        "Initial session user:",
-        initialSessionUser.current?.id,
-        "Has shown initial:",
-        hasShownInitialAuth.current,
-        "User ID:",
-        newUser?.id,
-        "Has shown toast for session:",
-        hasShownToastForSession.current
-      );
-
       // Show toast notifications for auth events (but not on initial load or token refreshes)
       if (hasShownInitialAuth.current) {
         // Show welcome toast for genuine sign-ins (not page refreshes)
