@@ -53,6 +53,7 @@ export function NotebookDetailPage() {
     updateBet,
     deleteBet,
     upsertBetCustomData,
+    updateBetWithCustomData,
     refetch,
   } = useNotebook(id || "");
   const { updateNotebook, deleteNotebook } = useNotebooks();
@@ -125,6 +126,20 @@ export function NotebookDetailPage() {
 
   const handleUpdateBet = async (betId: string, updates: any) => {
     await updateBet(betId, updates);
+    toast({
+      title: "Bet updated",
+      description: "Your bet has been successfully updated.",
+      variant: "success",
+    });
+  };
+
+  // Combined handler for updating bet with custom data in a single operation
+  const handleUpdateBetWithCustomData = async (
+    betId: string,
+    updates: any,
+    customValues: Record<string, string>
+  ) => {
+    await updateBetWithCustomData(betId, updates, customValues);
     toast({
       title: "Bet updated",
       description: "Your bet has been successfully updated.",
@@ -518,6 +533,7 @@ export function NotebookDetailPage() {
           selectedBet ? betCustomData[selectedBet.id] || {} : {}
         }
         onUpsertBetCustomData={upsertBetCustomData}
+        onUpdateBetWithCustomData={handleUpdateBetWithCustomData}
       />
 
       {/* Edit Notebook Dialog */}

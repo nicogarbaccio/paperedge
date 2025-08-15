@@ -195,7 +195,7 @@ export function useNotebook(notebookId: string) {
     }
   }
 
-  const updateBet = async (betId: string, updates: Partial<Bet>) => {
+  const updateBet = async (betId: string, updates: Partial<Bet>, delayRefresh = false) => {
     try {
       const { error } = await supabase
         .from('bets')
@@ -207,14 +207,16 @@ export function useNotebook(notebookId: string) {
 
       if (error) throw error
 
-      // Refresh data
-      await fetchNotebook()
+      // Refresh data unless delayed
+      if (!delayRefresh) {
+        await fetchNotebook()
+      }
     } catch (error: any) {
       throw new Error(error.message)
     }
   }
 
-  const upsertBetCustomData = async (betId: string, customData: Record<string, string>) => {
+  const upsertBetCustomData = async (betId: string, customData: Record<string, string>, delayRefresh = false) => {
     try {
       const rows = Object.entries(customData)
         .map(([columnId, value]) => ({ bet_id: betId, column_id: columnId, value: `${value ?? ''}` }))
@@ -223,6 +225,28 @@ export function useNotebook(notebookId: string) {
         .from('bet_custom_data')
         .upsert(rows, { onConflict: 'bet_id,column_id' })
       if (error) throw error
+      
+      // Refresh data unless delayed
+      if (!delayRefresh) {
+        await fetchNotebook()
+      }
+    } catch (error: any) {
+      throw new Error(error.message)
+    }
+  }
+
+  // Combined update function for bet + custom data with single refresh
+  const updateBetWithCustomData = async (
+    betId: string, 
+    updates: Partial<Bet>, 
+    customData: Record<string, string>
+  ) => {
+    try {
+      // Do both operations without refreshing
+      await updateBet(betId, updates, true)
+      await upsertBetCustomData(betId, customData, true)
+      
+      // Single refresh after both operations
       await fetchNotebook()
     } catch (error: any) {
       throw new Error(error.message)
@@ -312,6 +336,7 @@ export function useNotebook(notebookId: string) {
     updateBet,
     deleteBet,
     upsertBetCustomData,
+    updateBetWithCustomData,
     createColumn,
     updateColumn,
     deleteColumn,
