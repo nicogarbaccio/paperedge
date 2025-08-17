@@ -292,8 +292,61 @@ export function AccountTrackerPage() {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Mobile Layout - Timeline View */}
           <div
-            className={`bg-surface rounded-lg overflow-hidden border border-border ${
+            className={`md:hidden bg-surface rounded-lg border border-border overflow-hidden ${
+              plIsFetching ? "opacity-80" : ""
+            }`}
+          >
+            <div className="divide-y divide-border">
+              {days
+                .filter((d) => d.isCurrentMonth)
+                .map((d) => {
+                  const valueColor =
+                    d.total > 0
+                      ? "text-profit"
+                      : d.total < 0
+                      ? "text-loss"
+                      : "text-text-secondary";
+
+                  const bgColor =
+                    d.total !== 0
+                      ? d.total > 0
+                        ? "bg-profit/5"
+                        : "bg-loss/5"
+                      : "";
+
+                  return (
+                    <div
+                      key={d.key}
+                      className={`p-4 cursor-pointer hover:bg-surface-secondary transition-colors ${bgColor}`}
+                      onClick={() => setEditDate(d.key)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="text-lg font-semibold text-text-primary">
+                            {d.date.getDate()}
+                          </div>
+                          <div className="text-sm text-text-secondary">
+                            {d.date.toLocaleDateString("en-US", {
+                              weekday: "short",
+                            })}
+                          </div>
+                        </div>
+                        <div className={`text-base font-bold ${valueColor}`}>
+                          {d.total > 0 ? "+" : ""}
+                          {formatCurrency(d.total)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+
+          {/* Desktop Layout - Calendar Grid */}
+          <div
+            className={`hidden md:block bg-surface rounded-lg overflow-hidden border border-border ${
               plIsFetching ? "opacity-80" : ""
             }`}
           >
