@@ -286,80 +286,136 @@ export function CalendarView({ bets }: CalendarViewProps) {
 
       {/* Calendar Container */}
       <div className="bg-surface rounded-lg overflow-hidden border border-border">
-        {/* Day Headers */}
-        <div className="grid grid-cols-7 border-b border-border bg-surface-secondary">
-          {dayNames.map((day) => (
-            <div
-              key={day}
-              className="p-3 text-center text-sm font-medium text-text-secondary border-r border-border last:border-r-0"
-            >
-              {day}
-            </div>
-          ))}
-        </div>
+        {/* Mobile/Tablet Layout - Timeline View */}
+        <div className="lg:hidden">
+          <div className="divide-y divide-border">
+            {calendarData
+              .filter((day) => day.isCurrentMonth)
+              .map((day) => {
+                const valueColor = day.hasBets && day.profit !== null
+                  ? day.profit > 0
+                    ? "text-profit"
+                    : day.profit < 0
+                    ? "text-loss"
+                    : "text-text-secondary"
+                  : "text-text-secondary";
 
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-7">
-          {calendarData.map((day, index) => {
-            const isRightmost = (index + 1) % 7 === 0;
-            const isBottomRow = index >= 35; // Last row
+                const bgColor = day.hasBets && day.profit !== null && day.profit !== 0
+                  ? day.profit > 0
+                    ? "bg-profit/5"
+                    : "bg-loss/5"
+                  : "";
 
-            return (
-              <div
-                key={index}
-                className={`
-                  h-24 w-full p-2 flex flex-col border-border relative
-                  ${!isRightmost ? "border-r" : ""}
-                  ${!isBottomRow ? "border-b" : ""}
-                  ${
-                    day.isCurrentMonth
-                      ? day.hasBets && day.profit !== null
-                        ? day.profit > 0
-                          ? "bg-profit/10 hover:bg-profit/20"
-                          : day.profit < 0
-                          ? "bg-loss/10 hover:bg-loss/20"
-                          : "bg-surface hover:bg-surface-secondary"
-                        : "bg-surface hover:bg-surface-secondary"
-                      : "bg-background"
-                  }
-                  transition-colors cursor-pointer
-                `}
-              >
-                <div
-                  className={`
-                  text-sm font-medium
-                  ${
-                    day.isCurrentMonth
-                      ? "text-text-primary"
-                      : "text-text-secondary opacity-50"
-                  }
-                `}
-                >
-                  {day.day}
-                </div>
-
-                {day.hasBets && day.isCurrentMonth && day.profit !== null && (
-                  <div className="flex-1 flex items-center justify-center">
-                    <div
-                      className={`
-                      text-sm font-bold text-center
-                      ${
-                        day.profit > 0
-                          ? "text-profit"
-                          : day.profit < 0
-                          ? "text-loss"
-                          : "text-text-secondary"
-                      }
-                    `}
-                    >
-                      {day.profit > 0 ? "+" : ""}
-                      {formatCurrency(day.profit)}
+                return (
+                  <div
+                    key={day.dateKey}
+                    className={`p-4 hover:bg-surface-secondary transition-colors ${bgColor}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="text-lg font-semibold text-text-primary">
+                          {day.day}
+                        </div>
+                        <div className="text-sm text-text-secondary">
+                          {day.date.toLocaleDateString("en-US", {
+                            weekday: "short",
+                          })}
+                        </div>
+                      </div>
+                      <div className={`text-base font-bold ${valueColor}`}>
+                        {day.hasBets && day.profit !== null ? (
+                          <>
+                            {day.profit > 0 ? "+" : ""}
+                            {formatCurrency(day.profit)}
+                          </>
+                        ) : (
+                          "—"
+                        )}
+                      </div>
                     </div>
                   </div>
-                )}
+                );
+              })}
+          </div>
+        </div>
+
+        {/* Desktop Layout - Calendar Grid */}
+        <div className="hidden lg:block">
+          {/* Day Headers */}
+          <div className="grid grid-cols-7 border-b border-border bg-surface-secondary">
+            {dayNames.map((day) => (
+              <div
+                key={day}
+                className="p-3 text-center text-sm font-medium text-text-secondary border-r border-border last:border-r-0"
+              >
+                {day}
               </div>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7">
+            {calendarData.map((day, index) => {
+              const isRightmost = (index + 1) % 7 === 0;
+              const isBottomRow = index >= 35; // Last row
+
+              return (
+                <div
+                  key={index}
+                  className={`
+                    h-24 w-full p-2 flex flex-col border-border relative
+                    ${!isRightmost ? "border-r" : ""}
+                    ${!isBottomRow ? "border-b" : ""}
+                    ${
+                      day.isCurrentMonth
+                        ? day.hasBets && day.profit !== null
+                          ? day.profit > 0
+                            ? "bg-profit/10 hover:bg-profit/20"
+                            : day.profit < 0
+                            ? "bg-loss/10 hover:bg-loss/20"
+                            : "bg-surface hover:bg-surface-secondary"
+                          : "bg-surface hover:bg-surface-secondary"
+                        : "bg-background"
+                    }
+                    transition-colors cursor-pointer
+                  `}
+                >
+                  <div
+                    className={`
+                    text-sm font-medium
+                    ${
+                      day.isCurrentMonth
+                        ? "text-text-primary"
+                        : "text-text-secondary opacity-50"
+                    }
+                  `}
+                  >
+                    {day.day}
+                  </div>
+
+                  {day.hasBets && day.isCurrentMonth && day.profit !== null && (
+                    <div className="flex-1 flex items-center justify-center">
+                      <div
+                        className={`
+                        text-sm font-bold text-center
+                        ${
+                          day.profit > 0
+                            ? "text-profit"
+                            : day.profit < 0
+                            ? "text-loss"
+                            : "text-text-secondary"
+                        }
+                      `}
+                      >
+                        {day.profit > 0 ? "+" : ""}
+                        {formatCurrency(day.profit)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
