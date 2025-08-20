@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/authStore'
+import { parseLocalDate } from '@/lib/utils'
 
 export interface DashboardStats {
   totalBets: number
@@ -112,7 +113,7 @@ export function useDashboard() {
       
       const totalPL = allBets.reduce((total: number, bet: any) => {
         if (bet.status === 'won' && bet.return_amount) {
-          return total + bet.return_amount
+          return total + bet.return_amount // return_amount now stores profit only
         } else if (bet.status === 'lost') {
           return total - bet.wager_amount
         }
@@ -133,7 +134,12 @@ export function useDashboard() {
 
       // Get recent bets (last 5)
       const recentBetsData = allBets
-        .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .sort((a: any, b: any) => {
+          // Parse dates in local timezone to avoid UTC conversion issues
+          const aDate = parseLocalDate(a.date);
+          const bDate = parseLocalDate(b.date);
+          return bDate.getTime() - aDate.getTime();
+        })
         .slice(0, 5)
         .map((bet: any) => ({
           id: bet.id,
@@ -159,7 +165,7 @@ export function useDashboard() {
           
           const total_pl = bets.reduce((total: number, bet: any) => {
             if (bet.status === 'won' && bet.return_amount) {
-              return total + bet.return_amount
+              return total + bet.return_amount // return_amount now stores profit only
             } else if (bet.status === 'lost') {
               return total - bet.wager_amount
             }

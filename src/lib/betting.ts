@@ -1,10 +1,10 @@
 /**
- * Calculate the potential return from a bet based on American odds
+ * Calculate the potential profit from a bet based on American odds
  * @param odds American odds (e.g., +110, -150)
  * @param wager The wager amount
  * @returns The potential profit (not including the original wager), rounded to 2 decimal places
  */
-export function calculateReturn(odds: number, wager: number): number {
+export function calculateProfit(odds: number, wager: number): number {
   let profit: number;
   
   if (odds > 0) {
@@ -20,13 +20,24 @@ export function calculateReturn(odds: number, wager: number): number {
 }
 
 /**
+ * Calculate the potential return from a bet based on American odds
+ * @param odds American odds (e.g., +110, -150)
+ * @param wager The wager amount
+ * @returns The potential profit (not including the original wager), rounded to 2 decimal places
+ * @deprecated Use calculateProfit instead for clarity
+ */
+export function calculateReturn(odds: number, wager: number): number {
+  return calculateProfit(odds, wager);
+}
+
+/**
  * Calculate the total payout (original wager + profit)
  * @param odds American odds
  * @param wager The wager amount
  * @returns Total payout if bet wins, rounded to 2 decimal places
  */
 export function calculatePayout(odds: number, wager: number): number {
-  const payout = wager + calculateReturn(odds, wager);
+  const payout = wager + calculateProfit(odds, wager);
   // Round to 2 decimal places for currency
   return Math.round(payout * 100) / 100;
 }
@@ -111,6 +122,7 @@ export function calculateTotalPL(bets: Array<{
 }>): number {
   return bets.reduce((total, bet) => {
     if (bet.status === 'won' && bet.return_amount) {
+      // return_amount now stores profit only, so we add profit
       return total + bet.return_amount
     } else if (bet.status === 'lost') {
       return total - bet.wager_amount

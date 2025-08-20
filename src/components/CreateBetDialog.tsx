@@ -14,7 +14,7 @@ import { DateInput } from "@/components/ui/DateInput";
 import { Label } from "@/components/ui/Label";
 import { Loader2 } from "lucide-react";
 import {
-  calculateReturn,
+  calculateProfit,
   calculatePayout,
   isValidAmericanOdds,
 } from "@/lib/betting";
@@ -80,13 +80,13 @@ export function CreateBetDialog({
     }
   }, [open]);
 
-  // Calculate potential return and profit for display
+  // Calculate potential profit and total payout for display
   const potentialProfit =
     formData.wager_amount > 0 && isValidAmericanOdds(formData.odds)
-      ? calculateReturn(formData.odds, formData.wager_amount)
+      ? calculateProfit(formData.odds, formData.wager_amount)
       : 0;
 
-  const expectedReturn =
+  const expectedPayout =
     formData.wager_amount > 0 && isValidAmericanOdds(formData.odds)
       ? calculatePayout(formData.odds, formData.wager_amount)
       : 0;
@@ -256,12 +256,12 @@ export function CreateBetDialog({
                 required
               />
             </div>
-            {expectedReturn > 0 && (
+            {expectedPayout > 0 && (
               <p className="text-xs text-accent">
-                Expected return: {formatCurrency(expectedReturn)}
+                Expected profit: {formatCurrency(potentialProfit)}
                 <span className="text-text-secondary">
                   {" "}
-                  (profit: {formatCurrency(potentialProfit)})
+                  (total payout: {formatCurrency(expectedPayout)})
                 </span>
               </p>
             )}

@@ -64,7 +64,7 @@ export function useNotebooks() {
         
         const total_pl = bets.reduce((total: number, bet: any) => {
           if (bet.status === 'won' && bet.return_amount) {
-            return total + bet.return_amount
+            return total + bet.return_amount // return_amount now stores profit only
           } else if (bet.status === 'lost') {
             return total - bet.wager_amount
           }

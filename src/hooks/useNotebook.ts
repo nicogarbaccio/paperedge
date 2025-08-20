@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -47,8 +47,36 @@ export function useNotebook(notebookId: string) {
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuthStore()
 
+  // Validate notebook ID format
+  const isValidNotebookId = useMemo(() => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(notebookId);
+  }, [notebookId]);
+
   const fetchNotebook = async () => {
     if (!user || !user.id || !notebookId) {
+      setLoading(false)
+      return
+    }
+
+    // Debug logging
+    console.log('🔍 useNotebook Debug:', {
+      currentUserId: user.id,
+      currentUserEmail: user.email,
+      notebookId,
+      isValidNotebookId
+    });
+
+    // Check if notebook ID is valid
+    if (!isValidNotebookId) {
+      setError('Invalid notebook ID format')
+      setLoading(false)
+      return
+    }
+
+    // Check if user has access to this notebook
+    if (!user.id) {
+      setError('User not authenticated')
       setLoading(false)
       return
     }
@@ -56,6 +84,33 @@ export function useNotebook(notebookId: string) {
     try {
       setLoading(true)
       setError(null)
+
+      // First, verify user ownership of the notebook
+      const { data: ownershipCheck, error: ownershipError } = await supabase
+        .from('notebooks')
+        .select('user_id')
+        .eq('id', notebookId)
+        .single()
+
+      if (ownershipError) {
+        if (ownershipError.code === 'PGRST116') {
+          throw new Error('Notebook not found')
+        }
+        throw ownershipError
+      }
+
+      // Debug logging for ownership check
+      console.log('🔍 Ownership Check:', {
+        notebookId,
+        notebookOwnerId: ownershipCheck.user_id,
+        currentUserId: user.id,
+        isOwner: ownershipCheck.user_id === user.id
+      });
+
+      // Verify the notebook belongs to the current user
+      if (ownershipCheck.user_id !== user.id) {
+        throw new Error('Access denied: You do not own this notebook')
+      }
 
       // Fetch notebook details
       const { data: notebookData, error: notebookError } = await supabase
@@ -65,7 +120,19 @@ export function useNotebook(notebookId: string) {
         .eq('user_id', user.id)
         .single()
 
-      if (notebookError) throw notebookError
+      if (notebookError) {
+        // Check if it's a "not found" error or an unauthorized access
+        if (notebookError.code === 'PGRST116') {
+          // Notebook not found - this could mean unauthorized access
+          throw new Error('Notebook not found or access denied')
+        }
+        throw notebookError
+      }
+
+      // Double-check user ownership (extra security)
+      if (notebookData.user_id !== user.id) {
+        throw new Error('Access denied: You do not own this notebook')
+      }
 
       // Fetch bets for this notebook
       const { data: betsData, error: betsError } = await supabase
@@ -322,8 +389,13 @@ export function useNotebook(notebookId: string) {
   }
 
   useEffect(() => {
-    fetchNotebook()
-  }, [user?.id, notebookId])
+    if (isValidNotebookId) {
+      fetchNotebook()
+    } else if (notebookId) {
+      setError('Invalid notebook ID format')
+      setLoading(false)
+    }
+  }, [user?.id, notebookId, isValidNotebookId])
 
   return {
     notebook,

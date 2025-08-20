@@ -205,7 +205,7 @@ export function DashboardPage() {
                       </p>
                       <p className="text-xs text-text-secondary">
                         {bet.status === "won" && bet.return_amount
-                          ? `+${formatCurrency(bet.return_amount)}`
+                          ? `+${formatCurrency(bet.return_amount)}` // Show profit only
                           : bet.status === "lost"
                           ? `-${formatCurrency(bet.wager_amount)}`
                           : formatCurrency(bet.wager_amount)}

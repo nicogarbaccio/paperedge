@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Bet } from "./useNotebook";
 import { SearchFilters } from "@/components/BetSearch";
+import { parseLocalDate } from "@/lib/utils";
 
 export function useBetSearch(bets: Bet[], filters: SearchFilters) {
   const filteredBets = useMemo(() => {
@@ -21,16 +22,20 @@ export function useBetSearch(bets: Bet[], filters: SearchFilters) {
 
       // Date range filter
       if (filters.dateFrom) {
-        const betDate = new Date(bet.date);
-        const fromDate = new Date(filters.dateFrom);
+        // Parse dates in local timezone to avoid UTC conversion issues
+        const betDate = parseLocalDate(bet.date);
+        const fromDate = parseLocalDate(filters.dateFrom);
+        
         if (betDate < fromDate) {
           return false;
         }
       }
 
       if (filters.dateTo) {
-        const betDate = new Date(bet.date);
-        const toDate = new Date(filters.dateTo);
+        // Parse dates in local timezone to avoid UTC conversion issues
+        const betDate = parseLocalDate(bet.date);
+        const toDate = parseLocalDate(filters.dateTo);
+        
         // Set to end of day for inclusive comparison
         toDate.setHours(23, 59, 59, 999);
         if (betDate > toDate) {

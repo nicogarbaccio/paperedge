@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils";
@@ -9,7 +9,21 @@ interface CalendarViewProps {
 }
 
 export function CalendarView({ bets }: CalendarViewProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // Initialize calendar to show the month of the most recent bet, or current month if no bets
+  const [currentDate, setCurrentDate] = useState(() => {
+    if (bets.length === 0) {
+      return new Date(); // Fall back to current month if no bets
+    }
+
+    // Find the most recent bet by date
+    const mostRecentBet = bets.reduce((latest, bet) => {
+      return bet.date > latest.date ? bet : latest;
+    });
+
+    // Parse the bet date and set calendar to that month
+    const [year, month] = mostRecentBet.date.split("-").map(Number);
+    return new Date(year, month - 1); // month is 0-indexed in JavaScript
+  });
 
   const monthNames = [
     "January",
@@ -26,6 +40,31 @@ export function CalendarView({ bets }: CalendarViewProps) {
     "December",
   ];
 
+  // Update calendar month when bets change (e.g., switching notebooks)
+  useEffect(() => {
+    if (bets.length === 0) {
+      setCurrentDate(new Date()); // Reset to current month if no bets
+      return;
+    }
+
+    // Find the most recent bet by date
+    const mostRecentBet = bets.reduce((latest, bet) => {
+      return bet.date > latest.date ? bet : latest;
+    });
+
+    // Parse the bet date and set calendar to that month
+    const [year, month] = mostRecentBet.date.split("-").map(Number);
+    const newDate = new Date(year, month - 1); // month is 0-indexed in JavaScript
+
+    // Only update if the month is different to avoid unnecessary re-renders
+    if (
+      newDate.getMonth() !== currentDate.getMonth() ||
+      newDate.getFullYear() !== currentDate.getFullYear()
+    ) {
+      setCurrentDate(newDate);
+    }
+  }, [bets, currentDate]);
+
   // Calculate daily P&L from bets
   const dailyPL = useMemo(() => {
     const dailyData: Record<string, { profit: number; bets: Bet[] }> = {};
@@ -40,11 +79,16 @@ export function CalendarView({ bets }: CalendarViewProps) {
       dailyData[dateKey].bets.push(bet);
 
       if (bet.status === "won" && bet.return_amount) {
-        dailyData[dateKey].profit += bet.return_amount;
+        dailyData[dateKey].profit += bet.return_amount; // return_amount now stores profit only
       } else if (bet.status === "lost") {
         dailyData[dateKey].profit -= bet.wager_amount;
       }
       // Push and pending bets don't affect P&L
+    });
+
+    // Round all profits to 2 decimal places to avoid floating point precision issues
+    Object.keys(dailyData).forEach(dateKey => {
+      dailyData[dateKey].profit = Math.round(dailyData[dateKey].profit * 100) / 100;
     });
 
     return dailyData;
@@ -67,7 +111,7 @@ export function CalendarView({ bets }: CalendarViewProps) {
       // Only include bets from the current month being viewed
       if (betYear === year && betMonth === month) {
         if (bet.status === "won" && bet.return_amount) {
-          totalProfit += bet.return_amount;
+          totalProfit += bet.return_amount; // return_amount now stores profit only
         } else if (bet.status === "lost") {
           totalProfit -= bet.wager_amount;
         }
@@ -86,7 +130,7 @@ export function CalendarView({ bets }: CalendarViewProps) {
 
     const totalProfit = bets.reduce((total, bet) => {
       if (bet.status === "won" && bet.return_amount) {
-        return total + bet.return_amount;
+        return total + bet.return_amount; // return_amount now stores profit only
       } else if (bet.status === "lost") {
         return total - bet.wager_amount;
       }
@@ -122,7 +166,7 @@ export function CalendarView({ bets }: CalendarViewProps) {
         date: new Date(currentCalendarDay),
         dateKey,
         day: currentCalendarDay.getDate(),
-        profit: dayData?.profit || 0,
+        profit: dayData?.profit ?? null,
         hasBets: !!dayData,
         isCurrentMonth,
       });
@@ -145,7 +189,7 @@ export function CalendarView({ bets }: CalendarViewProps) {
     });
   };
 
-  const dayNames = ["S", "M", "T", "W", "TH", "F", "S"];
+  const dayNames = ["SU", "M", "T", "W", "TH", "F", "SA"];
 
   return (
     <div className="space-y-6">
@@ -175,6 +219,27 @@ export function CalendarView({ bets }: CalendarViewProps) {
                 {formatCurrency(monthlyProfit)}
               </span>
             </div>
+
+            {/* Show indicator when viewing a different month */}
+            {(() => {
+              const now = new Date();
+              const isCurrentMonth =
+                currentDate.getMonth() === now.getMonth() &&
+                currentDate.getFullYear() === now.getFullYear();
+
+              if (!isCurrentMonth) {
+                return (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-text-secondary">•</span>
+                    <span className="text-sm text-accent">
+                      Viewing {monthNames[currentDate.getMonth()]}{" "}
+                      {currentDate.getFullYear()}
+                    </span>
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
         </div>
         <div className="flex items-center space-x-2">
@@ -194,6 +259,28 @@ export function CalendarView({ bets }: CalendarViewProps) {
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
+
+          {/* Show "Go to current month" button when viewing a different month */}
+          {(() => {
+            const now = new Date();
+            const isCurrentMonth =
+              currentDate.getMonth() === now.getMonth() &&
+              currentDate.getFullYear() === now.getFullYear();
+
+            if (!isCurrentMonth) {
+              return (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentDate(new Date())}
+                  className="h-8 px-3 text-xs"
+                >
+                  Today
+                </Button>
+              );
+            }
+            return null;
+          })()}
         </div>
       </div>
 
@@ -226,7 +313,7 @@ export function CalendarView({ bets }: CalendarViewProps) {
                   ${!isBottomRow ? "border-b" : ""}
                   ${
                     day.isCurrentMonth
-                      ? day.hasBets
+                      ? day.hasBets && day.profit !== null
                         ? day.profit > 0
                           ? "bg-profit/10 hover:bg-profit/20"
                           : day.profit < 0
@@ -251,7 +338,7 @@ export function CalendarView({ bets }: CalendarViewProps) {
                   {day.day}
                 </div>
 
-                {day.hasBets && day.isCurrentMonth && (
+                {day.hasBets && day.isCurrentMonth && day.profit !== null && (
                   <div className="flex-1 flex items-center justify-center">
                     <div
                       className={`

@@ -37,10 +37,23 @@ export function formatPercentage(value: number): string {
 }
 
 /**
+ * Parse date string to Date object in local timezone
+ * This prevents dates from shifting due to UTC conversion issues
+ */
+export function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day); // month is 0-indexed
+}
+
+/**
  * Format date for display
  */
 export function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  // Parse the date string and create a date object in local timezone
+  // This prevents the date from shifting due to UTC conversion
+  const localDate = parseLocalDate(dateString);
+  
+  return localDate.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

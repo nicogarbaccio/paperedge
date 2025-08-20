@@ -27,6 +27,11 @@ import {
   getCustomFieldPriority,
   capitalizeFirst,
 } from "@/lib/utils";
+import {
+  calculateTotalPL,
+  calculateWinRate,
+  calculateROI,
+} from "@/lib/betting";
 import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { CreateBetDialog } from "@/components/CreateBetDialog";
 import { EditBetDialog } from "@/components/EditBetDialog";
@@ -34,7 +39,7 @@ import { EditNotebookDialog } from "@/components/EditNotebookDialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CalendarView } from "@/components/CalendarView";
 import { useNotebooks } from "@/hooks/useNotebooks";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useToast } from "@/hooks/useToast";
 import { BetSearch, SearchFilters } from "@/components/BetSearch";
 import { useBetSearch } from "@/hooks/useBetSearch";
@@ -42,6 +47,28 @@ import { NotebookDetailSkeleton } from "@/components/skeletons/NotebookDetailSke
 
 export function NotebookDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  // Validate notebook ID format
+  const isValidNotebookId = useMemo(() => {
+    if (!id) return false;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  }, [id]);
+
+  // Redirect if notebook ID is invalid
+  useEffect(() => {
+    if (id && !isValidNotebookId) {
+      toast({
+        title: "Invalid Notebook ID",
+        description: "The notebook ID in the URL is not valid.",
+        variant: "destructive",
+      });
+      navigate("/notebooks");
+    }
+  }, [id, isValidNotebookId, navigate, toast]);
+
   const {
     notebook,
     bets,
@@ -55,10 +82,9 @@ export function NotebookDetailPage() {
     upsertBetCustomData,
     updateBetWithCustomData,
     refetch,
-  } = useNotebook(id || "");
-  const { updateNotebook, deleteNotebook } = useNotebooks();
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  } = useNotebook(isValidNotebookId ? id || "" : "");
+  const { updateNotebook, deleteNotebook, notebooks } = useNotebooks();
+
   const [isCreateBetDialogOpen, setIsCreateBetDialogOpen] = useState(false);
   const [isEditBetDialogOpen, setIsEditBetDialogOpen] = useState(false);
   const [isEditNotebookDialogOpen, setIsEditNotebookDialogOpen] =
@@ -68,6 +94,36 @@ export function NotebookDetailPage() {
     "history"
   );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // Handle unauthorized access or notebook not found
+  useEffect(() => {
+    if (error && !loading) {
+      if (
+        error.includes("Access denied") ||
+        error.includes("Notebook not found")
+      ) {
+        toast({
+          title: "Access Denied",
+          description: "You don't have permission to view this notebook.",
+          variant: "destructive",
+        });
+        navigate("/notebooks");
+      }
+    }
+  }, [error, loading, navigate, toast]);
+
+  // Check if user has any notebooks
+  useEffect(() => {
+    if (!loading && notebooks.length === 0) {
+      toast({
+        title: "No Notebooks",
+        description:
+          "You don't have any notebooks yet. Create one to get started!",
+        variant: "default",
+      });
+      navigate("/notebooks");
+    }
+  }, [notebooks.length, loading, navigate, toast]);
 
   // Search filters state
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
@@ -233,6 +289,14 @@ export function NotebookDetailPage() {
 
   const notebookColorClasses = getNotebookColorClasses(notebook.color);
 
+  // Calculate notebook statistics
+  const totalPL = calculateTotalPL(bets);
+  const winRate = calculateWinRate(bets);
+  const roi = calculateROI(bets);
+  const totalWagered = bets
+    .filter((bet) => ["won", "lost"].includes(bet.status))
+    .reduce((total, bet) => total + bet.wager_amount, 0);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -284,6 +348,54 @@ export function NotebookDetailPage() {
             </div>
           </div>
         </CardHeader>
+        {bets.length > 0 && (
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <p className="text-text-secondary text-sm">Total P&L</p>
+                <p
+                  className={`text-lg font-semibold ${
+                    totalPL > 0
+                      ? "text-profit"
+                      : totalPL < 0
+                      ? "text-loss"
+                      : "text-text-primary"
+                  }`}
+                >
+                  {totalPL > 0 ? "+" : ""}
+                  {formatCurrency(totalPL)}
+                </p>
+              </div>
+              <div>
+                <p className="text-text-secondary text-sm">Win Rate</p>
+                <p className="text-lg font-semibold">
+                  {formatPercentage(winRate)}
+                </p>
+              </div>
+              <div>
+                <p className="text-text-secondary text-sm">ROI</p>
+                <p
+                  className={`text-lg font-semibold ${
+                    roi > 0
+                      ? "text-profit"
+                      : roi < 0
+                      ? "text-loss"
+                      : "text-text-primary"
+                  }`}
+                >
+                  {roi > 0 ? "+" : ""}
+                  {formatPercentage(roi)}
+                </p>
+              </div>
+              <div>
+                <p className="text-text-secondary text-sm">Total Wagered</p>
+                <p className="text-lg font-semibold">
+                  {formatCurrency(totalWagered)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        )}
       </Card>
 
       {/* View Toggle and Add Bet Button */}
@@ -492,8 +604,10 @@ export function NotebookDetailPage() {
                               ? "Pending"
                               : bet.status === "push"
                               ? "Push"
-                              : bet.return_amount
-                              ? formatCurrency(bet.return_amount)
+                              : bet.status === "won" && bet.return_amount
+                              ? formatCurrency(bet.return_amount) // Show profit only
+                              : bet.status === "lost"
+                              ? `-${formatCurrency(bet.wager_amount)}`
                               : "-"}
                           </p>
                         </div>

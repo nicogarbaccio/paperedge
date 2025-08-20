@@ -13,7 +13,7 @@ import { DateInput } from "@/components/ui/DateInput";
 import { Label } from "@/components/ui/Label";
 import { Loader2, Trash2 } from "lucide-react";
 import {
-  calculateReturn,
+  calculateProfit,
   calculatePayout,
   isValidAmericanOdds,
 } from "@/lib/betting";
@@ -90,13 +90,13 @@ export function EditBetDialog({
     Record<string, string>
   >({});
 
-  // Calculate expected return and profit based on current odds and wager
+  // Calculate expected profit and total payout based on current odds and wager
   const expectedProfit =
     formData.wager_amount > 0 && isValidAmericanOdds(formData.odds)
-      ? calculateReturn(formData.odds, formData.wager_amount)
+      ? calculateProfit(formData.odds, formData.wager_amount)
       : 0;
 
-  const expectedReturn =
+  const expectedPayout =
     formData.wager_amount > 0 && isValidAmericanOdds(formData.odds)
       ? calculatePayout(formData.odds, formData.wager_amount)
       : 0;
@@ -106,18 +106,18 @@ export function EditBetDialog({
     if (
       formData.status === "won" &&
       !userModifiedReturn &&
-      expectedReturn > 0 &&
+      expectedProfit > 0 &&
       !closingRef.current // Don't auto-calculate when closing
     ) {
       setFormData((prev) => ({
         ...prev,
-        return_amount: expectedReturn,
+        return_amount: expectedProfit, // Store profit only, not total payout
       }));
     }
   }, [
     formData.odds,
     formData.wager_amount,
-    expectedReturn,
+    expectedProfit,
     userModifiedReturn,
     formData.status,
   ]);
@@ -268,8 +268,8 @@ export function EditBetDialog({
       // Auto-set return amount based on status
       return_amount:
         status === "won"
-          ? expectedReturn > 0
-            ? expectedReturn
+          ? expectedProfit > 0
+            ? expectedProfit // Store profit only, not total payout
             : prev.return_amount
           : status === "lost"
           ? 0
@@ -462,33 +462,33 @@ export function EditBetDialog({
               </div>
               <div className="flex items-center justify-between text-xs">
                 <p className="text-text-secondary">
-                  Expected return: {formatCurrency(expectedReturn)}
+                  Expected profit: {formatCurrency(expectedProfit)}
                   <span className="text-accent">
                     {" "}
-                    (profit: {formatCurrency(expectedProfit)})
+                    (total payout: {formatCurrency(expectedPayout)})
                   </span>
                 </p>
-                {!userModifiedReturn && expectedReturn > 0 && (
+                {!userModifiedReturn && expectedProfit > 0 && (
                   <span className="text-green-600 text-xs">
                     Auto-calculated
                   </span>
                 )}
               </div>
               {userModifiedReturn &&
-                expectedReturn > 0 &&
-                Math.abs(formData.return_amount - expectedReturn) > 0.01 && (
+                expectedProfit > 0 &&
+                Math.abs(formData.return_amount - expectedProfit) > 0.01 && (
                   <button
                     type="button"
                     onClick={() => {
                       setFormData((prev) => ({
                         ...prev,
-                        return_amount: expectedReturn,
+                        return_amount: expectedProfit,
                       }));
                       setUserModifiedReturn(false);
                     }}
                     className="text-xs text-accent underline hover:no-underline"
                   >
-                    Use expected return ({formatCurrency(expectedReturn)})
+                    Use expected profit ({formatCurrency(expectedProfit)})
                   </button>
                 )}
             </div>
@@ -503,12 +503,12 @@ export function EditBetDialog({
             </div>
           )}
 
-          {expectedReturn > 0 && formData.status === "pending" && (
+          {expectedProfit > 0 && formData.status === "pending" && (
             <div className="text-xs text-accent bg-accent/10 p-3 rounded-md">
-              Expected return: {formatCurrency(expectedReturn)}
+              Expected profit: {formatCurrency(expectedProfit)}
               <span className="text-text-secondary">
                 {" "}
-                (profit: {formatCurrency(expectedProfit)})
+                (total payout: {formatCurrency(expectedPayout)})
               </span>
             </div>
           )}
