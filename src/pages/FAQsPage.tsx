@@ -18,16 +18,16 @@ const faqs: FAQItem[] = [
       "PaperEdge is a comprehensive betting management application that allows you to track and analyze your betting strategies without risking real money. It's designed for 'paper betting' - meaning you can test strategies, track hypothetical wagers, and analyze performance to determine profitability before putting actual money on the line.",
   },
   {
-    id: "why-not-pikkit",
-    question: "Why not just use existing betting platforms like Pikkit?",
-    answer:
-      "The whole point of PaperEdge is 'paper betting' - allowing you to track and test strategies without risking any actual money. This lets you determine whether a strategy is profitable before investing real funds. Traditional betting platforms require real money wagers, while PaperEdge focuses purely on strategy development and analysis.",
-  },
-  {
     id: "what-can-i-track",
     question: "What can I track with PaperEdge?",
     answer:
       "You can track: \n\n- Individual wagers with custom fields\n- Multiple betting strategies across different sports\n- Performance analytics and trends\n- Profit/loss calculations\n- Calendar views of your betting activity\n- Arbitrage opportunities\n- Parlay calculations\n- Unit-based betting strategies",
+  },
+  {
+    id: "why-not-pikkit",
+    question: "Why not just use existing betting platforms like Pikkit?",
+    answer:
+      "The whole point of PaperEdge is 'paper betting' - allowing you to track and test strategies without risking any actual money. This lets you determine whether a strategy is profitable before investing real funds. Traditional betting platforms require real money wagers, while PaperEdge focuses purely on strategy development and analysis.",
   },
   {
     id: "organize-strategies",
@@ -48,10 +48,16 @@ const faqs: FAQItem[] = [
       "Yes! PaperEdge includes advanced betting calculators for: \n\n- **Arbitrage opportunities** - Find risk-free betting scenarios\n- **Parlay calculations** - Calculate potential payouts for multiple bets\n- **Unit-based betting** - Manage bankroll using betting units\n- Custom betting scenarios",
   },
   {
+    id: "account-tracker",
+    question: "How does the tracker work?",
+    answer:
+      "The account tracker is a simple tool that allows you to track your betting across multiple accounts. Platforms like Pikkit don't allow you to track your activity on offshore sites like Betonline, BetUS, MyBookie, etc. And you can only track one account at a time. So if you have multiple accounts, you can track them all in one place and see your overall activity!",
+  },
+  {
     id: "mobile-friendly",
     question: "Is PaperEdge mobile-friendly?",
     answer:
-      "Absolutely. PaperEdge is built with a mobile-first approach using responsive design principles. You can access and manage your betting notebooks, add wagers, and view analytics seamlessly on any device.",
+      "Absolutely! You can access and manage your betting notebooks, add wagers, and view analytics seamlessly on any device.",
   },
   {
     id: "security",
@@ -63,7 +69,7 @@ const faqs: FAQItem[] = [
     id: "real-accounts",
     question: "Do I need to connect my real betting accounts?",
     answer:
-      "No! Since PaperEdge is designed for paper betting, you don't need to connect any real betting accounts or deposit actual money. Everything is tracked hypothetically to help you develop and test strategies.",
+      "Nope! Since PaperEdge is designed for paper betting, you don't need to connect any real betting accounts or deposit actual money. Everything is tracked hypothetically to help you develop and test strategies.",
   },
   {
     id: "multiple-sports",
@@ -92,8 +98,7 @@ const faqs: FAQItem[] = [
   {
     id: "export",
     question: "Can I export my data?",
-    answer:
-      "PaperEdge provides options to export your betting data and analytics, allowing you to use the information in other tools or keep personal backups of your strategy development progress.",
+    answer: "Not right now, but we're working on it!",
   },
 ];
 
