@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   supabase,
   getAuthRedirectUrl,
-  debugAuthRedirect,
 } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -50,9 +49,6 @@ export function LoginPage() {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     setError(null);
-
-    // Debug the redirect URL in development
-    debugAuthRedirect("/dashboard");
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({

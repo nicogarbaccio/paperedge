@@ -22,7 +22,15 @@ export function CalendarView({ bets }: CalendarViewProps) {
     });
 
     // Parse the bet date and set calendar to that month
-    const [year, month] = mostRecentBet.date.split("-").map(Number);
+    const dateParts = mostRecentBet.date.split("-");
+    if (dateParts.length < 2) {
+      return new Date(); // Invalid date format, fall back to current month
+    }
+    const year = parseInt(dateParts[0], 10);
+    const month = parseInt(dateParts[1], 10);
+    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+      return new Date(); // Invalid date values, fall back to current month
+    }
     return new Date(year, month - 1); // month is 0-indexed in JavaScript
   });
 
@@ -54,7 +62,15 @@ export function CalendarView({ bets }: CalendarViewProps) {
     });
 
     // Parse the bet date and set calendar to that month
-    const [year, month] = mostRecentBet.date.split("-").map(Number);
+    const dateParts = mostRecentBet.date.split("-");
+    if (dateParts.length < 2) {
+      return; // Invalid date format, don't update
+    }
+    const year = parseInt(dateParts[0], 10);
+    const month = parseInt(dateParts[1], 10);
+    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+      return; // Invalid date values, don't update
+    }
     const newDate = new Date(year, month - 1); // month is 0-indexed in JavaScript
 
     // Only update if the month is different to avoid unnecessary re-renders
@@ -103,9 +119,16 @@ export function CalendarView({ bets }: CalendarViewProps) {
     // Filter bets for the current month
     const monthBets = bets.filter((bet) => {
       // Parse date without timezone conversion by splitting the date string
-      const [betYearStr, betMonthStr] = bet.date.split("-");
-      const betYear = parseInt(betYearStr, 10);
-      const betMonth = parseInt(betMonthStr, 10) - 1; // Month is 0-indexed in JavaScript
+      const dateParts = bet.date.split("-");
+      if (dateParts.length < 2) {
+        return false; // Invalid date format, exclude from filter
+      }
+      const betYear = parseInt(dateParts[0], 10);
+      const betMonth = parseInt(dateParts[1], 10) - 1; // Month is 0-indexed in JavaScript
+
+      if (isNaN(betYear) || isNaN(betMonth)) {
+        return false; // Invalid date values, exclude from filter
+      }
 
       return betYear === year && betMonth === month;
     });

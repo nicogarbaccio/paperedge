@@ -3,11 +3,6 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Debug: Log the environment variables (we'll remove this after debugging)
-console.log('🔍 Debugging Supabase Environment Variables:')
-console.log('VITE_SUPABASE_URL:', supabaseUrl)
-console.log('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'Found (length: ' + supabaseAnonKey.length + ')' : 'Not found')
-
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
@@ -16,7 +11,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 try {
   new URL(supabaseUrl)
 } catch (error) {
-  console.error('Invalid Supabase URL:', supabaseUrl)
   throw new Error('Invalid Supabase URL format')
 }
 
@@ -28,18 +22,9 @@ export function getAuthRedirectUrl(path: string = '/dashboard'): string {
   if (import.meta.env.DEV) {
     return `http://localhost:5173${path}`
   }
-  
+
   // In production, use the current origin
   return `${window.location.origin}${path}`
-}
-
-// Debug function to log current redirect URL (remove in production)
-export function debugAuthRedirect(path: string = '/dashboard'): void {
-  if (import.meta.env.DEV) {
-    console.log('🔗 Auth Redirect URL:', getAuthRedirectUrl(path))
-    console.log('🌍 Current Origin:', window.location.origin)
-    console.log('🔧 Environment:', import.meta.env.MODE)
-  }
 }
 
 // Database types

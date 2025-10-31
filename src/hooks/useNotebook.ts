@@ -59,14 +59,6 @@ export function useNotebook(notebookId: string) {
       return
     }
 
-    // Debug logging
-    console.log('🔍 useNotebook Debug:', {
-      currentUserId: user.id,
-      currentUserEmail: user.email,
-      notebookId,
-      isValidNotebookId
-    });
-
     // Check if notebook ID is valid
     if (!isValidNotebookId) {
       setError('Invalid notebook ID format')
@@ -98,14 +90,6 @@ export function useNotebook(notebookId: string) {
         }
         throw ownershipError
       }
-
-      // Debug logging for ownership check
-      console.log('🔍 Ownership Check:', {
-        notebookId,
-        notebookOwnerId: ownershipCheck.user_id,
-        currentUserId: user.id,
-        isOwner: ownershipCheck.user_id === user.id
-      });
 
       // Verify the notebook belongs to the current user
       if (ownershipCheck.user_id !== user.id) {

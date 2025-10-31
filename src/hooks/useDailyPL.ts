@@ -87,10 +87,19 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
 
       // Filter to current user, then strip joined object
       // Type: array of objects with accounts relation joined
-      type DailyPLWithAccounts = DailyPLEntry & { accounts?: { user_id: string } }
+      // Note: Supabase returns foreign key joins as single objects, not arrays
+      type DailyPLWithAccounts = DailyPLEntry & {
+        accounts?: { user_id: string } | { user_id: string }[] | null
+      }
 
-      const filtered = (data as DailyPLWithAccounts[])
-        .filter((row) => row.accounts?.user_id === user.id)
+      const filtered = (data as unknown as DailyPLWithAccounts[])
+        .filter((row) => {
+          // Handle both object and array cases for accounts
+          if (Array.isArray(row.accounts)) {
+            return row.accounts.some(acc => acc.user_id === user.id)
+          }
+          return row.accounts?.user_id === user.id
+        })
         .map(({ accounts, ...rest }) => rest as DailyPLEntry)
 
       setData(filtered)
@@ -225,10 +234,18 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
         return
       }
 
-      type DailyPLWithAccounts = DailyPLEntry & { accounts?: { user_id: string } }
+      type DailyPLWithAccounts = DailyPLEntry & {
+        accounts?: { user_id: string } | { user_id: string }[] | null
+      }
 
-      const filtered = (data as DailyPLWithAccounts[])
-        .filter((row) => row.accounts?.user_id === user.id)
+      const filtered = (data as unknown as DailyPLWithAccounts[])
+        .filter((row) => {
+          // Handle both object and array cases for accounts
+          if (Array.isArray(row.accounts)) {
+            return row.accounts.some(acc => acc.user_id === user.id)
+          }
+          return row.accounts?.user_id === user.id
+        })
         .map(({ accounts, ...rest }) => rest as DailyPLEntry)
       cacheRef.current.set(key, filtered)
     } catch (_) {

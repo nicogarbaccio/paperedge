@@ -61,16 +61,6 @@ function App() {
     const urlParams = new URLSearchParams(window.location.search);
     const accessToken = urlParams.get("access_token");
     const refreshToken = urlParams.get("refresh_token");
-    const error = urlParams.get("error");
-    const errorDescription = urlParams.get("error_description");
-
-    console.log("URL params on load:", {
-      accessToken: !!accessToken,
-      refreshToken: !!refreshToken,
-      error,
-      errorDescription,
-      allParams: Object.fromEntries(urlParams.entries()),
-    });
 
     isOAuthRedirect.current = !!(accessToken || refreshToken);
 
@@ -109,7 +99,6 @@ function App() {
           newUser &&
           hasShownToastForSession.current !== newUser.id
         ) {
-          console.log("Showing welcome toast");
           toast({
             title: "Welcome back!",
             description: `Signed in as ${newUser.email}`,
@@ -118,11 +107,6 @@ function App() {
           hasShownToastForSession.current = newUser.id;
           // Store in session storage so it persists across page refreshes
           sessionStorage.setItem(`toast_shown_${newUser.id}`, newUser.id);
-        } else if (event === "INITIAL_SESSION" && newUser) {
-          console.log("Not showing toast because:", {
-            hasShownToast: hasShownToastForSession.current,
-            condition: hasShownToastForSession.current !== newUser.id,
-          });
         } else if (event === "SIGNED_OUT") {
           toast({
             title: "Signed out",

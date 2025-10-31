@@ -211,12 +211,19 @@ export function CreateBetDialog({
               type="number"
               placeholder="e.g., +150 or -110"
               value={formData.odds || ""}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  odds: parseInt(e.target.value) || 0,
-                }))
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "" || value === "-") {
+                  // Allow empty or negative sign during input
+                  setFormData((prev) => ({ ...prev, odds: 0 }));
+                } else {
+                  const parsedOdds = parseInt(value, 10);
+                  setFormData((prev) => ({
+                    ...prev,
+                    odds: isNaN(parsedOdds) ? 0 : parsedOdds,
+                  }));
+                }
+              }}
               disabled={loading}
               required
             />
@@ -239,12 +246,18 @@ export function CreateBetDialog({
                 step="0.01"
                 placeholder="100.00"
                 value={formData.wager_amount || ""}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    wager_amount: parseFloat(e.target.value) || 0,
-                  }))
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "") {
+                    setFormData((prev) => ({ ...prev, wager_amount: 0 }));
+                  } else {
+                    const parsedAmount = parseFloat(value);
+                    setFormData((prev) => ({
+                      ...prev,
+                      wager_amount: isNaN(parsedAmount) ? 0 : parsedAmount,
+                    }));
+                  }
+                }}
                 disabled={loading}
                 className="pl-8"
                 required
