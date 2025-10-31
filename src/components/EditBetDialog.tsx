@@ -17,7 +17,9 @@ import {
   calculatePayout,
   isValidAmericanOdds,
 } from "@/lib/betting";
-import { formatCurrency, capitalizeFirst } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
+import { CustomColumnsFields } from "@/components/CustomColumnsFields";
+import type { CustomColumn } from "@/hooks/useNotebook";
 
 interface Bet {
   id: string;
@@ -35,12 +37,7 @@ interface EditBetDialogProps {
   bet: Bet | null;
   onUpdateBet: (betId: string, updates: Partial<Bet>) => Promise<void>;
   onDeleteBet: (betId: string) => Promise<void>;
-  customColumns?: Array<{
-    id: string;
-    column_name: string;
-    column_type: "text" | "number" | "select";
-    select_options: string[] | null;
-  }>;
+  customColumns?: CustomColumn[];
   initialCustomValues?: Record<string, string>;
   onUpsertBetCustomData?: (
     betId: string,
@@ -78,8 +75,6 @@ export function EditBetDialog({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [customValues, setCustomValues] =
     useState<Record<string, string>>(initialCustomValues);
-  const [otherMode, setOtherMode] = useState<Record<string, boolean>>({});
-  const [showAdditional, setShowAdditional] = useState(false);
   // Track whether user has manually modified return_amount
   const [userModifiedReturn, setUserModifiedReturn] = useState(false);
   // Add ref to track if dialog is closing
@@ -140,10 +135,6 @@ export function EditBetDialog({
       setError(null);
       setShowDeleteConfirm(false);
       setCustomValues(initialCustomValues || {});
-      const hasAnyCustomValues = Object.values(initialCustomValues || {}).some(
-        (v) => v !== undefined && v !== null && `${v}`.trim() !== ""
-      );
-      setShowAdditional(hasAnyCustomValues);
       // Reset user modification flag when opening dialog
       setUserModifiedReturn(false);
     }
@@ -513,123 +504,13 @@ export function EditBetDialog({
             </div>
           )}
 
-          {customColumns?.length > 0 && (
-            <div className="space-y-2">
-              <button
-                type="button"
-                className="text-sm text-accent underline"
-                onClick={() => setShowAdditional((s) => !s)}
-              >
-                {showAdditional ? "Hide" : "Show"} additional fields
-              </button>
-              {showAdditional && (
-                <div className="space-y-3">
-                  {customColumns
-                    .filter(
-                      (col, idx, arr) =>
-                        arr.findIndex(
-                          (c) =>
-                            c.column_name.toLowerCase() ===
-                            col.column_name.toLowerCase()
-                        ) === idx
-                    )
-                    .map((col) => {
-                      const options = col.select_options || [];
-                      const filteredOptions = options.filter((opt) => {
-                        const o = `${opt}`.trim().toLowerCase();
-                        return (
-                          o !== "other" && o !== "other..." && o !== "other…"
-                        );
-                      });
-                      const currentVal = customValues[col.id] ?? "";
-                      const isInOptions = filteredOptions.includes(currentVal);
-                      const isOtherSelected =
-                        otherMode[col.id] || (!!currentVal && !isInOptions);
-                      const selectValue = isOtherSelected
-                        ? "__OTHER__"
-                        : currentVal;
-
-                      return (
-                        <div key={col.id} className="space-y-1">
-                          <Label htmlFor={`col-${col.id}`}>
-                            {capitalizeFirst(col.column_name)}
-                          </Label>
-                          {col.column_type === "select" ? (
-                            <>
-                              <select
-                                id={`col-${col.id}`}
-                                className="w-full rounded-md border border-border bg-surface p-2 text-sm"
-                                disabled={loading}
-                                value={selectValue}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  if (value === "__OTHER__") {
-                                    setOtherMode((prev) => ({
-                                      ...prev,
-                                      [col.id]: true,
-                                    }));
-                                    setCustomValues((prev) => ({
-                                      ...(prev || {}),
-                                      [col.id]: prev?.[col.id] ?? "",
-                                    }));
-                                  } else {
-                                    setOtherMode((prev) => ({
-                                      ...prev,
-                                      [col.id]: false,
-                                    }));
-                                    setCustomValues((prev) => ({
-                                      ...(prev || {}),
-                                      [col.id]: value,
-                                    }));
-                                  }
-                                }}
-                              >
-                                <option value="">Select...</option>
-                                {filteredOptions.map((opt) => (
-                                  <option key={opt} value={opt}>
-                                    {opt}
-                                  </option>
-                                ))}
-                                <option value="__OTHER__">Other…</option>
-                              </select>
-                              {isOtherSelected && (
-                                <Input
-                                  id={`col-${col.id}-other`}
-                                  placeholder={`Enter ${col.column_name}`}
-                                  value={currentVal}
-                                  onChange={(e) =>
-                                    setCustomValues((prev) => ({
-                                      ...(prev || {}),
-                                      [col.id]: e.target.value,
-                                    }))
-                                  }
-                                  disabled={loading}
-                                  className="mt-2"
-                                />
-                              )}
-                            </>
-                          ) : (
-                            <Input
-                              id={`col-${col.id}`}
-                              type={
-                                col.column_type === "number" ? "number" : "text"
-                              }
-                              value={currentVal}
-                              onChange={(e) =>
-                                setCustomValues((prev) => ({
-                                  ...(prev || {}),
-                                  [col.id]: e.target.value,
-                                }))
-                              }
-                              disabled={loading}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
-            </div>
+          {customColumns && customColumns.length > 0 && (
+            <CustomColumnsFields
+              customColumns={customColumns}
+              customValues={customValues}
+              setCustomValues={setCustomValues}
+              loading={loading}
+            />
           )}
 
           {error && (

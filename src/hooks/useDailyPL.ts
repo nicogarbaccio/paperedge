@@ -39,7 +39,7 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
     return `${toISODate(start)}|${toISODate(end)}|${accId ?? ''}`
   }
 
-  async function fetchRange() {
+  async function fetchRange(signal?: AbortSignal) {
     if (!user?.id) {
       setData([])
       setLoading(false)
@@ -172,7 +172,17 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
   }
 
   useEffect(() => {
-    fetchRange()
+    let cancelled = false
+
+    const fetchData = async () => {
+      await fetchRange()
+      if (cancelled) {
+        return
+      }
+    }
+
+    fetchData()
+    return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, rangeStart.getTime(), rangeEnd.getTime(), accountId])
 

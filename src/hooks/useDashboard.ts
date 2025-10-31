@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/authStore'
 import { parseLocalDate } from '@/lib/utils'
+import { calculateTotalPL, calculateWinRate, calculateROI } from '@/lib/betting'
 
 export interface DashboardStats {
   totalBets: number
@@ -105,23 +106,11 @@ export function useDashboard() {
 
       // Calculate stats
       const totalBets = allBets.length
-      const completedBets = allBets.filter((bet: any) => ['won', 'lost', 'push'].includes(bet.status))
-      const wonBets = allBets.filter((bet: any) => bet.status === 'won')
       const pendingBets = allBets.filter((bet: any) => bet.status === 'pending').length
-      
-      const winRate = completedBets.length > 0 ? (wonBets.length / completedBets.length) * 100 : 0
-      
-      const totalPL = allBets.reduce((total: number, bet: any) => {
-        if (bet.status === 'won' && bet.return_amount) {
-          return total + bet.return_amount // return_amount now stores profit only
-        } else if (bet.status === 'lost') {
-          return total - bet.wager_amount
-        }
-        return total
-      }, 0)
 
-      const totalWagered = completedBets.reduce((total: number, bet: any) => total + bet.wager_amount, 0)
-      const roi = totalWagered > 0 ? (totalPL / totalWagered) * 100 : 0
+      const winRate = calculateWinRate(allBets)
+      const totalPL = calculateTotalPL(allBets)
+      const roi = calculateROI(allBets)
 
       setStats({
         totalBets,
@@ -157,23 +146,11 @@ export function useDashboard() {
       const notebooksWithStats = notebooks
         .map(notebook => {
           const bets = notebook.bets || []
-          const completedBets = bets.filter((bet: any) => ['won', 'lost', 'push'].includes(bet.status))
-          const wonBets = bets.filter((bet: any) => bet.status === 'won')
-          
-          const bet_count = bets.length
-          const win_rate = completedBets.length > 0 ? (wonBets.length / completedBets.length) * 100 : 0
-          
-          const total_pl = bets.reduce((total: number, bet: any) => {
-            if (bet.status === 'won' && bet.return_amount) {
-              return total + bet.return_amount // return_amount now stores profit only
-            } else if (bet.status === 'lost') {
-              return total - bet.wager_amount
-            }
-            return total
-          }, 0)
 
-          const totalWagered = completedBets.reduce((total: number, bet: any) => total + bet.wager_amount, 0)
-          const roi = totalWagered > 0 ? (total_pl / totalWagered) * 100 : 0
+          const bet_count = bets.length
+          const win_rate = calculateWinRate(bets)
+          const total_pl = calculateTotalPL(bets)
+          const roi = calculateROI(bets)
 
           return {
             id: notebook.id,
@@ -199,7 +176,18 @@ export function useDashboard() {
   }
 
   useEffect(() => {
-    fetchDashboardData()
+    let cancelled = false
+
+    const fetchData = async () => {
+      await fetchDashboardData()
+      if (cancelled) {
+        // Reset state if component unmounted
+        return
+      }
+    }
+
+    fetchData()
+    return () => { cancelled = true }
   }, [user?.id])
 
   return {

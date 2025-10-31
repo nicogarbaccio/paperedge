@@ -69,7 +69,17 @@ export function useAccounts() {
   }
 
   useEffect(() => {
-    fetchAccounts()
+    let cancelled = false
+
+    const fetchData = async () => {
+      await fetchAccounts()
+      if (cancelled) {
+        return
+      }
+    }
+
+    fetchData()
+    return () => { cancelled = true }
   }, [user?.id])
 
   return { accounts, loading, error, refetch: fetchAccounts, createAccount, updateAccount, deleteAccount }
@@ -107,7 +117,17 @@ export function useAccount(accountId: string | null) {
   }
 
   useEffect(() => {
-    fetchAccount()
+    let cancelled = false
+
+    const fetchData = async () => {
+      await fetchAccount()
+      if (cancelled) {
+        return
+      }
+    }
+
+    fetchData()
+    return () => { cancelled = true }
   }, [user?.id, accountId])
 
   return { account, loading, error, refetch: fetchAccount }

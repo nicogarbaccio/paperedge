@@ -169,7 +169,7 @@ export function useNotebook(notebookId: string) {
           .select('*')
           .eq('notebook_id', notebookId)
           .order('created_at', { ascending: true })
-        if (seededFetchError) throw seededFetchError
+          if (seededFetchError) throw seededFetchError
         columns = seededColumns || []
       }
 
@@ -192,7 +192,7 @@ export function useNotebook(notebookId: string) {
           .from('bet_custom_data')
           .select('*')
           .in('bet_id', betIds)
-        if (customDataError) throw customDataError
+          if (customDataError) throw customDataError
 
         const map: BetCustomMap = {}
         for (const row of customDataRows || []) {
@@ -389,12 +389,22 @@ export function useNotebook(notebookId: string) {
   }
 
   useEffect(() => {
-    if (isValidNotebookId) {
-      fetchNotebook()
-    } else if (notebookId) {
-      setError('Invalid notebook ID format')
-      setLoading(false)
+    let cancelled = false
+
+    const fetchData = async () => {
+      if (isValidNotebookId) {
+        await fetchNotebook()
+        if (cancelled) {
+          return
+        }
+      } else if (notebookId) {
+        setError('Invalid notebook ID format')
+        setLoading(false)
+      }
     }
+
+    fetchData()
+    return () => { cancelled = true }
   }, [user?.id, notebookId, isValidNotebookId])
 
   return {

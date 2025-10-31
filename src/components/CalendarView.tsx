@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils";
+import { calculateTotalPL } from "@/lib/betting";
 import type { Bet } from "@/hooks/useNotebook";
 
 interface CalendarViewProps {
@@ -99,27 +100,17 @@ export function CalendarView({ bets }: CalendarViewProps) {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
 
-    // Use the same logic as dailyPL calculation
-    let totalProfit = 0;
-
-    bets.forEach((bet) => {
+    // Filter bets for the current month
+    const monthBets = bets.filter((bet) => {
       // Parse date without timezone conversion by splitting the date string
-      const [betYearStr, betMonthStr, betDayStr] = bet.date.split("-");
+      const [betYearStr, betMonthStr] = bet.date.split("-");
       const betYear = parseInt(betYearStr, 10);
       const betMonth = parseInt(betMonthStr, 10) - 1; // Month is 0-indexed in JavaScript
 
-      // Only include bets from the current month being viewed
-      if (betYear === year && betMonth === month) {
-        if (bet.status === "won" && bet.return_amount) {
-          totalProfit += bet.return_amount; // return_amount now stores profit only
-        } else if (bet.status === "lost") {
-          totalProfit -= bet.wager_amount;
-        }
-        // Push and pending bets don't affect P&L
-      }
+      return betYear === year && betMonth === month;
     });
 
-    return totalProfit;
+    return calculateTotalPL(monthBets);
   }, [bets, currentDate]);
 
   // Calculate overall stats
@@ -128,14 +119,7 @@ export function CalendarView({ bets }: CalendarViewProps) {
     const lostBets = bets.filter((bet) => bet.status === "lost");
     const pushBets = bets.filter((bet) => bet.status === "push");
 
-    const totalProfit = bets.reduce((total, bet) => {
-      if (bet.status === "won" && bet.return_amount) {
-        return total + bet.return_amount; // return_amount now stores profit only
-      } else if (bet.status === "lost") {
-        return total - bet.wager_amount;
-      }
-      return total;
-    }, 0);
+    const totalProfit = calculateTotalPL(bets);
 
     return {
       record: `${wonBets.length}-${lostBets.length}-${pushBets.length}`,
