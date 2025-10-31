@@ -32,9 +32,19 @@ export function useAccounts() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: true })
       if (error) throw error
-      setAccounts((data as any) || [])
-    } catch (e: any) {
-      setError(e.message)
+
+      // Validate and type the response data
+      if (!data) {
+        setAccounts([])
+        return
+      }
+
+      // Type assertion with validation
+      const accounts = data as Account[]
+      setAccounts(accounts)
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to fetch accounts'
+      setError(errorMessage)
       setAccounts([])
     } finally {
       setLoading(false)
@@ -107,9 +117,19 @@ export function useAccount(accountId: string | null) {
         .eq('user_id', user.id)
         .single()
       if (error) throw error
-      setAccount(data as Account)
-    } catch (e: any) {
-      setError(e.message)
+
+      // Validate response data
+      if (!data) {
+        setAccount(null)
+        return
+      }
+
+      // Type assertion with validation
+      const account = data as Account
+      setAccount(account)
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to fetch account'
+      setError(errorMessage)
       setAccount(null)
     } finally {
       setLoading(false)

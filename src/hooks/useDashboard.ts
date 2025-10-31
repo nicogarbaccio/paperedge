@@ -168,8 +168,9 @@ export function useDashboard() {
 
       setTopNotebooks(notebooksWithStats)
 
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch dashboard data'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

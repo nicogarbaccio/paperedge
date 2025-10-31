@@ -77,8 +77,19 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
 
       if (error) throw error
 
+      // Validate response data
+      if (!data || !Array.isArray(data)) {
+        setData([])
+        const key = makeKey(rangeStart, rangeEnd, accountId)
+        cacheRef.current.set(key, [])
+        return
+      }
+
       // Filter to current user, then strip joined object
-      const filtered = (data as any[])
+      // Type: array of objects with accounts relation joined
+      type DailyPLWithAccounts = DailyPLEntry & { accounts?: { user_id: string } }
+
+      const filtered = (data as DailyPLWithAccounts[])
         .filter((row) => row.accounts?.user_id === user.id)
         .map(({ accounts, ...rest }) => rest as DailyPLEntry)
 
@@ -86,8 +97,9 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
       // Update cache for this range
       const key = makeKey(rangeStart, rangeEnd, accountId)
       cacheRef.current.set(key, filtered)
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to fetch daily P&L data'
+      setError(errorMessage)
       setData([])
     } finally {
       setLoading(false)
@@ -206,12 +218,21 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
 
       const { data, error } = await query
       if (error) throw error
-      const filtered = (data as any[])
+
+      // Validate and type the response
+      if (!data || !Array.isArray(data)) {
+        cacheRef.current.set(key, [])
+        return
+      }
+
+      type DailyPLWithAccounts = DailyPLEntry & { accounts?: { user_id: string } }
+
+      const filtered = (data as DailyPLWithAccounts[])
         .filter((row) => row.accounts?.user_id === user.id)
         .map(({ accounts, ...rest }) => rest as DailyPLEntry)
       cacheRef.current.set(key, filtered)
     } catch (_) {
-      // ignore prefetch errors
+      // Silently ignore prefetch errors - not critical
     }
   }
 

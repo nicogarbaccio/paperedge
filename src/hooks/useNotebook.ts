@@ -203,8 +203,9 @@ export function useNotebook(notebookId: string) {
       } else {
         setBetCustomData({})
       }
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to perform operation"
+      setError(errorMessage)
       setNotebook(null)
       setBets([])
       setCustomColumns([])
@@ -257,8 +258,9 @@ export function useNotebook(notebookId: string) {
       await fetchNotebook()
 
       return data
-    } catch (error: any) {
-      throw new Error(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Operation failed"
+      throw new Error(errorMessage)
     }
   }
 
@@ -278,8 +280,9 @@ export function useNotebook(notebookId: string) {
       if (!delayRefresh) {
         await fetchNotebook()
       }
-    } catch (error: any) {
-      throw new Error(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Operation failed"
+      throw new Error(errorMessage)
     }
   }
 
@@ -297,8 +300,9 @@ export function useNotebook(notebookId: string) {
       if (!delayRefresh) {
         await fetchNotebook()
       }
-    } catch (error: any) {
-      throw new Error(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Operation failed"
+      throw new Error(errorMessage)
     }
   }
 
@@ -315,8 +319,9 @@ export function useNotebook(notebookId: string) {
       
       // Single refresh after both operations
       await fetchNotebook()
-    } catch (error: any) {
-      throw new Error(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Operation failed"
+      throw new Error(errorMessage)
     }
   }
 
@@ -327,8 +332,9 @@ export function useNotebook(notebookId: string) {
         .insert([{ notebook_id: notebookId, column_name: input.column_name, column_type: input.column_type, select_options: input.select_options ?? null }])
       if (error) throw error
       await fetchNotebook()
-    } catch (error: any) {
-      throw new Error(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Operation failed"
+      throw new Error(errorMessage)
     }
   }
 
@@ -344,8 +350,9 @@ export function useNotebook(notebookId: string) {
         .eq('id', columnId)
       if (error) throw error
       await fetchNotebook()
-    } catch (error: any) {
-      throw new Error(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Operation failed"
+      throw new Error(errorMessage)
     }
   }
 
@@ -357,8 +364,9 @@ export function useNotebook(notebookId: string) {
         .eq('id', columnId)
       if (error) throw error
       await fetchNotebook()
-    } catch (error: any) {
-      throw new Error(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Operation failed"
+      throw new Error(errorMessage)
     }
   }
 
@@ -367,8 +375,9 @@ export function useNotebook(notebookId: string) {
       const { error } = await supabase.rpc('add_recommended_fields', { target_notebook: notebookId })
       if (error) throw error
       await fetchNotebook()
-    } catch (error: any) {
-      throw new Error(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Operation failed"
+      throw new Error(errorMessage)
     }
   }
 
@@ -383,8 +392,9 @@ export function useNotebook(notebookId: string) {
 
       // Refresh data
       await fetchNotebook()
-    } catch (error: any) {
-      throw new Error(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Operation failed"
+      throw new Error(errorMessage)
     }
   }
 

@@ -74,8 +74,9 @@ export function useNotebooks() {
       }) || []
 
       setNotebooks(notebooksWithStats)
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch notebooks'
+      setError(errorMessage)
       setNotebooks([])
     } finally {
       setLoading(false)
@@ -109,8 +110,9 @@ export function useNotebooks() {
       await fetchNotebooks()
 
       return data
-    } catch (error: any) {
-      throw new Error(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create notebook'
+      throw new Error(errorMessage)
     }
   }
 
@@ -128,8 +130,9 @@ export function useNotebooks() {
 
       // Refresh notebooks list
       await fetchNotebooks()
-    } catch (error: any) {
-      throw new Error(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update notebook'
+      throw new Error(errorMessage)
     }
   }
 
@@ -144,8 +147,9 @@ export function useNotebooks() {
 
       // Refresh notebooks list
       await fetchNotebooks()
-    } catch (error: any) {
-      throw new Error(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete notebook'
+      throw new Error(errorMessage)
     }
   }
 
