@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useLayoutEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -79,81 +79,76 @@ export function EditBetDialog({
   const [userModifiedReturn, setUserModifiedReturn] = useState(false);
   // Store the current bet locally to prevent flickering when dialog closes
   const [currentBet, setCurrentBet] = useState<Bet | null>(bet);
-  // Track if form has been initialized to prevent auto-calc during load
-  const isInitialized = useRef(false);
+
+  // Use a ref to track if we're in the initialization phase
+  // This prevents any auto-calculations from running during mount
+  const isInitializing = useRef(false);
+
+  // Snapshot the bet data when dialog first opens
+  // This prevents the dialog from reacting to parent data changes
+  const betSnapshot = useRef<Bet | null>(null);
+  const dialogOpenedRef = useRef(false);
 
   // Calculate expected profit and total payout based on current odds and wager
-  const expectedProfit =
-    formData.wager_amount > 0 && isValidAmericanOdds(formData.odds)
-      ? calculateProfit(formData.odds, formData.wager_amount)
-      : 0;
+  // Using useMemo to avoid unnecessary recalculations
+  const expectedProfit = useMemo(
+    () =>
+      formData.wager_amount > 0 && isValidAmericanOdds(formData.odds)
+        ? calculateProfit(formData.odds, formData.wager_amount)
+        : 0,
+    [formData.odds, formData.wager_amount]
+  );
 
-  const expectedPayout =
-    formData.wager_amount > 0 && isValidAmericanOdds(formData.odds)
-      ? calculatePayout(formData.odds, formData.wager_amount)
-      : 0;
+  const expectedPayout = useMemo(
+    () =>
+      formData.wager_amount > 0 && isValidAmericanOdds(formData.odds)
+        ? calculatePayout(formData.odds, formData.wager_amount)
+        : 0,
+    [formData.odds, formData.wager_amount]
+  );
 
-  // Auto-update return_amount when odds or wager changes (only if user hasn't manually modified it)
-  useEffect(() => {
-    if (
-      formData.status === "won" &&
-      !userModifiedReturn &&
-      expectedProfit > 0 &&
-      open &&
-      isInitialized.current // Only auto-calculate after form is initialized
-    ) {
-      setFormData((prev) => ({
-        ...prev,
-        return_amount: expectedProfit, // Store profit only, not total payout
-      }));
-    }
-  }, [
-    formData.odds,
-    formData.wager_amount,
-    expectedProfit,
-    userModifiedReturn,
-    formData.status,
-    open,
-  ]);
+  // Track when dialog transitions from closed to open
+  // This is the ONLY time we should initialize from bet prop
+  useLayoutEffect(() => {
+    // Dialog is opening (transition from false to true)
+    if (open && !dialogOpenedRef.current && bet) {
+      dialogOpenedRef.current = true;
 
-  // Initialize form data when dialog opens with a new bet
-  // Use bet.id to detect when it's actually a different bet
-  const betId = bet?.id;
-  useEffect(() => {
-    if (bet && open) {
-      // Mark as not initialized during the update
-      isInitialized.current = false;
+      // Take a snapshot of the bet data - this will never change until dialog closes
+      betSnapshot.current = { ...bet };
 
-      // Update current bet
-      setCurrentBet(bet);
+      // Mark as initializing to block any auto-calculations
+      isInitializing.current = true;
 
+      // Update current bet with snapshot
+      setCurrentBet(betSnapshot.current);
+
+      // Initialize form data from the snapshot
       setFormData({
-        date: bet.date,
-        description: bet.description,
-        odds: bet.odds,
-        wager_amount: bet.wager_amount,
-        status: bet.status,
-        return_amount: bet.return_amount || 0,
+        date: betSnapshot.current.date,
+        description: betSnapshot.current.description,
+        odds: betSnapshot.current.odds,
+        wager_amount: betSnapshot.current.wager_amount,
+        status: betSnapshot.current.status,
+        return_amount: betSnapshot.current.return_amount || 0,
       });
       setError(null);
       setShowDeleteConfirm(false);
       setCustomValues(initialCustomValues || {});
-      // Reset user modification flag when opening dialog
       setUserModifiedReturn(false);
-    } else if (!open) {
-      // Reset when dialog closes
-      isInitialized.current = false;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [betId, open]);
 
-  // Mark as initialized after formData is set
-  useEffect(() => {
-    if (open && formData.date) {
-      // Only mark initialized once we have form data
-      isInitialized.current = true;
+      // Unblock after a single frame
+      requestAnimationFrame(() => {
+        isInitializing.current = false;
+      });
     }
-  }, [open, formData.date]);
+
+    // Dialog is closing (transition from true to false)
+    if (!open && dialogOpenedRef.current) {
+      dialogOpenedRef.current = false;
+      betSnapshot.current = null;
+    }
+  }, [open, bet, initialCustomValues]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -344,12 +339,23 @@ export function EditBetDialog({
                 type="number"
                 placeholder="e.g., +150 or -110"
                 value={formData.odds || ""}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    odds: parseInt(e.target.value) || 0,
-                  }))
-                }
+                onChange={(e) => {
+                  const newOdds = parseInt(e.target.value) || 0;
+                  setFormData((prev) => {
+                    const updates: any = { ...prev, odds: newOdds };
+                    // Auto-update return_amount if status is won and user hasn't manually modified it
+                    // BUT only if we're not in the initialization phase
+                    if (prev.status === "won" && !userModifiedReturn && !isInitializing.current && newOdds !== 0) {
+                      const newProfit = isValidAmericanOdds(newOdds) && prev.wager_amount > 0
+                        ? calculateProfit(newOdds, prev.wager_amount)
+                        : 0;
+                      if (newProfit > 0) {
+                        updates.return_amount = newProfit;
+                      }
+                    }
+                    return updates;
+                  });
+                }}
                 disabled={loading}
                 required
               />
@@ -368,12 +374,23 @@ export function EditBetDialog({
                   step="0.01"
                   placeholder="100.00"
                   value={formData.wager_amount || ""}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      wager_amount: parseFloat(e.target.value) || 0,
-                    }))
-                  }
+                  onChange={(e) => {
+                    const newWager = parseFloat(e.target.value) || 0;
+                    setFormData((prev) => {
+                      const updates: any = { ...prev, wager_amount: newWager };
+                      // Auto-update return_amount if status is won and user hasn't manually modified it
+                      // BUT only if we're not in the initialization phase
+                      if (prev.status === "won" && !userModifiedReturn && !isInitializing.current && newWager > 0) {
+                        const newProfit = isValidAmericanOdds(prev.odds)
+                          ? calculateProfit(prev.odds, newWager)
+                          : 0;
+                        if (newProfit > 0) {
+                          updates.return_amount = newProfit;
+                        }
+                      }
+                      return updates;
+                    });
+                  }}
                   disabled={loading}
                   className="pl-8"
                   required
