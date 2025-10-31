@@ -79,6 +79,8 @@ export function EditBetDialog({
   const [userModifiedReturn, setUserModifiedReturn] = useState(false);
   // Store the current bet locally to prevent flickering when dialog closes
   const [currentBet, setCurrentBet] = useState<Bet | null>(bet);
+  // Track if form has been initialized to prevent auto-calc during load
+  const isInitialized = useRef(false);
 
   // Calculate expected profit and total payout based on current odds and wager
   const expectedProfit =
@@ -97,7 +99,8 @@ export function EditBetDialog({
       formData.status === "won" &&
       !userModifiedReturn &&
       expectedProfit > 0 &&
-      open // Only auto-calculate when dialog is open
+      open &&
+      isInitialized.current // Only auto-calculate after form is initialized
     ) {
       setFormData((prev) => ({
         ...prev,
@@ -114,8 +117,13 @@ export function EditBetDialog({
   ]);
 
   // Initialize form data when dialog opens with a new bet
+  // Use bet.id to detect when it's actually a different bet
+  const betId = bet?.id;
   useEffect(() => {
     if (bet && open) {
+      // Mark as not initialized during the update
+      isInitialized.current = false;
+
       // Update current bet
       setCurrentBet(bet);
 
@@ -132,8 +140,20 @@ export function EditBetDialog({
       setCustomValues(initialCustomValues || {});
       // Reset user modification flag when opening dialog
       setUserModifiedReturn(false);
+    } else if (!open) {
+      // Reset when dialog closes
+      isInitialized.current = false;
     }
-  }, [bet, open, initialCustomValues]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [betId, open]);
+
+  // Mark as initialized after formData is set
+  useEffect(() => {
+    if (open && formData.date) {
+      // Only mark initialized once we have form data
+      isInitialized.current = true;
+    }
+  }, [open, formData.date]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,11 +292,8 @@ export function EditBetDialog({
     setUserModifiedReturn(true);
   };
 
-  // Don't render if no bet data
-  if (!currentBet) return null;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && !!currentBet} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit Bet</DialogTitle>
