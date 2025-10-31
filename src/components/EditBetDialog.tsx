@@ -77,13 +77,8 @@ export function EditBetDialog({
     useState<Record<string, string>>(initialCustomValues);
   // Track whether user has manually modified return_amount
   const [userModifiedReturn, setUserModifiedReturn] = useState(false);
-  // Add ref to track if dialog is closing
-  const closingRef = useRef(false);
-  // Frozen props to prevent changes during modal closing
-  const [frozenBet, setFrozenBet] = useState<Bet | null>(null);
-  const [frozenCustomValues, setFrozenCustomValues] = useState<
-    Record<string, string>
-  >({});
+  // Store the current bet locally to prevent flickering when dialog closes
+  const [currentBet, setCurrentBet] = useState<Bet | null>(bet);
 
   // Calculate expected profit and total payout based on current odds and wager
   const expectedProfit =
@@ -96,13 +91,13 @@ export function EditBetDialog({
       ? calculatePayout(formData.odds, formData.wager_amount)
       : 0;
 
-  // Auto-update return_amount when odds or wager changes (only if user hasn't manually modified it AND dialog is not closing)
+  // Auto-update return_amount when odds or wager changes (only if user hasn't manually modified it)
   useEffect(() => {
     if (
       formData.status === "won" &&
       !userModifiedReturn &&
       expectedProfit > 0 &&
-      !closingRef.current // Don't auto-calculate when closing
+      open // Only auto-calculate when dialog is open
     ) {
       setFormData((prev) => ({
         ...prev,
@@ -115,14 +110,14 @@ export function EditBetDialog({
     expectedProfit,
     userModifiedReturn,
     formData.status,
+    open,
   ]);
 
+  // Initialize form data when dialog opens with a new bet
   useEffect(() => {
-    if (bet && open && !closingRef.current) {
-      // Reset closing flag and freeze props when dialog opens
-      closingRef.current = false;
-      setFrozenBet(bet);
-      setFrozenCustomValues(initialCustomValues || {});
+    if (bet && open) {
+      // Update current bet
+      setCurrentBet(bet);
 
       setFormData({
         date: bet.date,
@@ -143,7 +138,6 @@ export function EditBetDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const currentBet = frozenBet || bet;
     if (!currentBet) return;
 
     // Validation
@@ -206,8 +200,7 @@ export function EditBetDialog({
         }
       }
 
-      // Set closing flag before closing the modal
-      closingRef.current = true;
+      // Close the modal
       onOpenChange(false);
     } catch (error: any) {
       setError(error.message || "Failed to update bet");
@@ -217,7 +210,6 @@ export function EditBetDialog({
   };
 
   const handleDelete = async () => {
-    const currentBet = frozenBet || bet;
     if (!currentBet) return;
 
     try {
@@ -225,8 +217,7 @@ export function EditBetDialog({
       setError(null);
       await onDeleteBet(currentBet.id);
 
-      // Set closing flag before closing the modal
-      closingRef.current = true;
+      // Close the modal
       onOpenChange(false);
     } catch (error: any) {
       setError(error.message || "Failed to delete bet");
@@ -236,7 +227,6 @@ export function EditBetDialog({
   };
 
   const handleCancel = () => {
-    const currentBet = frozenBet || bet;
     if (!loading && currentBet) {
       setFormData({
         date: currentBet.date,
@@ -282,7 +272,8 @@ export function EditBetDialog({
     setUserModifiedReturn(true);
   };
 
-  if (!bet && !frozenBet) return null;
+  // Don't render if no bet data
+  if (!currentBet) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
