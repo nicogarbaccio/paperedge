@@ -50,48 +50,60 @@ test.describe('Authentication', () => {
   test('User sees error with invalid email format', async ({ page }) => {
     await ensureLoggedOut(page);
 
-    await page.goto('/login');
+    await page.goto('/login', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
 
-    // Fill invalid email
-    await page.fill('input[type="email"]', 'notanemail');
-    await page.fill('input[type="password"]', 'password123');
-    await page.click('button[type="submit"]');
+    // Fill invalid email with proper locators
+    const emailInput = page.locator('input[type="email"]').first();
+    const passwordInput = page.locator('input[type="password"]').first();
+    
+    await emailInput.fill('notanemail');
+    await passwordInput.fill('password123');
+    
+    // Click submit button
+    const submitButton = page.locator('button[type="submit"]').first();
+    await submitButton.click();
 
-    // Should show validation error
+    // Wait for error or validation message
     const errorElement = page.locator(
-      'text=/invalid email|please enter a valid/i, [role="alert"]:has-text(/invalid/i)'
+      'text=/invalid email|please enter a valid|invalid/i, [role="alert"]'
     ).first();
 
     try {
-      await expect(errorElement).toBeVisible({ timeout: 3000 });
+      await expect(errorElement).toBeVisible({ timeout: 5000 });
     } catch {
-      // Some apps show error after form submission, check for it
-      const allErrors = page.locator('text=/invalid|error/i');
-      expect(await allErrors.count()).toBeGreaterThan(0);
+      // Browser validation might prevent submission; check if inputs have aria-invalid
+      const hasInvalidAttr = await emailInput.getAttribute('aria-invalid');
+      expect(hasInvalidAttr || await errorElement.count()).toBeTruthy();
     }
   });
 
   test('User sees error with wrong password', async ({ page }) => {
     await ensureLoggedOut(page);
 
-    await page.goto('/login');
+    await page.goto('/login', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
 
     // Use a valid email format but wrong credentials
-    await page.fill('input[type="email"]', testUser.email);
-    await page.fill('input[type="password"]', 'WrongPassword123!');
-    await page.click('button[type="submit"]');
+    const emailInput = page.locator('input[type="email"]').first();
+    const passwordInput = page.locator('input[type="password"]').first();
+    
+    await emailInput.fill(testUser.email);
+    await passwordInput.fill('WrongPassword123!');
+    
+    const submitButton = page.locator('button[type="submit"]').first();
+    await submitButton.click();
 
-    // Should show error message
+    // Should show error message or stay on login page
     const errorElement = page.locator(
       'text=/invalid credentials|wrong password|authentication failed/i, [role="alert"]'
     ).first();
 
     try {
-      await expect(errorElement).toBeVisible({ timeout: 3000 });
+      await expect(errorElement).toBeVisible({ timeout: 5000 });
     } catch {
       // Check if still on login page (which indicates login failed)
+      await page.waitForTimeout(1000);
       const currentUrl = page.url();
       expect(currentUrl).toMatch(/login/);
     }

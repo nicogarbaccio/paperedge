@@ -1,4 +1,4 @@
-# End-to-End Tests
+# PaperEdge E2E Test Suite
 
 E2E tests for PaperEdge using Playwright. Run these before shipping any code to ensure critical functionality works.
 
@@ -162,3 +162,65 @@ Run in GitHub Actions:
 4. Make tests resilient with multiple selector strategies
 
 Keep tests focused on what matters: **Does the feature work for users?**
+
+## Authentication Tests (auth.spec.ts)
+
+**Status**: 11 tests | Improved reliability
+
+### Recent Improvements (Latest Update)
+
+The authentication test helpers have been refactored for better reliability:
+
+#### Login Helper Improvements
+- ✅ Direct navigation to `/login` page with `domcontentloaded` wait
+- ✅ Proper locator selection using `.first()` to avoid ambiguity
+- ✅ Enhanced error detection with broader error patterns
+- ✅ Extended timeout from 10s to 15s for slower networks
+- ✅ Better handling of form submission clicks
+
+#### Register Helper Improvements
+- ✅ Direct navigation to `/register` page  
+- ✅ Proper password field selection using `.nth()` for multiple inputs
+- ✅ Extended timeout for registration process
+- ✅ Better error messages for debugging
+
+#### Logout Helper Improvements
+- ✅ Tries multiple menu button selectors (Settings, @, user-menu, Sign Out)
+- ✅ Graceful fallback if menu isn't found
+- ✅ Better visibility checks with timeout
+- ✅ Handles both dropdown menus and direct logout buttons
+
+#### Test File Improvements
+- ✅ Uses proper Playwright locators instead of deprecated `.fill()` and `.click()`
+- ✅ Better error validation with fallbacks
+- ✅ Improved timeout handling with `waitForTimeout()`
+- ✅ More robust element waiting strategies
+
+### Test Coverage
+
+- **Registration**: User can create account with valid email/password
+- **Login**: User can log in with valid credentials  
+- **Validation**: Invalid email format shows error
+- **Authentication**: Wrong password shows error
+- **Redirect**: Unauthenticated users redirected to login
+- **Logout**: User can log out successfully
+- **Protected Routes**: Accessing protected routes redirects to login
+- **Session Persistence**: Login session persists across page reloads
+- **Accessibility**: Login form has proper ARIA labels
+- **Keyboard Navigation**: Can tab through form elements
+- **Focus Indicators**: Inputs show visible focus states
+
+### Running Tests
+
+```bash
+# Run all auth tests
+npm test -- tests/e2e/auth/auth.spec.ts
+
+# Run with UI
+npm test -- tests/e2e/auth/auth.spec.ts --ui
+
+# Run specific test
+npm test -- tests/e2e/auth/auth.spec.ts -g "User can login"
+```
+
+See `tests/SETUP.md` for detailed setup instructions.

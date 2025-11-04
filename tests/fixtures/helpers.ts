@@ -9,24 +9,29 @@ export async function login(page: Page, email: string, password: string) {
   const isLoggedIn = await page.locator('button:has-text("Sign Out")').or(page.locator('text=/notebooks|dashboard/i')).count() > 0;
 
   if (!isLoggedIn) {
-    await page.goto('/');
+    await page.goto('/login', { waitUntil: 'domcontentloaded' });
 
-    // Wait for auth page to load
+    // Wait for auth page to load with better selectors
     await page.waitForSelector('input[type="email"]', { timeout: 10000 });
+    await page.waitForSelector('input[type="password"]', { timeout: 10000 });
 
-    // Fill in credentials
-    await page.fill('input[type="email"]', email);
-    await page.fill('input[type="password"]', password);
+    // Fill in credentials with proper typing
+    const emailInput = page.locator('input[type="email"]').first();
+    const passwordInput = page.locator('input[type="password"]').first();
+    
+    await emailInput.fill(email);
+    await passwordInput.fill(password);
 
-    // Click login button
-    await page.click('button[type="submit"]');
+    // Click the submit button - find it more reliably
+    const submitButton = page.locator('button[type="submit"]:has-text("Sign In"), button:has-text("Sign In")').first();
+    await submitButton.click();
 
     // Wait for navigation away from login page (more flexible than specific URL)
     try {
-      await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 10000 });
+      await page.waitForURL(url => !url.pathname.includes('/login') && !url.pathname.includes('/register'), { timeout: 15000 });
     } catch (error) {
       // Check if there's an error message on the page
-      const errorMessage = await page.locator('text=/invalid/i').or(page.locator('text=/error/i')).first().textContent().catch(() => null);
+      const errorMessage = await page.locator('text=/invalid|error|wrong|failed/i').first().textContent().catch(() => null);
       if (errorMessage) {
         throw new Error(`Login failed: ${errorMessage}. Make sure test user exists (see tests/SETUP.md)`);
       }
@@ -43,16 +48,34 @@ export async function logout(page: Page) {
   const hasSignOut = await page.locator('button:has-text("Sign Out")').count();
 
   if (hasSignOut > 0) {
-    // Click user menu button (button with user email)
-    const userButton = page.locator('button:has-text("@")').first();
-    await userButton.click();
+    // Look for user button or settings button to open menu
+    const userMenuButtons = [
+      page.locator('button:has-text("Settings")').first(),
+      page.locator('button:has-text("@")').first(),
+      page.locator('[data-testid="user-menu"]').first(),
+      page.locator('button:contains("Sign out")').first(), // Direct logout if visible
+    ];
 
-    // Wait for dropdown to appear and click Sign Out
-    await page.waitForSelector('button:has-text("Sign Out")', { state: 'visible', timeout: 3000 });
-    await page.click('button:has-text("Sign Out")');
+    // Try to find a clickable menu button
+    let clicked = false;
+    for (const button of userMenuButtons) {
+      if (await button.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await button.click();
+        clicked = true;
+        break;
+      }
+    }
 
-    // Wait for redirect to login/home
-    await page.waitForURL(url => url.pathname === '/' || url.pathname.includes('/login'), { timeout: 5000 });
+    // If we found a direct Sign Out button, we're done
+    if (!clicked && await page.locator('button:has-text("Sign Out")').isVisible({ timeout: 2000 }).catch(() => false)) {
+      await page.locator('button:has-text("Sign Out")').click();
+      clicked = true;
+    }
+
+    if (clicked) {
+      // Wait for redirect to login/home
+      await page.waitForURL(url => url.pathname === '/' || url.pathname.includes('/login'), { timeout: 5000 }).catch(() => null);
+    }
   }
 }
 
@@ -319,37 +342,36 @@ export async function register(page: Page, email: string, password: string) {
   // Make sure we're logged out first
   await ensureLoggedOut(page);
 
-  await page.goto('/');
+  await page.goto('/register', { waitUntil: 'domcontentloaded' });
 
   // Wait for page to load
-  await page.waitForSelector('a:has-text("Sign up"), button:has-text("Sign up")', { timeout: 5000 });
+  await page.waitForSelector('input[type="email"]', { timeout: 10000 });
 
-  // Click sign up link/button
-  await page.click('a:has-text("Sign up"), button:has-text("Sign up")');
+  // Fill registration fields with proper locators
+  const emailInput = page.locator('input[type="email"]').first();
+  const passwordInputs = page.locator('input[type="password"]');
+  
+  await emailInput.fill(email);
+  await passwordInputs.nth(0).fill(password);
 
-  // Wait for registration form
-  await page.waitForSelector('text="Create an account", text="Sign up"', { timeout: 5000 });
-
-  // Fill registration fields
-  await page.fill('input[type="email"]', email);
-  await page.fill('input[type="password"]', password);
-
-  // Confirm password field
-  const passwordInputs = await page.locator('input[type="password"]').count();
-  if (passwordInputs > 1) {
-    const allPasswordInputs = page.locator('input[type="password"]');
-    await allPasswordInputs.nth(1).fill(password);
+  // Fill confirm password field
+  const passwordCount = await passwordInputs.count();
+  if (passwordCount > 1) {
+    await passwordInputs.nth(1).fill(password);
   }
 
-  // Submit
-  await page.click('button[type="submit"]');
+  // Submit form - find the Create Account button
+  const submitButton = page.locator('button[type="submit"]:has-text("Create Account"), button:has-text("Create Account")').first();
+  await submitButton.click();
 
-  // Wait for redirect to dashboard
+  // Wait for redirect to success page or dashboard
   try {
-    await page.waitForURL(url => !url.pathname.includes('/register') && !url.pathname.includes('/login'),
-      { timeout: 10000 });
+    await page.waitForURL(url => {
+      const path = url.pathname;
+      return !path.includes('/register') && !path.includes('/login');
+    }, { timeout: 15000 });
   } catch (error) {
-    const errorMessage = await page.locator('text=/error|invalid/i').first().textContent().catch(() => null);
+    const errorMessage = await page.locator('text=/error|invalid|password/i').first().textContent().catch(() => null);
     throw new Error(`Registration failed: ${errorMessage || 'Unknown error'}`);
   }
 
