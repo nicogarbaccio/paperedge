@@ -464,6 +464,7 @@ export function NotebookDetailPage() {
                   {filteredBets.map((bet) => (
                     <div
                       key={bet.id}
+                      data-testid="bet-card"
                       className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 transition-colors cursor-pointer"
                       onClick={() => handleEditBet(bet)}
                     >

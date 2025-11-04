@@ -1,13 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  BookOpen,
-  Calculator,
-  Calendar,
-  Settings,
-  HelpCircle,
-} from "lucide-react";
+import { LayoutDashboard, BookOpen, Calculator, Calendar } from "lucide-react";
 
 const navigation = [
   {
@@ -29,16 +22,6 @@ const navigation = [
     name: "Calculators",
     href: "/calculators",
     icon: Calculator,
-  },
-  {
-    name: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
-  {
-    name: "FAQs",
-    href: "/faqs",
-    icon: HelpCircle,
   },
 ];
 

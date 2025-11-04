@@ -26,6 +26,8 @@ import { TrackerPage } from "./pages/TrackerPage";
 import { Toaster } from "./components/ui/Toaster";
 import AccountTrackerPage from "./pages/AccountTrackerPage";
 import FAQsPage from "./pages/FAQsPage";
+import SupportPage from "./pages/SupportPage";
+import AdminDashboard from "./pages/AdminDashboard";
 import { toast } from "@/hooks/useToast";
 
 // Protected route wrapper
@@ -170,6 +172,8 @@ function App() {
           <Route path="tracker/accounts/:id" element={<AccountTrackerPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="faqs" element={<FAQsPage />} />
+          <Route path="support" element={<SupportPage />} />
+          <Route path="admin" element={<AdminDashboard />} />
         </Route>
       </Routes>
       <Toaster />
