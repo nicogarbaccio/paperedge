@@ -102,14 +102,26 @@ test.describe('Admin Dashboard', () => {
       return;
     }
 
-    // Should show feature requests
-    const requests = page.locator('[data-testid*="feature"], [class*="feature"], [class*="request-item"]');
-    const requestsCount = await requests.count();
+    // Wait a bit for the content to load
+    await page.waitForTimeout(300);
 
-    // Either has requests or empty state
-    const emptyState = page.locator('text=/no features|no requests|empty/i');
-    const hasRequests = requestsCount > 0;
-    const isEmpty = await emptyState.count() > 0;
+    // Should show feature requests - Cards have buttons with aria-expanded attribute
+    const featureItems = page.locator('button[aria-expanded]');
+    const itemsCount = await featureItems.count();
+    const hasRequests = itemsCount > 0;
+
+    // Or empty state message
+    const emptyState = page.locator('text=/no feature requests|showing 0 of/i');
+    const isEmptyCount = await emptyState.count();
+    const isEmpty = isEmptyCount > 0;
+
+    // Debug logging
+    if (!hasRequests && !isEmpty) {
+      console.log('Feature items count:', itemsCount);
+      console.log('Empty state count:', isEmptyCount);
+      const pageText = await page.textContent('body');
+      console.log('Page text sample:', pageText?.substring(0, 500));
+    }
 
     expect(hasRequests || isEmpty).toBe(true);
   });

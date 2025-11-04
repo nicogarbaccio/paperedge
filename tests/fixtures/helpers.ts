@@ -44,39 +44,36 @@ export async function login(page: Page, email: string, password: string) {
 }
 
 export async function logout(page: Page) {
-  // Check if already logged out
+  // Check if already logged out by looking for Sign Out button
   const hasSignOut = await page.locator('button:has-text("Sign Out")').count();
 
-  if (hasSignOut > 0) {
-    // Look for user button or settings button to open menu
-    const userMenuButtons = [
-      page.locator('button:has-text("Settings")').first(),
-      page.locator('button:has-text("@")').first(),
-      page.locator('[data-testid="user-menu"]').first(),
-      page.locator('button:contains("Sign out")').first(), // Direct logout if visible
-    ];
+  if (hasSignOut === 0) {
+    // Already logged out
+    return;
+  }
 
-    // Try to find a clickable menu button
-    let clicked = false;
-    for (const button of userMenuButtons) {
-      if (await button.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await button.click();
-        clicked = true;
-        break;
-      }
-    }
+  // Click user menu button (the button with email address containing @)
+  const userButton = page.locator('button:has-text("@")').first();
+  await userButton.click();
 
-    // If we found a direct Sign Out button, we're done
-    if (!clicked && await page.locator('button:has-text("Sign Out")').isVisible({ timeout: 2000 }).catch(() => false)) {
-      await page.locator('button:has-text("Sign Out")').click();
-      clicked = true;
-    }
+  // Wait a bit for menu animation, then click the visible Sign Out button
+  await page.waitForTimeout(500);
 
-    if (clicked) {
-      // Wait for redirect to login/home
-      await page.waitForURL(url => url.pathname === '/' || url.pathname.includes('/login'), { timeout: 5000 }).catch(() => null);
+  // Find the visible Sign Out button and click it
+  const signOutButtons = page.locator('button:has-text("Sign Out")');
+  const count = await signOutButtons.count();
+
+  for (let i = 0; i < count; i++) {
+    const button = signOutButtons.nth(i);
+    if (await button.isVisible()) {
+      await button.click();
+      break;
     }
   }
+
+  // Wait for the ProtectedRoute to redirect us to /login after auth state updates
+  // This might take a moment as Supabase processes the signOut
+  await page.waitForURL(url => url.pathname.includes('/login'), { timeout: 10000 });
 }
 
 /**
@@ -364,15 +361,21 @@ export async function register(page: Page, email: string, password: string) {
   const submitButton = page.locator('button[type="submit"]:has-text("Create Account"), button:has-text("Create Account")').first();
   await submitButton.click();
 
-  // Wait for redirect to success page or dashboard
+  // Wait for either success message or redirect to dashboard (depending on Supabase config)
+  // In some configs, email confirmation is auto-enabled and user is logged in immediately
   try {
-    await page.waitForURL(url => {
-      const path = url.pathname;
-      return !path.includes('/register') && !path.includes('/login');
-    }, { timeout: 15000 });
+    await Promise.race([
+      page.waitForSelector('text="Check your email"', { timeout: 15000 }),
+      page.waitForURL(url => url.pathname.includes('/dashboard'), { timeout: 15000 })
+    ]);
   } catch (error) {
+    // Check for error messages
     const errorMessage = await page.locator('text=/error|invalid|password/i').first().textContent().catch(() => null);
-    throw new Error(`Registration failed: ${errorMessage || 'Unknown error'}`);
+    if (errorMessage) {
+      throw new Error(`Registration failed: ${errorMessage}`);
+    }
+    // Otherwise might have succeeded but with different flow
+    await page.waitForLoadState('networkidle');
   }
 
   await page.waitForLoadState('networkidle');

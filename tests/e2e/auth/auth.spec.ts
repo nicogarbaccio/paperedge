@@ -22,13 +22,20 @@ test.describe('Authentication', () => {
 
     await register(page, uniqueEmail, password);
 
-    // After registration, should be on dashboard or home
+    // After registration, check which flow we got (email confirmation or auto-login)
     const url = page.url();
-    expect(url).toMatch(/dashboard|home/);
 
-    // Should be logged in (no login page visible)
-    const loginButton = page.locator('button:has-text("Login"), a:has-text("Login")');
-    expect(await loginButton.count()).toBe(0);
+    if (url.includes('/dashboard')) {
+      // Auto-login flow - should be authenticated
+      const hasSignOut = await page.locator('button:has-text("Sign Out")').count();
+      expect(hasSignOut).toBeGreaterThan(0);
+    } else {
+      // Email confirmation flow - should see success message
+      const hasCheckEmail = await page.locator('text="Check your email"').count();
+      const hasBackToLogin = await page.locator('button:has-text("Back to Login")').count();
+
+      expect(hasCheckEmail + hasBackToLogin).toBeGreaterThan(0);
+    }
   });
 
   test('User can login with valid credentials', async ({ page }) => {
@@ -50,32 +57,30 @@ test.describe('Authentication', () => {
   test('User sees error with invalid email format', async ({ page }) => {
     await ensureLoggedOut(page);
 
-    await page.goto('/login', { waitUntil: 'domcontentloaded' });
+    await page.goto('/login');
     await page.waitForLoadState('networkidle');
 
-    // Fill invalid email with proper locators
+    // Fill invalid email
     const emailInput = page.locator('input[type="email"]').first();
     const passwordInput = page.locator('input[type="password"]').first();
-    
+
     await emailInput.fill('notanemail');
     await passwordInput.fill('password123');
-    
-    // Click submit button
+
+    // Try to submit - the browser should prevent it with HTML5 validation
     const submitButton = page.locator('button[type="submit"]').first();
     await submitButton.click();
 
-    // Wait for error or validation message
-    const errorElement = page.locator(
-      'text=/invalid email|please enter a valid|invalid/i, [role="alert"]'
-    ).first();
+    // Check if HTML5 validation prevented submission by checking if we're still on login page
+    await page.waitForTimeout(1000); // Give time for any potential navigation
+    const url = page.url();
+    expect(url).toMatch(/login/);
 
-    try {
-      await expect(errorElement).toBeVisible({ timeout: 5000 });
-    } catch {
-      // Browser validation might prevent submission; check if inputs have aria-invalid
-      const hasInvalidAttr = await emailInput.getAttribute('aria-invalid');
-      expect(hasInvalidAttr || await errorElement.count()).toBeTruthy();
-    }
+    // The email input should be invalid according to browser validation
+    const isInvalid = await emailInput.evaluate((input: HTMLInputElement) => {
+      return !input.validity.valid;
+    });
+    expect(isInvalid).toBe(true);
   });
 
   test('User sees error with wrong password', async ({ page }) => {
@@ -126,22 +131,16 @@ test.describe('Authentication', () => {
     // First login
     await login(page, testUser.email, testUser.password);
 
-    // Click on user menu or logout
-    const logoutButton = page.locator('button:has-text("Logout"), button:has-text("Sign out"), [data-testid="logout"]');
-    const userMenu = page.locator('[data-testid="user-menu"], button:has-text("Settings")');
+    // Use the logout helper
+    await logout(page);
 
-    if (await logoutButton.isVisible()) {
-      await logoutButton.click();
-    } else if (await userMenu.isVisible()) {
-      await userMenu.click();
-      await page.click('button:has-text("Logout"), button:has-text("Sign out")');
-    }
-
-    // Should redirect to login or home
-    await page.waitForURL(url => url.pathname.match(/login|^\/$/) !== null, { timeout: 5000 });
-
+    // Should be on login page or root
     const url = page.url();
-    expect(url).toMatch(/login|^\//);
+    expect(url).toMatch(/login|\/$/);
+
+    // Should not be able to see authenticated content
+    const signOutButton = page.locator('button:has-text("Sign Out")');
+    expect(await signOutButton.count()).toBe(0);
   });
 
   test('Protected route access without login shows login page', async ({ page }) => {
