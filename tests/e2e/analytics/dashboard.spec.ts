@@ -32,9 +32,10 @@ test.describe('Analytics Dashboard', () => {
     await navigateToDashboard(page);
 
     // Find total P&L element
-    const totalPLElement = page.locator(
-      '[data-testid="total-pl"], text=/total p&l|total p\/l|total profit/i, :text("Total P&L")'
-    ).first();
+    const totalPLElement = page.locator('[data-testid="total-pl"]')
+      .or(page.locator('text=/total p&l|total p\/l|total profit/i'))
+      .or(page.locator(':text("Total P&L")'))
+      .first();
 
     if (await totalPLElement.count() === 0) {
       test.skip();
@@ -56,9 +57,9 @@ test.describe('Analytics Dashboard', () => {
     await navigateToDashboard(page);
 
     // Find win rate element
-    const winRateElement = page.locator(
-      '[data-testid="win-rate"], text=/win rate|win %|winning percentage/i'
-    ).first();
+    const winRateElement = page.locator('[data-testid="win-rate"]')
+      .or(page.locator('text=/win rate|win %|winning percentage/i'))
+      .first();
 
     if (await winRateElement.count() === 0) {
       test.skip();
@@ -80,9 +81,9 @@ test.describe('Analytics Dashboard', () => {
     await navigateToDashboard(page);
 
     // Find ROI element
-    const roiElement = page.locator(
-      '[data-testid="roi"], text=/return on investment|roi|ROI/i'
-    ).first();
+    const roiElement = page.locator('[data-testid="roi"]')
+      .or(page.locator('text=/return on investment|roi|ROI/i'))
+      .first();
 
     if (await roiElement.count() === 0) {
       test.skip();
@@ -103,9 +104,10 @@ test.describe('Analytics Dashboard', () => {
     await navigateToDashboard(page);
 
     // Look for bankroll, growth, or trend element
-    const bankrollElements = page.locator(
-      '[data-testid*="bankroll"], [data-testid*="growth"], [data-testid*="trend"], text=/bankroll|growth|trend/i'
-    );
+    const bankrollElements = page.locator('[data-testid*="bankroll"]')
+      .or(page.locator('[data-testid*="growth"]'))
+      .or(page.locator('[data-testid*="trend"]'))
+      .or(page.locator('text=/bankroll|growth|trend/i'));
 
     const elementCount = await bankrollElements.count();
 
@@ -184,13 +186,12 @@ test.describe('Analytics Dashboard', () => {
     await navigateToDashboard(page);
 
     // Check for either:
-    // 1. Metrics displayed (has data)
+    // 1. Metrics displayed (has data) - look for heading text that indicates metrics
     // 2. Empty state message (no data)
 
-    const metrics = page.locator('[data-testid*="pl"], [data-testid*="rate"]');
-    const emptyState = page.locator(
-      'text=/no bets|no data|empty|no results/i, [data-testid="empty"]'
-    );
+    const metrics = page.locator('text=/Total P&L|Win Rate|ROI|Total Bets/i');
+    const emptyState = page.locator('text=/no bets|no data|empty|no results/i')
+      .or(page.locator('[data-testid="empty"]'));
 
     const hasMetrics = await metrics.count() > 0;
     const hasEmptyState = await emptyState.count() > 0;
@@ -208,7 +209,9 @@ test.describe('Analytics Dashboard', () => {
     await navigateToDashboard(page);
 
     // Get dashboard metrics
-    const dashboardTotalPL = page.locator('[data-testid="total-pl"], text=/total p&l/i').first();
+    const dashboardTotalPL = page.locator('[data-testid="total-pl"]')
+      .or(page.locator('text=/total p&l/i'))
+      .first();
 
     if (await dashboardTotalPL.count() === 0) {
       test.skip();
@@ -222,7 +225,8 @@ test.describe('Analytics Dashboard', () => {
     await navigateToNotebooks(page);
 
     // Get notebook metrics if available
-    const notebookPLElements = page.locator('[data-testid*="pl"], text=/total|pl|profit/i');
+    const notebookPLElements = page.locator('[data-testid*="pl"]')
+      .or(page.locator('text=/total|pl|profit/i'));
 
     const notebookPLCount = await notebookPLElements.count();
 
@@ -236,7 +240,9 @@ test.describe('Analytics Dashboard', () => {
     await navigateToDashboard(page);
 
     // Get initial metrics
-    const plElement = page.locator('[data-testid="total-pl"], text=/total p&l/i').first();
+    const plElement = page.locator('[data-testid="total-pl"]')
+      .or(page.locator('text=/total p&l/i'))
+      .first();
 
     if (await plElement.count() === 0) {
       test.skip();
