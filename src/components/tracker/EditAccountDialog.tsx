@@ -53,7 +53,7 @@ export function EditAccountDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent data-testid="edit-account-dialog">
         <DialogHeader>
           <DialogTitle>Edit Account</DialogTitle>
         </DialogHeader>
@@ -65,6 +65,7 @@ export function EditAccountDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="DraftKings, Offshore A..."
+              data-testid="edit-account-name-input"
             />
           </div>
           <div>
@@ -73,6 +74,7 @@ export function EditAccountDialog({
               className="w-full border border-border rounded-md bg-background p-2 text-sm"
               value={kind}
               onChange={(e) => setKind(e.target.value as Account["kind"])}
+              data-testid="edit-account-type-select"
             >
               <option value="main">Main</option>
               <option value="offshore">Offshore</option>
@@ -82,10 +84,10 @@ export function EditAccountDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} data-testid="edit-account-cancel-button">
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isSaving || !name.trim()}>
+          <Button onClick={handleSave} disabled={isSaving || !name.trim()} data-testid="edit-account-save-button">
             {isSaving ? "Saving..." : "Save changes"}
           </Button>
         </DialogFooter>

@@ -102,7 +102,7 @@ export function EditNotebookDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px]" data-testid="edit-notebook-dialog">
         <DialogHeader>
           <DialogTitle>Edit Notebook</DialogTitle>
           <DialogDescription>
@@ -122,6 +122,7 @@ export function EditNotebookDialog({
               }
               disabled={loading}
               required
+              data-testid="edit-notebook-name-input"
             />
           </div>
 
@@ -138,12 +139,13 @@ export function EditNotebookDialog({
                 }))
               }
               disabled={loading}
+              data-testid="edit-notebook-description-input"
             />
           </div>
 
           <div className="space-y-2">
             <Label>Color</Label>
-            <div className="grid grid-cols-9 gap-2">
+            <div className="grid grid-cols-9 gap-2" data-testid="edit-notebook-color-picker">
               {NOTEBOOK_COLORS.map((color) => (
                 <button
                   key={color.id}
@@ -161,6 +163,7 @@ export function EditNotebookDialog({
                   disabled={loading}
                   title={color.name}
                   aria-label={`Select ${color.name} color`}
+                  data-testid={`edit-notebook-color-${color.id}`}
                 />
               ))}
             </div>
@@ -170,7 +173,10 @@ export function EditNotebookDialog({
           </div>
 
           {error && (
-            <div className="text-sm text-loss bg-loss/10 p-3 rounded-md">
+            <div
+              className="text-sm text-loss bg-loss/10 p-3 rounded-md"
+              data-testid="edit-notebook-dialog-error"
+            >
               {error}
             </div>
           )}
@@ -181,10 +187,15 @@ export function EditNotebookDialog({
               variant="outline"
               onClick={handleCancel}
               disabled={loading}
+              data-testid="edit-notebook-cancel-button"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button
+              type="submit"
+              disabled={loading}
+              data-testid="edit-notebook-save-button"
+            >
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

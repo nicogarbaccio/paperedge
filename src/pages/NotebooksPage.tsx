@@ -55,7 +55,9 @@ export function NotebooksPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary">Notebooks</h1>
+          <h1 className="text-3xl font-bold text-text-primary" data-testid="notebooks-page-title">
+            Notebooks
+          </h1>
           <p className="text-text-secondary mt-1">
             Manage your betting strategies and track performance
           </p>
@@ -65,6 +67,7 @@ export function NotebooksPage() {
           <Button
             className="flex items-center space-x-2 w-full sm:w-auto"
             onClick={() => setIsCreateDialogOpen(true)}
+            data-testid="create-notebook-button"
           >
             <Plus className="h-4 w-4" />
             <span>New Notebook</span>
@@ -75,7 +78,10 @@ export function NotebooksPage() {
       {/* Content */}
       {notebooks.length === 0 ? (
         // Clean empty state with single create button
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div
+          className="flex flex-col items-center justify-center py-20 text-center"
+          data-testid="notebooks-empty-state"
+        >
           <div className="max-w-md mx-auto">
             <div className="h-20 w-20 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-6">
               <Plus className="h-10 w-10 text-accent" />
@@ -91,6 +97,7 @@ export function NotebooksPage() {
               size="lg"
               onClick={() => setIsCreateDialogOpen(true)}
               className="px-8 py-3 text-base"
+              data-testid="create-notebook-button"
             >
               <Plus className="h-5 w-5 mr-2" />
               Create Notebook
@@ -99,7 +106,10 @@ export function NotebooksPage() {
         </div>
       ) : (
         // Notebooks grid with add button
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          data-testid="notebooks-grid"
+        >
           {notebooks.map((notebook) => {
             const colorClasses = getNotebookColorClasses(notebook.color);
             return (
@@ -109,6 +119,7 @@ export function NotebooksPage() {
                     "hover:bg-surface-secondary/50 transition-colors cursor-pointer h-full border-l-4",
                     colorClasses.border
                   )}
+                  data-testid="notebook-card"
                 >
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center justify-between text-base sm:text-lg">
@@ -118,8 +129,11 @@ export function NotebooksPage() {
                             "w-3 h-3 rounded-full flex-shrink-0",
                             colorClasses.accent
                           )}
+                          data-testid="notebook-card-color"
                         />
-                        <span className="truncate">{notebook.name}</span>
+                        <span className="truncate" data-testid="notebook-card-title">
+                          {notebook.name}
+                        </span>
                       </div>
                       <span
                         className={`text-sm font-normal flex-shrink-0 ml-2 ${getPLColorClass(
@@ -130,11 +144,11 @@ export function NotebooksPage() {
                         {formatCurrency(notebook.total_pl || 0)}
                       </span>
                     </CardTitle>
-                    <CardDescription className="text-sm">
+                    <CardDescription className="text-sm" data-testid="notebook-card-description">
                       {notebook.description || "No description"}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent data-testid="notebook-card-stats">
                     <div className="space-y-3">
                       {/* Bankroll Info */}
                       <div className="flex justify-between items-center">
@@ -225,6 +239,7 @@ export function NotebooksPage() {
           <Card
             className="border-dashed border-2 border-border hover:border-accent/50 transition-colors cursor-pointer"
             onClick={() => setIsCreateDialogOpen(true)}
+            data-testid="create-notebook-card"
           >
             <CardContent className="flex flex-col items-center justify-center h-full min-h-[280px] space-y-4 p-6">
               <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center">

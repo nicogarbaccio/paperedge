@@ -10,7 +10,7 @@ export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<AdminTab>("bugs");
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="admin-dashboard">
       {/* Header */}
       <div className="space-y-3">
         <div className="flex items-center gap-3">
@@ -18,7 +18,7 @@ export function AdminDashboard() {
             <Shield className="h-6 w-6 text-accent" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold text-text-primary">
+            <h1 className="text-4xl font-bold text-text-primary" data-testid="admin-dashboard-title">
               Admin Dashboard
             </h1>
             <p className="text-text-secondary text-sm mt-1">
@@ -29,11 +29,12 @@ export function AdminDashboard() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 border-b border-border pb-4">
+      <div className="flex gap-2 border-b border-border pb-4" data-testid="admin-tabs">
         <Button
           onClick={() => setActiveTab("bugs")}
           variant={activeTab === "bugs" ? "default" : "ghost"}
           className="gap-2"
+          data-testid="admin-bugs-tab"
         >
           <AlertCircle className="h-4 w-4" />
           Bug Reports
@@ -42,6 +43,7 @@ export function AdminDashboard() {
           onClick={() => setActiveTab("features")}
           variant={activeTab === "features" ? "default" : "ghost"}
           className="gap-2"
+          data-testid="admin-features-tab"
         >
           <Lightbulb className="h-4 w-4" />
           Feature Requests

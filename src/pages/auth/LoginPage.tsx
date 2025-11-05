@@ -109,6 +109,7 @@ export function LoginPage() {
               className="w-full"
               onClick={handleGoogleLogin}
               disabled={googleLoading || loading}
+              data-testid="login-google-button"
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path
@@ -155,6 +156,7 @@ export function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                data-testid="login-email-input"
               />
             </div>
             <div className="space-y-2">
@@ -166,15 +168,22 @@ export function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                data-testid="login-password-input"
               />
             </div>
             {error && (
-              <div className="text-sm text-loss bg-loss/10 border border-loss/20 rounded-md p-3">
+              <div
+                className="text-sm text-loss bg-loss/10 border border-loss/20 rounded-md p-3"
+                data-testid="login-error-message"
+              >
                 {error}
               </div>
             )}
             {resetSent && (
-              <div className="text-sm text-profit bg-profit/10 border border-profit/20 rounded-md p-3">
+              <div
+                className="text-sm text-profit bg-profit/10 border border-profit/20 rounded-md p-3"
+                data-testid="login-reset-sent-message"
+              >
                 Reset link sent! Check your email to continue.
               </div>
             )}
@@ -182,6 +191,7 @@ export function LoginPage() {
               type="submit"
               className="w-full"
               disabled={loading || googleLoading}
+              data-testid="login-submit-button"
             >
               {loading ? "Signing in..." : "Sign In"}
             </Button>
@@ -193,6 +203,7 @@ export function LoginPage() {
                 onClick={handleForgotPassword}
                 disabled={resetLoading}
                 aria-label="Forgot password"
+                data-testid="login-forgot-password-link"
               >
                 {resetLoading ? "Sending..." : "Forgot password?"}
               </Button>
@@ -200,7 +211,11 @@ export function LoginPage() {
           </form>
           <div className="mt-6 text-center text-sm">
             <span className="text-text-secondary">Don't have an account? </span>
-            <Link to="/register" className="text-accent hover:underline">
+            <Link
+              to="/register"
+              className="text-accent hover:underline"
+              data-testid="login-register-link"
+            >
               Sign up
             </Link>
           </div>

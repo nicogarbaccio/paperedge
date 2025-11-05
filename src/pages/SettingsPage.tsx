@@ -71,9 +71,9 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="settings-page">
       <div>
-        <h1 className="text-3xl font-bold text-text-primary">Settings</h1>
+        <h1 className="text-3xl font-bold text-text-primary" data-testid="settings-page-title">Settings</h1>
         <p className="text-text-secondary">
           Manage your account and data
         </p>
@@ -159,6 +159,7 @@ export function SettingsPage() {
                   onClick={handlePasswordReset}
                   disabled={loading}
                   className="flex items-center space-x-2"
+                  data-testid="settings-reset-password-button"
                 >
                   <Mail className="h-4 w-4" />
                   <span>{loading ? "Sending..." : "Reset"}</span>

@@ -59,18 +59,28 @@ export function ResetPasswordPage() {
         </CardHeader>
         <CardContent>
           {hasSession === false && (
-            <div className="mb-4 text-sm text-loss bg-loss/10 border border-loss/20 rounded-md p-3">
+            <div
+              className="mb-4 text-sm text-loss bg-loss/10 border border-loss/20 rounded-md p-3"
+              data-testid="reset-password-invalid-link-message"
+            >
               Password reset link is invalid or expired. Please request a new one from Settings.
             </div>
           )}
 
           {success ? (
             <div className="space-y-4">
-              <div className="text-sm text-profit bg-profit/10 border border-profit/20 rounded-md p-3">
+              <div
+                className="text-sm text-profit bg-profit/10 border border-profit/20 rounded-md p-3"
+                data-testid="reset-password-success-message"
+              >
                 Password updated successfully. Redirecting to dashboard...
               </div>
               <div className="text-center text-sm">
-                <Link to="/dashboard" className="text-accent hover:underline">
+                <Link
+                  to="/dashboard"
+                  className="text-accent hover:underline"
+                  data-testid="reset-password-go-to-dashboard-link"
+                >
                   Go now
                 </Link>
               </div>
@@ -86,6 +96,7 @@ export function ResetPasswordPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  data-testid="new-password-input"
                 />
               </div>
               <div className="space-y-2">
@@ -97,18 +108,33 @@ export function ResetPasswordPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
+                  data-testid="new-password-confirm-input"
                 />
               </div>
               {error && (
-                <div className="text-sm text-loss bg-loss/10 border border-loss/20 rounded-md p-3">
+                <div
+                  className="text-sm text-loss bg-loss/10 border border-loss/20 rounded-md p-3"
+                  data-testid="reset-password-error-message"
+                >
                   {error}
                 </div>
               )}
-              <Button type="submit" className="w-full" disabled={loading || hasSession === false}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || hasSession === false}
+                data-testid="new-password-submit-button"
+              >
                 {loading ? "Updating..." : "Update Password"}
               </Button>
               <div className="mt-2 text-center text-xs text-text-secondary">
-                Having trouble? Return to <Link to="/login" className="text-accent hover:underline">Sign in</Link>
+                Having trouble? Return to <Link
+                  to="/login"
+                  className="text-accent hover:underline"
+                  data-testid="reset-password-back-to-login-link"
+                >
+                  Sign in
+                </Link>
               </div>
             </form>
           )}

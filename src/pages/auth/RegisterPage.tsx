@@ -77,12 +77,16 @@ export function RegisterPage() {
               <span className="text-2xl">✅</span>
             </div>
             <CardTitle className="text-2xl">Check your email</CardTitle>
-            <CardDescription>
+            <CardDescription data-testid="register-success-message">
               We've sent you a confirmation link at {email}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate("/login")} className="w-full">
+            <Button
+              onClick={() => navigate("/login")}
+              className="w-full"
+              data-testid="register-back-to-login-button"
+            >
               Back to Login
             </Button>
           </CardContent>
@@ -112,6 +116,7 @@ export function RegisterPage() {
               className="w-full"
               onClick={handleGoogleSignUp}
               disabled={googleLoading || loading}
+              data-testid="register-google-button"
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path
@@ -158,6 +163,7 @@ export function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                data-testid="register-email-input"
               />
             </div>
             <div className="space-y-2">
@@ -169,6 +175,7 @@ export function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                data-testid="register-password-input"
               />
             </div>
             <div className="space-y-2">
@@ -180,10 +187,14 @@ export function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                data-testid="register-confirm-password-input"
               />
             </div>
             {error && (
-              <div className="text-sm text-loss bg-loss/10 border border-loss/20 rounded-md p-3">
+              <div
+                className="text-sm text-loss bg-loss/10 border border-loss/20 rounded-md p-3"
+                data-testid="register-error-message"
+              >
                 {error}
               </div>
             )}
@@ -191,6 +202,7 @@ export function RegisterPage() {
               type="submit"
               className="w-full"
               disabled={loading || googleLoading}
+              data-testid="register-submit-button"
             >
               {loading ? "Creating account..." : "Create Account"}
             </Button>
@@ -199,7 +211,11 @@ export function RegisterPage() {
             <span className="text-text-secondary">
               Already have an account?{" "}
             </span>
-            <Link to="/login" className="text-accent hover:underline">
+            <Link
+              to="/login"
+              className="text-accent hover:underline"
+              data-testid="register-login-link"
+            >
               Sign in
             </Link>
           </div>

@@ -159,11 +159,11 @@ export function TrackerPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="tracker-page">
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold text-text-primary">
+            <h1 className="text-3xl font-bold text-text-primary" data-testid="tracker-page-title">
               Bet Tracker
             </h1>
             <TooltipProvider>
@@ -175,6 +175,7 @@ export function TrackerPage() {
                     size="sm"
                     className="h-8 w-8 p-0 rounded-full border-2 hover:bg-surface-secondary transition-colors"
                     onClick={() => setIsHelpOpen((v) => !v)}
+                    data-testid="tracker-help-button"
                   >
                     <HelpCircle className="h-4 w-4 text-text-secondary" />
                   </Button>
@@ -202,7 +203,7 @@ export function TrackerPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => setIsCreateOpen(true)}>
+          <Button onClick={() => setIsCreateOpen(true)} data-testid="add-account-button">
             <Plus className="h-4 w-4 mr-2" />
             Add Account
           </Button>
@@ -226,6 +227,7 @@ export function TrackerPage() {
                   ? "text-loss"
                   : "text-text-secondary"
               }`}
+              data-testid="tracker-monthly-total"
             >
               {monthlyTotal > 0 ? "+" : ""}
               {formatCurrency(monthlyTotal)}
@@ -242,6 +244,7 @@ export function TrackerPage() {
                     ? "text-loss"
                     : "text-text-secondary"
                 }`}
+                data-testid="tracker-alltime-total"
               >
                 All-time: {allTimeTotal > 0 ? "+" : ""}
                 {formatCurrency(allTimeTotal)}
@@ -254,6 +257,7 @@ export function TrackerPage() {
                     ? "text-loss"
                     : "text-text-secondary"
                 }`}
+                data-testid="tracker-ytd-total"
               >
                 YTD: {yearTotal > 0 ? "+" : ""}
                 {formatCurrency(yearTotal)}
@@ -265,6 +269,7 @@ export function TrackerPage() {
                 size="sm"
                 onClick={() => navigateMonth("prev")}
                 className="h-8 w-8 p-0"
+                data-testid="tracker-prev-month-button"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -273,6 +278,7 @@ export function TrackerPage() {
                 size="sm"
                 onClick={() => navigateMonth("next")}
                 className="h-8 w-8 p-0"
+                data-testid="tracker-next-month-button"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -288,16 +294,17 @@ export function TrackerPage() {
               </div>
             </div>
             {accounts.length === 0 ? (
-              <div className="text-sm text-text-secondary">
+              <div className="text-sm text-text-secondary" data-testid="tracker-no-accounts-message">
                 No accounts yet. Create one to begin tracking.
               </div>
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2" data-testid="tracker-accounts-list">
                 {accounts.map((a) => (
-                  <div key={a.id} className="inline-flex items-center gap-2">
+                  <div key={a.id} className="inline-flex items-center gap-2" data-testid="tracker-account-item">
                     <Link
                       to={`/tracker/accounts/${a.id}`}
                       className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-border hover:bg-surface-secondary transition-colors text-sm"
+                      data-testid={`tracker-account-link-${a.id}`}
                     >
                       <span className="font-medium">{a.name}</span>
                       <span className="text-xs text-text-secondary capitalize">
@@ -312,6 +319,7 @@ export function TrackerPage() {
                         setSelectedAccount(a);
                         setIsEditAccountOpen(true);
                       }}
+                      data-testid={`tracker-edit-account-button-${a.id}`}
                     >
                       Edit
                     </Button>
@@ -322,7 +330,7 @@ export function TrackerPage() {
           </div>
 
           {/* Mobile Layout - Timeline View */}
-          <div className="md:hidden bg-surface rounded-lg border border-border overflow-hidden">
+          <div className="md:hidden bg-surface rounded-lg border border-border overflow-hidden" data-testid="tracker-mobile-calendar">
             <div className="divide-y divide-border">
               {days
                 .filter((d) => d.isCurrentMonth)
@@ -346,6 +354,7 @@ export function TrackerPage() {
                       key={d.key}
                       className={`p-4 cursor-pointer hover:bg-surface-secondary transition-colors ${bgColor}`}
                       onClick={() => setEditDate(d.key)}
+                      data-testid="tracker-mobile-day-cell"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
@@ -370,7 +379,7 @@ export function TrackerPage() {
           </div>
 
           {/* Desktop Layout - Calendar Grid */}
-          <div className="hidden md:block bg-surface rounded-lg overflow-hidden border border-border">
+          <div className="hidden md:block bg-surface rounded-lg overflow-hidden border border-border" data-testid="tracker-desktop-calendar">
             <div className="grid grid-cols-7 border-b border-border bg-surface-secondary">
               {dayNames.map((d) => (
                 <div
@@ -409,6 +418,7 @@ export function TrackerPage() {
                       transition-colors cursor-pointer
                     `}
                     onClick={() => setEditDate(d.key)}
+                    data-testid="tracker-desktop-day-cell"
                   >
                     <div
                       className={`text-[10px] sm:text-sm font-medium ${

@@ -31,9 +31,10 @@ export function Sidebar() {
   return (
     <div className="hidden md:flex md:w-64 md:flex-col md:h-full">
       <div className="flex flex-col h-full overflow-y-auto border-r border-border bg-surface">
-        <nav className="flex-1 space-y-1 px-4 py-6">
+        <nav className="flex-1 space-y-1 px-4 py-6" data-testid="sidebar-nav">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
+            const testId = `sidebar-${item.name.toLowerCase()}-link`;
             return (
               <Link
                 key={item.name}
@@ -44,6 +45,7 @@ export function Sidebar() {
                     ? "bg-accent text-accent-foreground"
                     : "text-text-secondary hover:bg-surface-secondary hover:text-text-primary"
                 )}
+                data-testid={testId}
               >
                 <item.icon
                   className={cn(

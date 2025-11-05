@@ -305,6 +305,7 @@ export function NotebookDetailPage() {
           <Link
             to="/notebooks"
             className="flex items-center text-text-secondary hover:text-text-primary transition-colors"
+            data-testid="back-to-notebooks-link"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
             Back to Notebooks
@@ -315,6 +316,7 @@ export function NotebookDetailPage() {
             variant="outline"
             size="sm"
             onClick={() => setIsEditNotebookDialogOpen(true)}
+            data-testid="edit-notebook-button"
           >
             <Pencil className="h-4 w-4 mr-2" />
             Edit Notebook
@@ -324,6 +326,7 @@ export function NotebookDetailPage() {
             size="sm"
             onClick={() => setIsDeleteDialogOpen(true)}
             className="text-loss border-loss hover:bg-loss hover:text-white"
+            data-testid="delete-notebook-button"
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Delete
@@ -339,9 +342,11 @@ export function NotebookDetailPage() {
               className={`h-4 w-4 rounded-full ${notebookColorClasses.bg}`}
             />
             <div>
-              <CardTitle className="text-2xl">{notebook.name}</CardTitle>
+              <CardTitle className="text-2xl" data-testid="notebook-detail-title">
+                {notebook.name}
+              </CardTitle>
               {notebook.description && (
-                <CardDescription className="mt-1">
+                <CardDescription className="mt-1" data-testid="notebook-detail-description">
                   {notebook.description}
                 </CardDescription>
               )}
@@ -349,7 +354,7 @@ export function NotebookDetailPage() {
           </div>
         </CardHeader>
         {bets.length > 0 && (
-          <CardContent>
+          <CardContent data-testid="notebook-detail-stats">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
                 <p className="text-text-secondary text-sm">Total P&L</p>
@@ -400,11 +405,12 @@ export function NotebookDetailPage() {
 
       {/* View Toggle and Add Bet Button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2" data-testid="notebook-view-toggle">
           <Button
             variant={activeView === "history" ? "default" : "outline"}
             size="sm"
             onClick={() => setActiveView("history")}
+            data-testid="notebook-history-view-button"
           >
             <History className="h-4 w-4 mr-2" />
             History
@@ -413,12 +419,16 @@ export function NotebookDetailPage() {
             variant={activeView === "calendar" ? "default" : "outline"}
             size="sm"
             onClick={() => setActiveView("calendar")}
+            data-testid="notebook-calendar-view-button"
           >
             <Calendar className="h-4 w-4 mr-2" />
             Calendar
           </Button>
         </div>
-        <Button onClick={() => setIsCreateBetDialogOpen(true)}>
+        <Button
+          onClick={() => setIsCreateBetDialogOpen(true)}
+          data-testid="create-bet-button"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Bet
         </Button>
@@ -470,7 +480,7 @@ export function NotebookDetailPage() {
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-text-primary">
+                          <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
                             {bet.description}
                           </h3>
                         </div>
@@ -478,6 +488,7 @@ export function NotebookDetailPage() {
                           className={`px-2 py-1 text-xs font-medium rounded-md ${getStatusColorClass(
                             bet.status
                           )} bg-surface-secondary/30`}
+                          data-testid="bet-card-status"
                         >
                           {bet.status.charAt(0).toUpperCase() +
                             bet.status.slice(1)}
@@ -575,18 +586,18 @@ export function NotebookDetailPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
                         <div>
                           <p className="text-text-secondary text-xs">Date</p>
-                          <p className="font-medium">{formatDate(bet.date)}</p>
+                          <p className="font-medium" data-testid="bet-card-date">{formatDate(bet.date)}</p>
                         </div>
                         <div>
                           <p className="text-text-secondary text-xs">Odds</p>
-                          <p className="font-medium">
+                          <p className="font-medium" data-testid="bet-card-odds">
                             {bet.odds > 0 ? "+" : ""}
                             {bet.odds}
                           </p>
                         </div>
                         <div>
                           <p className="text-text-secondary text-xs">Wager</p>
-                          <p className="font-medium">
+                          <p className="font-medium" data-testid="bet-card-wager">
                             {formatCurrency(bet.wager_amount)}
                           </p>
                         </div>
@@ -600,6 +611,7 @@ export function NotebookDetailPage() {
                                 ? "text-loss"
                                 : "text-text-secondary"
                             }`}
+                            data-testid="bet-card-return"
                           >
                             {bet.status === "pending"
                               ? "Pending"

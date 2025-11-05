@@ -83,7 +83,7 @@ export function CreateNotebookDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px]" data-testid="create-notebook-dialog">
         <DialogHeader>
           <DialogTitle>Create New Notebook</DialogTitle>
           <DialogDescription>
@@ -103,6 +103,7 @@ export function CreateNotebookDialog({
               }
               disabled={loading}
               required
+              data-testid="notebook-name-input"
             />
           </div>
 
@@ -119,6 +120,7 @@ export function CreateNotebookDialog({
                 }))
               }
               disabled={loading}
+              data-testid="notebook-description-input"
             />
           </div>
 
@@ -144,6 +146,7 @@ export function CreateNotebookDialog({
                 disabled={loading}
                 className="pl-8"
                 required
+                data-testid="notebook-starting-bankroll-input"
               />
             </div>
             <p className="text-xs text-text-secondary">
@@ -153,7 +156,7 @@ export function CreateNotebookDialog({
 
           <div className="space-y-2">
             <Label>Color</Label>
-            <div className="grid grid-cols-9 gap-2">
+            <div className="grid grid-cols-9 gap-2" data-testid="notebook-color-picker">
               {NOTEBOOK_COLORS.map((color) => (
                 <button
                   key={color.id}
@@ -171,6 +174,7 @@ export function CreateNotebookDialog({
                   disabled={loading}
                   title={color.name}
                   aria-label={`Select ${color.name} color`}
+                  data-testid={`notebook-color-${color.id}`}
                 />
               ))}
             </div>
@@ -180,7 +184,10 @@ export function CreateNotebookDialog({
           </div>
 
           {error && (
-            <div className="text-sm text-loss bg-loss/10 p-3 rounded-md">
+            <div
+              className="text-sm text-loss bg-loss/10 p-3 rounded-md"
+              data-testid="notebook-dialog-error"
+            >
               {error}
             </div>
           )}
@@ -191,10 +198,15 @@ export function CreateNotebookDialog({
               variant="outline"
               onClick={handleCancel}
               disabled={loading}
+              data-testid="notebook-cancel-button"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button
+              type="submit"
+              disabled={loading}
+              data-testid="notebook-save-button"
+            >
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

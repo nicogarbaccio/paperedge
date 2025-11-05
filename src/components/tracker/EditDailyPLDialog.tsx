@@ -68,7 +68,7 @@ export function EditDailyPLDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent data-testid="edit-daily-pl-dialog">
         <DialogHeader>
           <DialogTitle>Edit P/L - {formatDate(date)}</DialogTitle>
         </DialogHeader>
@@ -84,6 +84,7 @@ export function EditDailyPLDialog({
                 <div
                   key={a.id}
                   className="flex items-center justify-between gap-3"
+                  data-testid="daily-pl-account-row"
                 >
                   <div className="min-w-0">
                     <div className="text-sm font-medium">{a.name}</div>
@@ -103,6 +104,7 @@ export function EditDailyPLDialog({
                         }))
                       }
                       placeholder="0.00"
+                      data-testid={`daily-pl-amount-input-${a.id}`}
                     />
                   </div>
                 </div>
@@ -115,10 +117,11 @@ export function EditDailyPLDialog({
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
+              data-testid="daily-pl-cancel-button"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSaving}>
+            <Button type="submit" disabled={isSaving} data-testid="daily-pl-save-button">
               {isSaving ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>

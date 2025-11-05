@@ -131,11 +131,11 @@ export function SupportPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="support-page">
       {/* Hero Section */}
       <div className="space-y-3">
         <div>
-          <h1 className="text-4xl font-bold text-text-primary">
+          <h1 className="text-4xl font-bold text-text-primary" data-testid="support-page-title">
             Support & Help
           </h1>
           <p className="mt-2 text-lg text-text-secondary">

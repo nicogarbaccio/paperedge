@@ -36,7 +36,7 @@ export function CreateAccountDialog({ open, onOpenChange, onCreate }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent data-testid="create-account-dialog">
         <DialogHeader>
           <DialogTitle>Add Account</DialogTitle>
         </DialogHeader>
@@ -47,6 +47,7 @@ export function CreateAccountDialog({ open, onOpenChange, onCreate }: Props) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="DraftKings, Offshore A..."
+              data-testid="account-name-input"
             />
           </div>
           <div>
@@ -55,6 +56,7 @@ export function CreateAccountDialog({ open, onOpenChange, onCreate }: Props) {
               className="w-full border border-border rounded-md bg-background p-2 text-sm"
               value={kind}
               onChange={(e) => setKind(e.target.value as Account["kind"])}
+              data-testid="account-type-select"
             >
               <option value="main">Main</option>
               <option value="offshore">Offshore</option>
@@ -63,10 +65,10 @@ export function CreateAccountDialog({ open, onOpenChange, onCreate }: Props) {
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} data-testid="account-cancel-button">
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={isLoading}>
+          <Button onClick={handleCreate} disabled={isLoading} data-testid="account-create-button">
             {isLoading ? "Creating..." : "Create"}
           </Button>
         </DialogFooter>

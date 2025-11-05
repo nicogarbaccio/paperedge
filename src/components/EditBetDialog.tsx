@@ -289,7 +289,7 @@ export function EditBetDialog({
 
   return (
     <Dialog open={open && !!currentBet} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" data-testid="edit-bet-dialog">
         <DialogHeader>
           <DialogTitle>Edit Bet</DialogTitle>
           <DialogDescription>
@@ -311,6 +311,7 @@ export function EditBetDialog({
               }
               disabled={loading}
               required
+              data-testid="edit-bet-date-input"
             />
           </div>
 
@@ -328,6 +329,7 @@ export function EditBetDialog({
               }
               disabled={loading}
               required
+              data-testid="edit-bet-description-input"
             />
           </div>
 
@@ -358,6 +360,7 @@ export function EditBetDialog({
                 }}
                 disabled={loading}
                 required
+                data-testid="edit-bet-odds-input"
               />
             </div>
 
@@ -394,6 +397,7 @@ export function EditBetDialog({
                   disabled={loading}
                   className="pl-8"
                   required
+                  data-testid="edit-bet-wager-input"
                 />
               </div>
             </div>
@@ -401,7 +405,7 @@ export function EditBetDialog({
 
           <div className="space-y-3">
             <Label>Bet Status *</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2" data-testid="edit-bet-status-select">
               <Button
                 type="button"
                 variant={formData.status === "won" ? "default" : "outline"}
@@ -412,6 +416,7 @@ export function EditBetDialog({
                     ? "bg-profit hover:bg-profit/90"
                     : ""
                 }
+                data-testid="bet-status-won-button"
               >
                 Won
               </Button>
@@ -423,6 +428,7 @@ export function EditBetDialog({
                 className={
                   formData.status === "lost" ? "bg-loss hover:bg-loss/90" : ""
                 }
+                data-testid="bet-status-lost-button"
               >
                 Lost
               </Button>
@@ -436,12 +442,14 @@ export function EditBetDialog({
                     ? "bg-gray-500 hover:bg-gray-500/90"
                     : ""
                 }
+                data-testid="bet-status-push-button"
               >
                 Push
               </Button>
               <Button
                 type="button"
                 variant={formData.status === "pending" ? "default" : "outline"}
+                data-testid="bet-status-pending-button"
                 onClick={() => handleStatusChange("pending")}
                 disabled={loading}
                 className={
@@ -591,6 +599,7 @@ export function EditBetDialog({
               onClick={() => setShowDeleteConfirm(true)}
               disabled={loading || showDeleteConfirm}
               className="text-loss border-loss hover:bg-loss hover:text-white order-last sm:order-first"
+              data-testid="edit-bet-delete-button"
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete Bet
@@ -601,10 +610,15 @@ export function EditBetDialog({
                 variant="outline"
                 onClick={handleCancel}
                 disabled={loading}
+                data-testid="edit-bet-cancel-button"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading || showDeleteConfirm}>
+              <Button
+                type="submit"
+                disabled={loading || showDeleteConfirm}
+                data-testid="edit-bet-save-button"
+              >
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

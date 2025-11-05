@@ -44,6 +44,7 @@ export function Header() {
           <Link
             to="/dashboard"
             className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+            data-testid="header-dashboard-link"
           >
             <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-surface-secondary flex items-center justify-center">
               <span className="text-base sm:text-lg">📊</span>
@@ -65,6 +66,7 @@ export function Header() {
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="flex items-center space-x-2 text-sm cursor-pointer hover:text-text-primary transition-colors px-3 py-2 rounded-md hover:bg-surface-secondary"
+                data-testid="header-user-menu-button"
               >
                 <User className="h-4 w-4 text-text-secondary" />
                 <span className="text-text-secondary hover:text-text-primary transition-colors hidden sm:inline">
@@ -74,12 +76,16 @@ export function Header() {
 
               {/* Dropdown Menu */}
               {isMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-surface border border-border rounded-md shadow-lg z-50">
+                <div
+                  className="absolute right-0 mt-2 w-48 bg-surface border border-border rounded-md shadow-lg z-50"
+                  data-testid="header-user-menu"
+                >
                   <div className="py-1">
                     <Link
                       to="/settings"
                       onClick={() => setIsMenuOpen(false)}
                       className="flex items-center space-x-2 px-4 py-2 text-sm text-text-secondary hover:bg-surface-secondary hover:text-text-primary transition-colors"
+                      data-testid="header-settings-link"
                     >
                       <Settings className="h-4 w-4" />
                       <span>Settings</span>
@@ -89,6 +95,7 @@ export function Header() {
                         to="/admin"
                         onClick={() => setIsMenuOpen(false)}
                         className="flex items-center space-x-2 px-4 py-2 text-sm text-text-secondary hover:bg-surface-secondary hover:text-text-primary transition-colors"
+                        data-testid="header-admin-link"
                       >
                         <Shield className="h-4 w-4" />
                         <span>Admin</span>
@@ -97,6 +104,7 @@ export function Header() {
                     <button
                       onClick={handleSignOut}
                       className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-text-secondary hover:bg-loss/10 hover:text-loss transition-colors text-left"
+                      data-testid="header-logout-button"
                     >
                       <LogOut className="h-4 w-4" />
                       <span>Sign Out</span>

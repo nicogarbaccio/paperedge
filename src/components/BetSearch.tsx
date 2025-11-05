@@ -96,6 +96,7 @@ export function BetSearch({
           value={localQuery}
           onChange={(e) => setLocalQuery(e.target.value)}
           className="pl-12 pr-10"
+          data-testid="bet-search-input"
         />
         {localQuery && (
           <Button
@@ -103,6 +104,7 @@ export function BetSearch({
             size="sm"
             className="absolute right-3 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
             onClick={() => setLocalQuery("")}
+            data-testid="bet-search-clear-button"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -117,11 +119,12 @@ export function BetSearch({
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
             className="flex items-center space-x-2"
+            data-testid="bet-filters-toggle-button"
           >
             <Filter className="h-4 w-4" />
             <span>Filters</span>
             {getActiveFiltersCount() > 0 && (
-              <span className="bg-accent text-accent-foreground rounded-full px-2 py-0.5 text-xs font-medium">
+              <span className="bg-accent text-accent-foreground rounded-full px-2 py-0.5 text-xs font-medium" data-testid="bet-filters-active-count">
                 {getActiveFiltersCount()}
               </span>
             )}
@@ -132,19 +135,20 @@ export function BetSearch({
               size="sm"
               onClick={clearFilters}
               className="text-text-secondary hover:text-text-primary"
+              data-testid="bet-filters-clear-button"
             >
               Clear all
             </Button>
           )}
         </div>
-        <div className="text-sm text-text-secondary">
+        <div className="text-sm text-text-secondary" data-testid="bet-search-results-count">
           Showing {filteredCount} of {totalBets} bets
         </div>
       </div>
 
       {/* Expanded Filters */}
       {isExpanded && (
-        <div className="border border-border rounded-lg p-4 space-y-4 bg-surface-secondary/30">
+        <div className="border border-border rounded-lg p-4 space-y-4 bg-surface-secondary/30" data-testid="bet-filters-panel">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Status Filter */}
             <div className="space-y-2">
@@ -154,6 +158,7 @@ export function BetSearch({
                 value={filters.status}
                 onChange={(e) => updateFilter("status", e.target.value)}
                 className="flex h-10 w-full rounded-md border border-border bg-input px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                data-testid="bet-filter-status-select"
               >
                 <option value="">All Statuses</option>
                 <option value="pending">Pending</option>
@@ -173,6 +178,7 @@ export function BetSearch({
                 value={filters.dateFrom}
                 onChange={(value) => updateFilter("dateFrom", value)}
                 placeholder="Start date"
+                data-testid="bet-filter-date-from"
               />
             </div>
 
@@ -185,6 +191,7 @@ export function BetSearch({
                 value={filters.dateTo}
                 onChange={(value) => updateFilter("dateTo", value)}
                 placeholder="End date"
+                data-testid="bet-filter-date-to"
               />
             </div>
 
@@ -205,6 +212,7 @@ export function BetSearch({
                     )
                   }
                   className="flex-1"
+                  data-testid="bet-filter-odds-min"
                 />
                 <Input
                   type="number"
@@ -217,6 +225,7 @@ export function BetSearch({
                     )
                   }
                   className="flex-1"
+                  data-testid="bet-filter-odds-max"
                 />
               </div>
             </div>
@@ -239,6 +248,7 @@ export function BetSearch({
                     e.target.value ? Number(e.target.value) : null
                   )
                 }
+                data-testid="bet-filter-wager-min"
               />
               <Input
                 type="number"
@@ -250,6 +260,7 @@ export function BetSearch({
                     e.target.value ? Number(e.target.value) : null
                   )
                 }
+                data-testid="bet-filter-wager-max"
               />
             </div>
           </div>

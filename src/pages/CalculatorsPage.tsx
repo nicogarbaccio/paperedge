@@ -185,16 +185,16 @@ export function CalculatorsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="calculators-page">
       <div>
-        <h1 className="text-3xl font-bold text-text-primary">Calculators</h1>
+        <h1 className="text-3xl font-bold text-text-primary" data-testid="calculators-page-title">Calculators</h1>
         <p className="text-text-secondary">
           Betting calculators and tools to help with your analysis
         </p>
       </div>
 
       {/* Calculator Navigation */}
-      <div className="flex flex-wrap gap-2 p-4 bg-surface rounded-lg border border-border">
+      <div className="flex flex-wrap gap-2 p-4 bg-surface rounded-lg border border-border" data-testid="calculator-nav">
         {calculators.map((calc) => (
           <button
             key={calc.id}
@@ -204,6 +204,7 @@ export function CalculatorsPage() {
                 ? "bg-accent text-accent-foreground"
                 : "bg-surface-secondary text-text-secondary hover:bg-surface-secondary/80 hover:text-text-primary"
             }`}
+            data-testid={`calculator-tab-${calc.id}`}
           >
             <div className="text-left">
               <div className="font-semibold">{calc.name}</div>
@@ -215,7 +216,7 @@ export function CalculatorsPage() {
 
       {/* Betting Odds Calculator */}
       {activeCalculator === "odds" && (
-        <Card className="max-w-4xl mx-auto">
+        <Card className="max-w-4xl mx-auto" data-testid="odds-calculator">
           <CardHeader>
             <CardTitle className="text-2xl font-bold">
               Betting Odds Calculator
@@ -243,6 +244,7 @@ export function CalculatorsPage() {
                     className="text-lg font-medium text-center pl-8"
                     min="0"
                     step="0.01"
+                    data-testid="odds-calc-bet-amount"
                   />
                 </div>
               </div>
@@ -259,6 +261,7 @@ export function CalculatorsPage() {
                   onChange={(e) => updateOddsFromAmerican(e.target.value)}
                   placeholder="e.g., +110 or -150"
                   className="font-mono"
+                  data-testid="odds-calc-american"
                 />
               </div>
               <div className="space-y-2">
@@ -272,6 +275,7 @@ export function CalculatorsPage() {
                   step="0.01"
                   min="1"
                   className="font-mono"
+                  data-testid="odds-calc-decimal"
                 />
               </div>
               <div className="space-y-2">
@@ -283,6 +287,7 @@ export function CalculatorsPage() {
                   onChange={(e) => updateOddsFromFractional(e.target.value)}
                   placeholder="e.g., 11/10"
                   className="font-mono"
+                  data-testid="odds-calc-fractional"
                 />
               </div>
               <div className="space-y-2">
@@ -297,19 +302,20 @@ export function CalculatorsPage() {
                   min="0"
                   max="100"
                   className="font-mono"
+                  data-testid="odds-calc-implied"
                 />
               </div>
             </div>
 
             {/* Results */}
-            <Card className="bg-surface-secondary border-border">
+            <Card className="bg-surface-secondary border-border" data-testid="odds-calc-results">
               <CardContent className="pt-6">
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
                     <Label className="text-sm text-text-secondary">
                       To Win
                     </Label>
-                    <div className="text-2xl font-bold text-text-primary">
+                    <div className="text-2xl font-bold text-text-primary" data-testid="odds-calc-to-win">
                       ${results.toWin > 0 ? results.toWin.toFixed(2) : "–"}
                     </div>
                   </div>
@@ -317,7 +323,7 @@ export function CalculatorsPage() {
                     <Label className="text-sm text-text-secondary">
                       Payout
                     </Label>
-                    <div className="text-2xl font-bold text-text-primary">
+                    <div className="text-2xl font-bold text-text-primary" data-testid="odds-calc-payout">
                       ${results.payout > 0 ? results.payout.toFixed(2) : "–"}
                     </div>
                   </div>
@@ -327,7 +333,7 @@ export function CalculatorsPage() {
 
             {/* Reset Button */}
             <div className="flex justify-center">
-              <Button onClick={handleReset} variant="outline" className="px-8">
+              <Button onClick={handleReset} variant="outline" className="px-8" data-testid="odds-calc-reset">
                 RESET
               </Button>
             </div>

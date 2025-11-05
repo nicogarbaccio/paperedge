@@ -15,6 +15,7 @@ const ToastViewport = React.forwardRef<
       "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
       className
     )}
+    data-testid="toast-container"
     {...props}
   />
 ))
@@ -33,6 +34,7 @@ const Toast = React.forwardRef<
     variant?: keyof typeof toastVariants
   }
 >(({ className, variant = "default", ...props }, ref) => {
+  const testId = variant === "destructive" ? "toast-error" : variant === "success" ? "toast-success" : "toast-message";
   return (
     <ToastPrimitives.Root
       ref={ref}
@@ -41,6 +43,7 @@ const Toast = React.forwardRef<
         toastVariants[variant],
         className
       )}
+      data-testid={testId}
       {...props}
     />
   )
@@ -73,6 +76,7 @@ const ToastClose = React.forwardRef<
       className
     )}
     toast-close=""
+    data-testid="toast-close-button"
     {...props}
   >
     <X className="h-4 w-4" />

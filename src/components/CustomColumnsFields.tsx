@@ -53,16 +53,17 @@ export function CustomColumnsFields({
   const dedupedColumns = deduplicateColumns(customColumns);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" data-testid="custom-fields-container">
       <button
         type="button"
         className="text-sm text-accent underline"
         onClick={() => setShowAdditional((s) => !s)}
+        data-testid="custom-fields-toggle-button"
       >
         {showAdditional ? "Hide" : "Show"} additional fields
       </button>
       {showAdditional && (
-        <div className="space-y-3">
+        <div className="space-y-3" data-testid="custom-fields-panel">
           {dedupedColumns.map((col) => {
             const options = col.select_options || [];
             const filteredOptions = filterOtherOptions(options);
@@ -106,6 +107,7 @@ export function CustomColumnsFields({
                           }));
                         }
                       }}
+                      data-testid={`custom-field-select-${col.column_name.toLowerCase().replace(/\s+/g, '-')}`}
                     >
                       <option value="">Select...</option>
                       {filteredOptions.map((opt) => (
@@ -128,6 +130,7 @@ export function CustomColumnsFields({
                         }
                         disabled={loading}
                         className="mt-2"
+                        data-testid={`custom-field-other-input-${col.column_name.toLowerCase().replace(/\s+/g, '-')}`}
                       />
                     )}
                   </>
@@ -143,6 +146,7 @@ export function CustomColumnsFields({
                       }))
                     }
                     disabled={loading}
+                    data-testid={`custom-field-input-${col.column_name.toLowerCase().replace(/\s+/g, '-')}`}
                   />
                 )}
               </div>

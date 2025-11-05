@@ -158,7 +158,7 @@ export function CreateBetDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px]" data-testid="create-bet-dialog">
         <DialogHeader>
           <DialogTitle>Add New Bet</DialogTitle>
           <DialogDescription>
@@ -180,6 +180,7 @@ export function CreateBetDialog({
               }
               disabled={loading}
               required
+              data-testid="bet-date-input"
             />
           </div>
 
@@ -198,6 +199,7 @@ export function CreateBetDialog({
               disabled={loading}
               autoFocus
               required
+              data-testid="bet-description-input"
             />
             <p className="text-xs text-text-secondary">
               Describe the bet (team, spread, total, etc.)
@@ -226,6 +228,7 @@ export function CreateBetDialog({
               }}
               disabled={loading}
               required
+              data-testid="bet-odds-input"
             />
             <p className="text-xs text-text-secondary">
               Enter American odds (positive for underdogs, negative for
@@ -261,12 +264,13 @@ export function CreateBetDialog({
                 disabled={loading}
                 className="pl-8"
                 required
+                data-testid="bet-wager-input"
               />
             </div>
             {expectedPayout > 0 && (
-              <p className="text-xs text-accent">
+              <p className="text-xs text-accent" data-testid="bet-payout-display">
                 Expected profit: {formatCurrency(potentialProfit)}
-                <span className="text-text-secondary">
+                <span className="text-text-secondary" data-testid="bet-profit-display">
                   {" "}
                   (total payout: {formatCurrency(expectedPayout)})
                 </span>
@@ -284,7 +288,10 @@ export function CreateBetDialog({
           )}
 
           {error && (
-            <div className="text-sm text-loss bg-loss/10 p-3 rounded-md">
+            <div
+              className="text-sm text-loss bg-loss/10 p-3 rounded-md"
+              data-testid="bet-dialog-error"
+            >
               {error}
             </div>
           )}
@@ -295,10 +302,15 @@ export function CreateBetDialog({
               variant="outline"
               onClick={handleCancel}
               disabled={loading}
+              data-testid="bet-cancel-button"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button
+              type="submit"
+              disabled={loading}
+              data-testid="bet-save-button"
+            >
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

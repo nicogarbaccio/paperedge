@@ -123,9 +123,9 @@ export function FAQsPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="faqs-page">
       <div>
-        <h1 className="text-3xl font-bold text-text-primary">FAQs</h1>
+        <h1 className="text-3xl font-bold text-text-primary" data-testid="faqs-page-title">FAQs</h1>
         <p className="text-text-secondary">
           Common questions and quick answers.
         </p>
@@ -137,6 +137,7 @@ export function FAQsPage() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search FAQs…"
           aria-label="Search FAQs"
+          data-testid="faqs-search-input"
         />
       </div>
 
