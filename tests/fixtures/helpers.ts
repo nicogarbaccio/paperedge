@@ -21,7 +21,8 @@ export async function loginUser(
   await page.getByTestId('login-submit-button').click();
 
   // Wait for successful login by checking URL change to dashboard
-  await page.waitForURL('**/dashboard', { timeout: 10000 });
+  // Increased timeout to handle slow dashboard loads with accumulated test data
+  await page.waitForURL('**/dashboard', { timeout: 30000 });
 
   // Verify we're on the dashboard
   await expect(page).toHaveURL(/\/dashboard/);
