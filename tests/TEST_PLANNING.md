@@ -5,12 +5,25 @@
 ### Overview
 This document outlines the complete testing strategy for the PaperEdge sports betting analytics application, including detailed test scenarios, test file organization, test ID requirements, and implementation phases.
 
-### Key Metrics
-- **Total Estimated Tests**: 292 E2E tests
+**Updated**: Streamlined to focus on core functionality with manual testing for edge cases.
+
+### Key Metrics (Updated)
+- **Total Estimated Tests**: ~219 E2E tests (reduced from 292, 25% reduction)
 - **Coverage Target**: 95%+ code coverage
 - **Test Files**: 22 test specification files
 - **Estimated Test IDs Needed**: 180+ data-testid attributes
 - **Implementation Timeline**: 6 phases (6-8 weeks)
+
+### Test Count by Phase
+- **Phase 1 (Auth)**: 58 tests (unchanged - already completed)
+- **Phase 2 (Notebooks)**: 39 tests ✅ COMPLETED (reduced from 68)
+- **Phase 3 (Bets)**: 47 tests (reduced from 86)
+- **Phase 4 (Tracker)**: 36 tests (reduced from 62)
+- **Phase 5 (Advanced)**: 55 tests (reduced from 96)
+- **Phase 6 (Non-Functional)**: 42 tests (reduced from 78)
+
+### Philosophy
+Focus on **core functionality** and **critical user paths**. Edge cases (special characters, very large values, bulk operations, concurrent updates, etc.) will be covered through manual testing during development.
 
 ### Test ID Audit Summary
 Current state analysis reveals that most components lack `data-testid` attributes. An estimated **180+ test IDs** need to be added across:
@@ -52,45 +65,45 @@ Current state analysis reveals that most components lack `data-testid` attribute
 | Password Reset | `tests/e2e/auth/password-reset.spec.ts` | 14 | P0 | Planned | 0% |
 | OAuth (Google) | `tests/e2e/auth/oauth.spec.ts` | 10 | P1 | Planned | 0% |
 | **Notebooks** |
-| Notebook CRUD | `tests/e2e/notebooks/crud.spec.ts` | 24 | P0 | Planned | 0% |
-| Custom Columns | `tests/e2e/notebooks/custom-columns.spec.ts` | 18 | P1 | Planned | 0% |
-| Navigation | `tests/e2e/notebooks/navigation.spec.ts` | 12 | P1 | Planned | 0% |
-| Search & Filter | `tests/e2e/notebooks/search-filter.spec.ts` | 14 | P1 | Planned | 0% |
+| Notebook CRUD | `tests/e2e/notebooks/crud.spec.ts` | 13 | P0 | ✅ Complete | 100% |
+| Custom Columns | `tests/e2e/notebooks/custom-columns.spec.ts` | 12 | P1 | ✅ Complete | 100% |
+| Navigation | `tests/e2e/notebooks/navigation.spec.ts` | 6 | P1 | ✅ Complete | 100% |
+| Search & Filter | `tests/e2e/notebooks/search-filter.spec.ts` | 8 | P1 | ✅ Complete | 100% |
 | **Bets** |
-| Bet CRUD | `tests/e2e/bets/crud.spec.ts` | 28 | P0 | Planned | 0% |
-| Bet Custom Fields | `tests/e2e/bets/custom-fields.spec.ts` | 20 | P1 | Planned | 0% |
-| Bet Validation | `tests/e2e/bets/validation.spec.ts` | 16 | P1 | Planned | 0% |
-| Bet Search | `tests/e2e/bets/search.spec.ts` | 12 | P1 | Planned | 0% |
-| Bet Status Updates | `tests/e2e/bets/status.spec.ts` | 10 | P0 | Planned | 0% |
+| Bet CRUD | `tests/e2e/bets/crud.spec.ts` | 15 | P0 | Planned | 0% |
+| Bet Custom Fields | `tests/e2e/bets/custom-fields.spec.ts` | 10 | P1 | Planned | 0% |
+| Bet Validation | `tests/e2e/bets/validation.spec.ts` | 10 | P1 | Planned | 0% |
+| Bet Search | `tests/e2e/bets/search.spec.ts` | 6 | P1 | Planned | 0% |
+| Bet Status Updates | `tests/e2e/bets/status.spec.ts` | 6 | P0 | Planned | 0% |
 | **Tracker** |
-| Calendar View | `tests/e2e/tracker/calendar.spec.ts` | 20 | P1 | Planned | 0% |
-| Accounts CRUD | `tests/e2e/tracker/accounts.spec.ts` | 16 | P1 | Planned | 0% |
-| Daily P&L | `tests/e2e/tracker/daily-pl.spec.ts` | 14 | P1 | Planned | 0% |
-| Aggregations | `tests/e2e/tracker/aggregations.spec.ts` | 12 | P1 | Planned | 0% |
+| Calendar View | `tests/e2e/tracker/calendar.spec.ts` | 12 | P1 | Planned | 0% |
+| Accounts CRUD | `tests/e2e/tracker/accounts.spec.ts` | 10 | P1 | Planned | 0% |
+| Daily P&L | `tests/e2e/tracker/daily-pl.spec.ts` | 8 | P1 | Planned | 0% |
+| Aggregations | `tests/e2e/tracker/aggregations.spec.ts` | 6 | P1 | Planned | 0% |
 | **Dashboard** |
-| Dashboard Overview | `tests/e2e/dashboard/overview.spec.ts` | 18 | P1 | Planned | 0% |
+| Dashboard Overview | `tests/e2e/dashboard/overview.spec.ts` | 10 | P1 | Planned | 0% |
 | **Calculators** |
-| Kelly Calculator | `tests/e2e/calculators/kelly.spec.ts` | 12 | P2 | Planned | 0% |
-| Arbitrage Calculator | `tests/e2e/calculators/arbitrage.spec.ts` | 12 | P2 | Planned | 0% |
-| Parlay Calculator | `tests/e2e/calculators/parlay.spec.ts` | 10 | P2 | Planned | 0% |
-| Unit Betting Calculator | `tests/e2e/calculators/unit-betting.spec.ts` | 10 | P2 | Planned | 0% |
+| Kelly Calculator | `tests/e2e/calculators/kelly.spec.ts` | 6 | P2 | Planned | 0% |
+| Arbitrage Calculator | `tests/e2e/calculators/arbitrage.spec.ts` | 6 | P2 | Planned | 0% |
+| Parlay Calculator | `tests/e2e/calculators/parlay.spec.ts` | 5 | P2 | Planned | 0% |
+| Unit Betting Calculator | `tests/e2e/calculators/unit-betting.spec.ts` | 5 | P2 | Planned | 0% |
 | **Settings** |
-| Settings Page | `tests/e2e/settings/settings.spec.ts` | 14 | P1 | Planned | 0% |
+| Settings Page | `tests/e2e/settings/settings.spec.ts` | 8 | P1 | Planned | 0% |
 | **Support & Admin** |
-| Support System | `tests/e2e/support/support.spec.ts` | 12 | P2 | Planned | 0% |
-| Admin Dashboard | `tests/e2e/admin/admin.spec.ts` | 10 | P2 | Planned | 0% |
+| Support System | `tests/e2e/support/support.spec.ts` | 6 | P2 | Planned | 0% |
+| Admin Dashboard | `tests/e2e/admin/admin.spec.ts` | 5 | P2 | Planned | 0% |
 | **FAQs** |
-| FAQs Page | `tests/e2e/faqs/faqs.spec.ts` | 8 | P2 | Planned | 0% |
+| FAQs Page | `tests/e2e/faqs/faqs.spec.ts` | 4 | P2 | Planned | 0% |
 | **Responsive** |
-| Mobile Layout | `tests/e2e/responsive/mobile.spec.ts` | 20 | P2 | Planned | 0% |
-| Tablet Layout | `tests/e2e/responsive/tablet.spec.ts` | 14 | P2 | Planned | 0% |
+| Mobile Layout | `tests/e2e/responsive/mobile.spec.ts` | 10 | P2 | Planned | 0% |
+| Tablet Layout | `tests/e2e/responsive/tablet.spec.ts` | 8 | P2 | Planned | 0% |
 | **Performance** |
-| Page Load Performance | `tests/e2e/performance/page-load.spec.ts` | 10 | P2 | Planned | 0% |
-| Data Load Performance | `tests/e2e/performance/data-load.spec.ts` | 8 | P2 | Planned | 0% |
+| Page Load Performance | `tests/e2e/performance/page-load.spec.ts` | 6 | P2 | Planned | 0% |
+| Data Load Performance | `tests/e2e/performance/data-load.spec.ts` | 4 | P2 | Planned | 0% |
 | **Accessibility** |
-| Keyboard Navigation | `tests/e2e/a11y/keyboard.spec.ts` | 14 | P2 | Planned | 0% |
-| Screen Reader | `tests/e2e/a11y/screen-reader.spec.ts` | 12 | P2 | Planned | 0% |
-| **TOTAL** | | **292** | | | **0%** |
+| Keyboard Navigation | `tests/e2e/a11y/keyboard.spec.ts` | 8 | P2 | Planned | 0% |
+| Screen Reader | `tests/e2e/a11y/screen-reader.spec.ts` | 6 | P2 | Planned | 0% |
+| **TOTAL** | | **219** | | | **18% (39/219)** |
 
 ---
 
@@ -307,7 +320,7 @@ Protected Routes:
 
 ---
 
-### Phase 2: Notebook Management (Week 2-3)
+### Phase 2: Notebook Management (Week 2-3) ✅ COMPLETED
 **Objective**: Test notebook creation, editing, deletion, and organization
 
 **Scope:**
@@ -318,12 +331,13 @@ Protected Routes:
 - Color coding
 
 **Test Files:**
-- `tests/e2e/notebooks/crud.spec.ts`
-- `tests/e2e/notebooks/custom-columns.spec.ts`
-- `tests/e2e/notebooks/navigation.spec.ts`
-- `tests/e2e/notebooks/search-filter.spec.ts`
+- `tests/e2e/notebooks/crud.spec.ts` (13 tests)
+- `tests/e2e/notebooks/custom-columns.spec.ts` (12 tests)
+- `tests/e2e/notebooks/navigation.spec.ts` (6 tests)
+- `tests/e2e/notebooks/search-filter.spec.ts` (8 tests)
 
-**Estimated Test Count**: 68 tests
+**Actual Test Count**: 39 tests (reduced from 68, removed edge cases)
+**Status**: ✅ All tests passing (39/39 - 100%)
 
 **Test IDs Needed (42 total):**
 ```
@@ -482,13 +496,14 @@ Notebook Detail:
 - Status updates
 
 **Test Files:**
-- `tests/e2e/bets/crud.spec.ts`
-- `tests/e2e/bets/custom-fields.spec.ts`
-- `tests/e2e/bets/validation.spec.ts`
-- `tests/e2e/bets/search.spec.ts`
-- `tests/e2e/bets/status.spec.ts`
+- `tests/e2e/bets/crud.spec.ts` (~15 tests - core CRUD, validation errors)
+- `tests/e2e/bets/custom-fields.spec.ts` (~10 tests - basic custom field functionality)
+- `tests/e2e/bets/validation.spec.ts` (~10 tests - odds/wager/date validation)
+- `tests/e2e/bets/search.spec.ts` (~6 tests - search, filter, sort basics)
+- `tests/e2e/bets/status.spec.ts` (~6 tests - status updates, P&L calculation)
 
-**Estimated Test Count**: 86 tests
+**Estimated Test Count**: 47 tests (reduced from 86, focus on core functionality)
+**Note**: Removed edge cases like very large values, special characters, emoji handling, bulk operations
 
 **Test IDs Needed (48 total):**
 ```
@@ -544,128 +559,91 @@ Bet Actions:
 [ ] bet-duplicate-button
 ```
 
-**Test Scenarios:**
+**Test Scenarios (Streamlined - Focus on Core Functionality):**
 
-#### Bet CRUD (28 tests)
-1. **Happy Path (10 tests)**
+#### Bet CRUD (~15 tests)
+1. **Happy Path (8 tests)**
    - Create bet with required fields only
    - Create bet with all fields
    - Create bet with custom fields
    - Edit bet description
-   - Edit bet odds
-   - Edit bet wager amount
-   - Edit bet date
+   - Edit bet odds/wager
    - Edit bet status
    - Delete bet with confirmation
    - View bet details
 
-2. **Error Scenarios (12 tests)**
-   - Create bet without description
+2. **Error Scenarios (7 tests)**
+   - Create bet without description (required field)
    - Invalid odds format
-   - Negative wager amount
-   - Zero wager amount
-   - Invalid date format
-   - Future date validation
+   - Negative/zero wager amount
    - Empty required fields
-   - Concurrent edit conflict
-   - Unauthorized bet edit
+   - Cancel button in create/edit dialogs
    - Network error during save
-   - Character limits exceeded
-   - SQL injection in description
+   - Unauthorized bet edit
 
-3. **Edge Cases (6 tests)**
-   - Bet with very large odds
-   - Bet with decimal wager amounts
-   - Bet with emoji in description
-   - Maximum bets per notebook
-   - Bulk delete bets
-   - Duplicate bet functionality
+**Removed**: Very large values, emoji handling, bulk operations, duplicate bet, character limits, SQL injection tests
 
-#### Custom Fields (20 tests)
-1. **Happy Path (7 tests)**
+#### Custom Fields (~10 tests)
+1. **Happy Path (6 tests)**
    - Create bet with market custom field
    - Create bet with sportsbook custom field
-   - Create bet with both custom field types
+   - Create bet without custom fields (optional)
    - Edit custom field value
    - Display custom fields in bet card
-   - Filter bets by custom field
-   - Sort bets by custom field
-
-2. **Error Scenarios (8 tests)**
-   - Create bet with invalid custom field value
-   - Custom field validation errors
-   - Missing required custom field
-   - Custom field character limit
-   - Delete column with bet data
-   - Custom field type mismatch
-   - Unauthorized custom field modification
-   - Network error saving custom data
-
-3. **Edge Cases (5 tests)**
-   - Custom field display order
-   - Custom field with special characters
-   - Bulk update custom fields
-   - Export bets with custom fields
-   - Custom field backward compatibility
-
-#### Validation (16 tests)
-1. **Odds Validation (6 tests)**
-   - American odds format validation
-   - Positive odds (+100, +150)
-   - Negative odds (-110, -200)
-   - Invalid odds formats
-   - Odds calculation accuracy
-   - Edge case odds values (+100000, -100000)
-
-2. **Wager Validation (5 tests)**
-   - Minimum wager amount
-   - Maximum wager amount
-   - Decimal precision (2 places)
-   - Currency formatting
-   - Invalid wager inputs
-
-3. **Date Validation (5 tests)**
-   - Valid date range
-   - Date picker functionality
-   - Future date warning
-   - Past date validation
-   - Date format localization
-
-#### Search (12 tests)
-1. **Happy Path (5 tests)**
-   - Search bets by description
-   - Filter by status (Won/Lost/Pending/Void)
-   - Filter by date range
-   - Sort by date
-   - Sort by profit/loss
+   - Toggle custom fields panel
 
 2. **Error Scenarios (4 tests)**
+   - Handle missing custom columns
+   - Handle empty custom field values
+   - Don't block submission with invalid types
+   - Maintain form state on validation fail
+
+**Removed**: Special characters, bulk updates, export, backward compatibility, filter/sort by custom fields
+
+#### Validation (~10 tests)
+1. **Odds Validation (4 tests)**
+   - Positive American odds (+100, +150)
+   - Negative American odds (-110, -200)
+   - Invalid odds formats
+   - Odds calculation accuracy
+
+2. **Wager Validation (3 tests)**
+   - Zero/negative wager validation
+   - Decimal precision
+   - Required field validation
+
+3. **Date Validation (3 tests)**
+   - Date picker functionality
+   - Future date handling
+   - Invalid date format
+
+**Removed**: Min/max limits, currency formatting, date localization, edge case values
+
+#### Search (~6 tests)
+1. **Happy Path (4 tests)**
+   - Search bets by description
+   - Filter by status (Won/Lost/Pending/Void)
+   - Sort by date
+   - Clear search/filters
+
+2. **Error Scenarios (2 tests)**
    - Search with no results
-   - Invalid search query
-   - Empty search clears results
-   - Search timeout handling
+   - Handle empty search
 
-3. **Edge Cases (3 tests)**
-   - Case-insensitive search
-   - Partial match search
-   - Combine multiple filters
+**Removed**: Date range filters, sort by P&L, case-insensitive search, partial match, combine filters, timeout handling
 
-#### Status Updates (10 tests)
+#### Status Updates (~6 tests)
 1. **Happy Path (4 tests)**
    - Mark bet as Won (calculates profit)
    - Mark bet as Lost (calculates loss)
    - Mark bet as Void (no P&L impact)
    - Mark bet as Pending
 
-2. **Error Scenarios (4 tests)**
-   - Status update without odds
-   - Status update without wager
-   - Concurrent status updates
-   - Unauthorized status change
+2. **Error Scenarios (2 tests)**
+   - Status update validation (requires odds/wager)
+   - Handle status update errors
 
-3. **Edge Cases (2 tests)**
-   - Bulk status updates
-   - Status change notification
+**Removed**: Bulk updates, concurrent updates, unauthorized changes, notifications
 
 ---
 
@@ -679,12 +657,13 @@ Bet Actions:
 - Data aggregations and calculations
 
 **Test Files:**
-- `tests/e2e/tracker/calendar.spec.ts`
-- `tests/e2e/tracker/accounts.spec.ts`
-- `tests/e2e/tracker/daily-pl.spec.ts`
-- `tests/e2e/tracker/aggregations.spec.ts`
+- `tests/e2e/tracker/calendar.spec.ts` (~12 tests - display, navigation, edit P&L)
+- `tests/e2e/tracker/accounts.spec.ts` (~10 tests - CRUD, validation)
+- `tests/e2e/tracker/daily-pl.spec.ts` (~8 tests - add/edit/delete P&L)
+- `tests/e2e/tracker/aggregations.spec.ts` (~6 tests - monthly/yearly/all-time totals)
 
-**Estimated Test Count**: 62 tests
+**Estimated Test Count**: 36 tests (reduced from 62, focus on core functionality)
+**Note**: Removed edge cases like leap year handling, very large values, bulk imports, concurrent updates
 
 **Test IDs Needed (36 total):**
 ```
@@ -730,9 +709,9 @@ Account Detail:
 [ ] account-bet-list
 ```
 
-**Test Scenarios:**
+**Test Scenarios (Streamlined - Focus on Core Functionality):**
 
-#### Calendar View (20 tests)
+#### Calendar View (~12 tests)
 1. **Happy Path (7 tests)**
    - Display current month calendar
    - Navigate to previous month
@@ -742,24 +721,16 @@ Account Detail:
    - Display monthly total
    - Display yearly total
 
-2. **Error Scenarios (8 tests)**
+2. **Error Scenarios (5 tests)**
    - Loading state during data fetch
    - Error state on fetch failure
    - Empty state for no data
-   - Invalid date navigation
-   - Concurrent P&L updates
-   - Network timeout
-   - Unauthorized access
    - Invalid P&L value format
+   - Network error
 
-3. **Edge Cases (5 tests)**
-   - Month boundary navigation
-   - Year boundary navigation
-   - Leap year handling
-   - Display negative P&L values
-   - Display large P&L values
+**Removed**: Concurrent updates, month/year boundary edge cases, leap year handling, large value display, unauthorized access
 
-#### Accounts (16 tests)
+#### Accounts (~10 tests)
 1. **Happy Path (6 tests)**
    - Create new account
    - Edit account name
@@ -768,21 +739,15 @@ Account Detail:
    - List all accounts
    - Navigate to account detail page
 
-2. **Error Scenarios (6 tests)**
-   - Create account without name
+2. **Error Scenarios (4 tests)**
+   - Create account without name (required field)
    - Duplicate account name
    - Delete account with P&L data (warning)
-   - Edit non-existent account
-   - Unauthorized account access
    - Network error during save
 
-3. **Edge Cases (4 tests)**
-   - Maximum accounts limit
-   - Account with special characters
-   - Account name character limit
-   - Default account designation
+**Removed**: Special characters, character limits, max accounts, default designation, unauthorized access, edit non-existent
 
-#### Daily P&L (14 tests)
+#### Daily P&L (~8 tests)
 1. **Happy Path (5 tests)**
    - Add daily P&L value
    - Edit daily P&L value
@@ -790,37 +755,25 @@ Account Detail:
    - Add P&L notes
    - View P&L history
 
-2. **Error Scenarios (6 tests)**
+2. **Error Scenarios (3 tests)**
    - Invalid P&L value format
-   - Negative P&L value validation
    - Empty P&L value
-   - Concurrent P&L updates
    - Network error during save
-   - Unauthorized P&L modification
 
-3. **Edge Cases (3 tests)**
-   - Very large P&L values
-   - P&L with decimal precision
-   - Bulk import P&L data
+**Removed**: Negative validation, concurrent updates, unauthorized access, very large values, decimal precision, bulk import
 
-#### Aggregations (12 tests)
+#### Aggregations (~6 tests)
 1. **Happy Path (4 tests)**
    - Calculate monthly total P&L
    - Calculate yearly total P&L
    - Calculate all-time total P&L
    - Display account-level aggregations
 
-2. **Error Scenarios (4 tests)**
-   - Aggregation with missing data
+2. **Error Scenarios (2 tests)**
+   - Aggregation with missing/empty data
    - Aggregation calculation errors
-   - Aggregation timeout
-   - Invalid date range for aggregation
 
-3. **Edge Cases (4 tests)**
-   - Aggregation performance with large datasets
-   - Real-time aggregation updates
-   - Aggregation across multiple accounts
-   - Aggregation with voided bets
+**Removed**: Timeout, invalid date range, performance testing, real-time updates, multiple accounts, voided bets handling
 
 ---
 
@@ -836,17 +789,18 @@ Account Detail:
 - FAQs
 
 **Test Files:**
-- `tests/e2e/dashboard/overview.spec.ts`
-- `tests/e2e/calculators/kelly.spec.ts`
-- `tests/e2e/calculators/arbitrage.spec.ts`
-- `tests/e2e/calculators/parlay.spec.ts`
-- `tests/e2e/calculators/unit-betting.spec.ts`
-- `tests/e2e/settings/settings.spec.ts`
-- `tests/e2e/support/support.spec.ts`
-- `tests/e2e/admin/admin.spec.ts`
-- `tests/e2e/faqs/faqs.spec.ts`
+- `tests/e2e/dashboard/overview.spec.ts` (~10 tests - stats display, navigation, empty state)
+- `tests/e2e/calculators/kelly.spec.ts` (~6 tests - calculate, validate inputs)
+- `tests/e2e/calculators/arbitrage.spec.ts` (~6 tests - calculate, validate inputs)
+- `tests/e2e/calculators/parlay.spec.ts` (~5 tests - add legs, calculate)
+- `tests/e2e/calculators/unit-betting.spec.ts` (~5 tests - calculate units)
+- `tests/e2e/settings/settings.spec.ts` (~8 tests - view email, reset password, export/import, delete account)
+- `tests/e2e/support/support.spec.ts` (~6 tests - submit bug/feature, view history)
+- `tests/e2e/admin/admin.spec.ts` (~5 tests - view submissions, resolve/delete, unauthorized)
+- `tests/e2e/faqs/faqs.spec.ts` (~4 tests - display, search, expand/collapse)
 
-**Estimated Test Count**: 96 tests
+**Estimated Test Count**: 55 tests (reduced from 96, focus on core functionality)
+**Note**: Removed edge cases like very large values, special characters, performance testing, responsive layout
 
 **Test IDs Needed (52 total):**
 ```
@@ -1105,14 +1059,15 @@ FAQs:
 - Screen reader compatibility
 
 **Test Files:**
-- `tests/e2e/responsive/mobile.spec.ts`
-- `tests/e2e/responsive/tablet.spec.ts`
-- `tests/e2e/performance/page-load.spec.ts`
-- `tests/e2e/performance/data-load.spec.ts`
-- `tests/e2e/a11y/keyboard.spec.ts`
-- `tests/e2e/a11y/screen-reader.spec.ts`
+- `tests/e2e/responsive/mobile.spec.ts` (~10 tests - key pages at mobile viewport)
+- `tests/e2e/responsive/tablet.spec.ts` (~8 tests - key pages at tablet viewport)
+- `tests/e2e/performance/page-load.spec.ts` (~6 tests - dashboard, notebooks, tracker load times)
+- `tests/e2e/performance/data-load.spec.ts` (~4 tests - key data fetching operations)
+- `tests/e2e/a11y/keyboard.spec.ts` (~8 tests - tab order, focus, shortcuts)
+- `tests/e2e/a11y/screen-reader.spec.ts` (~6 tests - headings, labels, ARIA, announcements)
 
-**Estimated Test Count**: 78 tests
+**Estimated Test Count**: 42 tests (reduced from 78, focus on critical paths)
+**Note**: Removed edge cases like notch handling, split-screen, slow network simulation, custom shortcuts, live regions
 
 **Test IDs Needed** (use existing test IDs from previous phases)
 
