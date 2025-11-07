@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/authStore'
+import { calculateTotalPL } from '@/lib/betting'
 
 export interface NotebookDetail {
   id: string
@@ -127,8 +128,16 @@ export function useNotebook(notebookId: string) {
 
       if (betsError) throw betsError
 
-      setNotebook(notebookData)
       const notebookBets = betsData || []
+      
+      // Calculate current bankroll dynamically: starting bankroll + total P/L
+      const total_pl = calculateTotalPL(notebookBets)
+      const current_bankroll = notebookData.starting_bankroll + total_pl
+      
+      setNotebook({
+        ...notebookData,
+        current_bankroll // Override with calculated value
+      })
       setBets(notebookBets)
 
       // Fetch custom columns for this notebook

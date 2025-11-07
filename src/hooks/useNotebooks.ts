@@ -62,6 +62,9 @@ export function useNotebooks() {
         const win_rate = calculateWinRate(bets)
         const total_pl = calculateTotalPL(bets)
         const roi = calculateROI(bets)
+        
+        // Calculate current bankroll dynamically: starting bankroll + total P/L
+        const current_bankroll = notebook.starting_bankroll + total_pl
 
         return {
           ...notebook,
@@ -69,7 +72,8 @@ export function useNotebooks() {
           bet_count,
           win_rate,
           total_pl,
-          roi
+          roi,
+          current_bankroll // Override with calculated value
         }
       }) || []
 

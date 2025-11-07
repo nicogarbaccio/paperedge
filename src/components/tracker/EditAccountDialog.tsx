@@ -18,6 +18,7 @@ interface Props {
     id: string,
     updates: { name?: string; kind?: Account["kind"] }
   ) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }
 
 export function EditAccountDialog({
@@ -25,15 +26,20 @@ export function EditAccountDialog({
   onOpenChange,
   account,
   onUpdate,
+  onDelete,
 }: Props) {
   const [name, setName] = useState("");
   const [kind, setKind] = useState<Account["kind"]>("main");
   const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (open && account) {
       setName(account.name);
       setKind(account.kind);
+      setShowDeleteConfirm(false);
+      setIsDeleting(false);
     }
   }, [open, account]);
 
@@ -46,6 +52,17 @@ export function EditAccountDialog({
       onOpenChange(false);
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!account) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(account.id);
+      onOpenChange(false);
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -83,13 +100,72 @@ export function EditAccountDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} data-testid="edit-account-cancel-button">
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving || !name.trim()} data-testid="edit-account-save-button">
-            {isSaving ? "Saving..." : "Save changes"}
-          </Button>
+        {showDeleteConfirm && (
+          <div className="bg-loss/10 border border-loss/20 p-4 rounded-md space-y-3">
+            <div className="text-sm text-loss font-medium">
+              Are you sure you want to delete this account?
+            </div>
+            <div className="text-xs text-text-secondary">
+              This will permanently delete the account and all associated daily
+              P/L records. This action cannot be undone.
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                data-testid="edit-account-delete-cancel-button"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="text-loss border-loss hover:bg-loss hover:text-white"
+                data-testid="edit-account-delete-confirm-button"
+              >
+                {isDeleting ? "Deleting..." : "Delete Account"}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <DialogFooter className="flex justify-between items-center">
+          {!showDeleteConfirm && (
+            <Button
+              variant="ghost"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="text-loss hover:text-loss hover:bg-loss/10"
+              disabled={isSaving}
+              data-testid="edit-account-delete-button"
+            >
+              Delete Account
+            </Button>
+          )}
+          <div className="flex gap-2 ml-auto">
+            <Button
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              disabled={isSaving || isDeleting}
+              data-testid="edit-account-cancel-button"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={
+                isSaving || !name.trim() || isDeleting || showDeleteConfirm
+              }
+              data-testid="edit-account-save-button"
+            >
+              {isSaving ? "Saving..." : "Save changes"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

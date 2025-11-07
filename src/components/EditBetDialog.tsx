@@ -306,8 +306,8 @@ export function EditBetDialog({
             <DateInput
               id="date"
               value={formData.date}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, date: e.target.value }))
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, date: value }))
               }
               disabled={loading}
               required
@@ -347,10 +347,16 @@ export function EditBetDialog({
                     const updates: any = { ...prev, odds: newOdds };
                     // Auto-update return_amount if status is won and user hasn't manually modified it
                     // BUT only if we're not in the initialization phase
-                    if (prev.status === "won" && !userModifiedReturn && !isInitializing.current && newOdds !== 0) {
-                      const newProfit = isValidAmericanOdds(newOdds) && prev.wager_amount > 0
-                        ? calculateProfit(newOdds, prev.wager_amount)
-                        : 0;
+                    if (
+                      prev.status === "won" &&
+                      !userModifiedReturn &&
+                      !isInitializing.current &&
+                      newOdds !== 0
+                    ) {
+                      const newProfit =
+                        isValidAmericanOdds(newOdds) && prev.wager_amount > 0
+                          ? calculateProfit(newOdds, prev.wager_amount)
+                          : 0;
                       if (newProfit > 0) {
                         updates.return_amount = newProfit;
                       }
@@ -383,7 +389,12 @@ export function EditBetDialog({
                       const updates: any = { ...prev, wager_amount: newWager };
                       // Auto-update return_amount if status is won and user hasn't manually modified it
                       // BUT only if we're not in the initialization phase
-                      if (prev.status === "won" && !userModifiedReturn && !isInitializing.current && newWager > 0) {
+                      if (
+                        prev.status === "won" &&
+                        !userModifiedReturn &&
+                        !isInitializing.current &&
+                        newWager > 0
+                      ) {
                         const newProfit = isValidAmericanOdds(prev.odds)
                           ? calculateProfit(prev.odds, newWager)
                           : 0;
@@ -405,7 +416,10 @@ export function EditBetDialog({
 
           <div className="space-y-3">
             <Label>Bet Status *</Label>
-            <div className="grid grid-cols-2 gap-2" data-testid="edit-bet-status-select">
+            <div
+              className="grid grid-cols-2 gap-2"
+              data-testid="edit-bet-status-select"
+            >
               <Button
                 type="button"
                 variant={formData.status === "won" ? "default" : "outline"}

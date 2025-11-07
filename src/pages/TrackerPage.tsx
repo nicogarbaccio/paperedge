@@ -30,14 +30,17 @@ import {
 } from "@/components/ui/Tooltip";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TrackerSkeleton } from "@/components/skeletons/TrackerSkeleton";
+import { useToast } from "@/hooks/useToast";
 
 export function TrackerPage() {
+  const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editDate, setEditDate] = useState<string | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
-  const { accounts, createAccount, updateAccount } = useAccounts();
+  const { accounts, createAccount, updateAccount, deleteAccount } =
+    useAccounts();
   const [isEditAccountOpen, setIsEditAccountOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
 
@@ -154,6 +157,24 @@ export function TrackerPage() {
     }
   }
 
+  async function handleDeleteAccount(id: string) {
+    try {
+      await deleteAccount(id);
+      toast({
+        title: "Account deleted",
+        description:
+          "The account and all associated daily P/L records have been deleted.",
+        variant: "success",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete account",
+        variant: "destructive",
+      });
+    }
+  }
+
   if (loading) {
     return <TrackerSkeleton />;
   }
@@ -163,7 +184,10 @@ export function TrackerPage() {
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold text-text-primary" data-testid="tracker-page-title">
+            <h1
+              className="text-3xl font-bold text-text-primary"
+              data-testid="tracker-page-title"
+            >
               Bet Tracker
             </h1>
             <TooltipProvider>
@@ -203,7 +227,10 @@ export function TrackerPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => setIsCreateOpen(true)} data-testid="add-account-button">
+          <Button
+            onClick={() => setIsCreateOpen(true)}
+            data-testid="add-account-button"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Account
           </Button>
@@ -294,13 +321,23 @@ export function TrackerPage() {
               </div>
             </div>
             {accounts.length === 0 ? (
-              <div className="text-sm text-text-secondary" data-testid="tracker-no-accounts-message">
+              <div
+                className="text-sm text-text-secondary"
+                data-testid="tracker-no-accounts-message"
+              >
                 No accounts yet. Create one to begin tracking.
               </div>
             ) : (
-              <div className="flex flex-wrap gap-2" data-testid="tracker-accounts-list">
+              <div
+                className="flex flex-wrap gap-2"
+                data-testid="tracker-accounts-list"
+              >
                 {accounts.map((a) => (
-                  <div key={a.id} className="inline-flex items-center gap-2" data-testid="tracker-account-item">
+                  <div
+                    key={a.id}
+                    className="inline-flex items-center gap-2"
+                    data-testid="tracker-account-item"
+                  >
                     <Link
                       to={`/tracker/accounts/${a.id}`}
                       className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-border hover:bg-surface-secondary transition-colors text-sm"
@@ -330,7 +367,10 @@ export function TrackerPage() {
           </div>
 
           {/* Mobile Layout - Timeline View */}
-          <div className="md:hidden bg-surface rounded-lg border border-border overflow-hidden" data-testid="tracker-mobile-calendar">
+          <div
+            className="md:hidden bg-surface rounded-lg border border-border overflow-hidden"
+            data-testid="tracker-mobile-calendar"
+          >
             <div className="divide-y divide-border">
               {days
                 .filter((d) => d.isCurrentMonth)
@@ -379,7 +419,10 @@ export function TrackerPage() {
           </div>
 
           {/* Desktop Layout - Calendar Grid */}
-          <div className="hidden md:block bg-surface rounded-lg overflow-hidden border border-border" data-testid="tracker-desktop-calendar">
+          <div
+            className="hidden md:block bg-surface rounded-lg overflow-hidden border border-border"
+            data-testid="tracker-desktop-calendar"
+          >
             <div className="grid grid-cols-7 border-b border-border bg-surface-secondary">
               {dayNames.map((d) => (
                 <div
@@ -473,6 +516,7 @@ export function TrackerPage() {
         }}
         account={selectedAccount}
         onUpdate={updateAccount}
+        onDelete={handleDeleteAccount}
       />
     </div>
   );

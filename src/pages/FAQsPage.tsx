@@ -100,6 +100,18 @@ const faqs: FAQItem[] = [
     question: "Can I export my data?",
     answer: "Not right now, but we're working on it!",
   },
+  {
+    id: "starting-bankroll",
+    question: "What is the starting bankroll and why do I need to set it?",
+    answer:
+      "The starting bankroll represents your hypothetical initial investment for a betting strategy. It serves as a baseline to measure your strategy's performance over time. As you add and settle bets, your current bankroll will change, and you can see if you're growing or depleting your initial investment. This helps you evaluate whether a strategy is profitable before risking real money.",
+  },
+  {
+    id: "bankroll-negative",
+    question: "What happens if my notebook bankroll goes to zero or negative?",
+    answer:
+      "If your betting strategy loses your entire starting bankroll, the notebook will continue to track your bets and show the negative balance. This is important data - it tells you the strategy isn't profitable. Remember, PaperEdge is for testing strategies without real money, so you can learn from these results without financial loss. You can always start a new notebook with a fresh strategy or adjust your approach based on what you've learned.\n\nThink of the progress bar on your notebook like a health bar in a video game:\n• Green (100%+): Healthy and profitable - your strategy is winning!\n• Yellow (90-100%): Minor damage - small loss but still recoverable\n• Orange (75-90%): Moderate damage - concerning losses, adjust your approach\n• Red (below 75%): Critical damage - strategy is struggling and needs a major rethink!",
+  },
 ];
 
 export function FAQsPage() {
@@ -125,7 +137,12 @@ export function FAQsPage() {
   return (
     <div className="space-y-6" data-testid="faqs-page">
       <div>
-        <h1 className="text-3xl font-bold text-text-primary" data-testid="faqs-page-title">FAQs</h1>
+        <h1
+          className="text-3xl font-bold text-text-primary"
+          data-testid="faqs-page-title"
+        >
+          FAQs
+        </h1>
         <p className="text-text-secondary">
           Common questions and quick answers.
         </p>

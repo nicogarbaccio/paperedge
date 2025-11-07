@@ -55,7 +55,10 @@ export function NotebooksPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary" data-testid="notebooks-page-title">
+          <h1
+            className="text-3xl font-bold text-text-primary"
+            data-testid="notebooks-page-title"
+          >
             Notebooks
           </h1>
           <p className="text-text-secondary mt-1">
@@ -105,7 +108,7 @@ export function NotebooksPage() {
           </div>
         </div>
       ) : (
-        // Notebooks grid with add button
+        // Notebooks grid
         <div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           data-testid="notebooks-grid"
@@ -116,12 +119,21 @@ export function NotebooksPage() {
               <Link key={notebook.id} to={`/notebooks/${notebook.id}`}>
                 <Card
                   className={cn(
-                    "hover:bg-surface-secondary/50 transition-colors cursor-pointer h-full border-l-4",
-                    colorClasses.border
+                    "relative hover:bg-surface-secondary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer h-full border-l-4 rounded-lg overflow-visible",
+                    colorClasses.border,
+                    // Notebook-like styling
+                    "before:absolute before:left-3 before:top-0 before:bottom-0 before:w-0.5 before:bg-border/40",
+                    // Spiral binding holes
+                    "after:absolute after:left-2 after:top-6 after:bottom-6 after:w-1 after:bg-[length:4px_20px] after:bg-repeat-y",
+                    "after:bg-[radial-gradient(circle,_var(--border)_2px,_transparent_2px)]"
                   )}
                   data-testid="notebook-card"
+                  style={{
+                    boxShadow:
+                      "2px 2px 8px rgba(0, 0, 0, 0.1), 4px 4px 12px rgba(0, 0, 0, 0.05)",
+                  }}
                 >
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-3 pl-8">
                     <CardTitle className="flex items-center justify-between text-base sm:text-lg">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <div
@@ -131,7 +143,10 @@ export function NotebooksPage() {
                           )}
                           data-testid="notebook-card-color"
                         />
-                        <span className="truncate" data-testid="notebook-card-title">
+                        <span
+                          className="truncate"
+                          data-testid="notebook-card-title"
+                        >
                           {notebook.name}
                         </span>
                       </div>
@@ -144,11 +159,17 @@ export function NotebooksPage() {
                         {formatCurrency(notebook.total_pl || 0)}
                       </span>
                     </CardTitle>
-                    <CardDescription className="text-sm" data-testid="notebook-card-description">
+                    <CardDescription
+                      className="text-sm"
+                      data-testid="notebook-card-description"
+                    >
                       {notebook.description || "No description"}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent data-testid="notebook-card-stats">
+                  <CardContent
+                    className="pl-8"
+                    data-testid="notebook-card-stats"
+                  >
                     <div className="space-y-3">
                       {/* Bankroll Info */}
                       <div className="flex justify-between items-center">
@@ -208,12 +229,16 @@ export function NotebooksPage() {
                         </div>
                         <div className="w-full bg-surface-secondary rounded-full h-2">
                           <div
-                            className={`h-2 rounded-full ${
-                              notebook.current_bankroll >
-                              notebook.starting_bankroll
-                                ? "bg-profit"
-                                : "bg-loss"
-                            }`}
+                            className={`h-2 rounded-full ${(() => {
+                              const percentage =
+                                (notebook.current_bankroll /
+                                  notebook.starting_bankroll) *
+                                100;
+                              if (percentage >= 100) return "bg-profit"; // Green: Profit
+                              if (percentage >= 90) return "bg-yellow-500"; // Yellow: Minor loss
+                              if (percentage >= 75) return "bg-orange-500"; // Orange: Moderate loss
+                              return "bg-loss"; // Red: Critical loss
+                            })()}`}
                             style={{
                               width: `${Math.min(
                                 100,
@@ -234,27 +259,6 @@ export function NotebooksPage() {
               </Link>
             );
           })}
-
-          {/* Add New Notebook Card */}
-          <Card
-            className="border-dashed border-2 border-border hover:border-accent/50 transition-colors cursor-pointer"
-            onClick={() => setIsCreateDialogOpen(true)}
-            data-testid="create-notebook-card"
-          >
-            <CardContent className="flex flex-col items-center justify-center h-full min-h-[280px] space-y-4 p-6">
-              <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center">
-                <Plus className="h-6 w-6 text-accent" />
-              </div>
-              <div className="text-center">
-                <h3 className="text-lg font-medium text-text-primary mb-2">
-                  Create New Notebook
-                </h3>
-                <p className="text-text-secondary text-sm">
-                  Start tracking a new strategy
-                </p>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       )}
 

@@ -1,3 +1,5 @@
+@import "react-day-picker/dist/style.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,5 +14,15 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Override react-day-picker CSS to fix calendar column alignment */
+  .rdp-root {
+    /* Remove fixed widths from cells to allow table-layout: fixed to work */
+    --rdp-day-width: auto !important;
+    --rdp-day-height: auto !important;
+    /* Keep button sizes reasonable */
+    --rdp-day_button-width: 40px;
+    --rdp-day_button-height: 40px;
   }
 } 

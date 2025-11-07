@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Card,
   CardHeader,
@@ -15,9 +15,12 @@ import { useDailyPL } from "@/hooks/useDailyPL";
 import { EditDailyPLDialog } from "@/components/tracker/EditDailyPLDialog";
 import EditAccountDialog from "@/components/tracker/EditAccountDialog";
 import { AccountTrackerSkeleton } from "@/components/skeletons/AccountTrackerSkeleton";
+import { useToast } from "@/hooks/useToast";
 
 export function AccountTrackerPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const {
     account,
     loading: accountLoading,
@@ -28,7 +31,7 @@ export function AccountTrackerPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [editDate, setEditDate] = useState<string | null>(null);
   const [isEditAccountOpen, setIsEditAccountOpen] = useState(false);
-  const { updateAccount } = useAccounts();
+  const { updateAccount, deleteAccount } = useAccounts();
 
   const monthStart = useMemo(
     () => new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
@@ -176,6 +179,25 @@ export function AccountTrackerPage() {
       } catch {
         // ignore transient errors when refreshing totals
       }
+    }
+  }
+
+  async function handleDeleteAccount(accountId: string) {
+    try {
+      await deleteAccount(accountId);
+      toast({
+        title: "Account deleted",
+        description:
+          "The account and all associated daily P/L records have been deleted.",
+        variant: "success",
+      });
+      navigate("/tracker");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete account",
+        variant: "destructive",
+      });
     }
   }
 
@@ -436,6 +458,7 @@ export function AccountTrackerPage() {
           await updateAccount(accId, updates);
           await refetch();
         }}
+        onDelete={handleDeleteAccount}
       />
     </div>
   );

@@ -64,7 +64,12 @@ export function CreateNotebookDialog({
       });
 
       // Reset form and close dialog
-      setFormData({ name: "", description: "", starting_bankroll: 1000, color: DEFAULT_NOTEBOOK_COLOR.id });
+      setFormData({
+        name: "",
+        description: "",
+        starting_bankroll: 1000,
+        color: DEFAULT_NOTEBOOK_COLOR.id,
+      });
       onOpenChange(false);
     } catch (error: any) {
       setError(error.message || "Failed to create notebook");
@@ -75,7 +80,12 @@ export function CreateNotebookDialog({
 
   const handleCancel = () => {
     if (!loading) {
-      setFormData({ name: "", description: "", starting_bankroll: 1000, color: DEFAULT_NOTEBOOK_COLOR.id });
+      setFormData({
+        name: "",
+        description: "",
+        starting_bankroll: 1000,
+        color: DEFAULT_NOTEBOOK_COLOR.id,
+      });
       setError(null);
       onOpenChange(false);
     }
@@ -83,7 +93,10 @@ export function CreateNotebookDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]" data-testid="create-notebook-dialog">
+      <DialogContent
+        className="sm:max-w-[425px]"
+        data-testid="create-notebook-dialog"
+      >
         <DialogHeader>
           <DialogTitle>Create New Notebook</DialogTitle>
           <DialogDescription>
@@ -150,13 +163,17 @@ export function CreateNotebookDialog({
               />
             </div>
             <p className="text-xs text-text-secondary">
-              Your hypothetical starting bankroll for this strategy
+              Your hypothetical starting bankroll. This is the baseline to
+              measure how your strategy performs over time.
             </p>
           </div>
 
           <div className="space-y-2">
             <Label>Color</Label>
-            <div className="grid grid-cols-9 gap-2" data-testid="notebook-color-picker">
+            <div
+              className="grid grid-cols-9 gap-2"
+              data-testid="notebook-color-picker"
+            >
               {NOTEBOOK_COLORS.map((color) => (
                 <button
                   key={color.id}

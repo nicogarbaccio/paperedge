@@ -158,7 +158,10 @@ export function CreateBetDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-[425px]" data-testid="create-bet-dialog">
+      <DialogContent
+        className="sm:max-w-[425px]"
+        data-testid="create-bet-dialog"
+      >
         <DialogHeader>
           <DialogTitle>Add New Bet</DialogTitle>
           <DialogDescription>
@@ -175,8 +178,8 @@ export function CreateBetDialog({
             <DateInput
               id="date"
               value={formData.date}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, date: e.target.value }))
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, date: value }))
               }
               disabled={loading}
               required
@@ -268,9 +271,15 @@ export function CreateBetDialog({
               />
             </div>
             {expectedPayout > 0 && (
-              <p className="text-xs text-accent" data-testid="bet-payout-display">
+              <p
+                className="text-xs text-accent"
+                data-testid="bet-payout-display"
+              >
                 Expected profit: {formatCurrency(potentialProfit)}
-                <span className="text-text-secondary" data-testid="bet-profit-display">
+                <span
+                  className="text-text-secondary"
+                  data-testid="bet-profit-display"
+                >
                   {" "}
                   (total payout: {formatCurrency(expectedPayout)})
                 </span>
