@@ -22,12 +22,16 @@ const DateInput = React.forwardRef<HTMLDivElement, DateInputProps>(
   ) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-      value ? new Date(value) : undefined
+      value ? new Date(value + 'T00:00:00') : undefined
     );
 
     useEffect(() => {
       if (value) {
-        setSelectedDate(new Date(value));
+        // Parse date with explicit time to avoid timezone issues
+        const newDate = new Date(value + 'T00:00:00');
+        setSelectedDate(newDate);
+      } else {
+        setSelectedDate(undefined);
       }
     }, [value]);
 

@@ -162,9 +162,16 @@ export function NotebookDetailPage() {
     });
   };
 
-  // Reset create form state only after the dialog has closed to avoid flicker
+  // Reset create form state when dialog opens or closes
   useEffect(() => {
-    if (!isCreateBetDialogOpen) {
+    if (isCreateBetDialogOpen) {
+      // When dialog opens, reset date to today (but keep other fields to preserve partial edits)
+      setCreateBetFormData((prev) => ({
+        ...prev,
+        date: getCurrentLocalDate(),
+      }));
+    } else {
+      // When dialog closes, reset all fields
       setCreateBetFormData({
         date: getCurrentLocalDate(),
         description: "",
