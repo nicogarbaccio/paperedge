@@ -45,8 +45,6 @@ test.describe('Notebook Search and Filter', () => {
       await page.getByTestId('bet-wager-input').fill(bet.wager);
       await page.getByTestId('bet-save-button').click();
       await expect(page.getByText(/bet added|bet created/i).first()).toBeVisible();
-      // Wait a bit for the bet to appear
-      await page.waitForTimeout(500);
     }
   });
 
@@ -62,33 +60,30 @@ test.describe('Notebook Search and Filter', () => {
       // Enter search query
       await page.getByTestId('bet-search-input').fill('Lakers');
 
-      // Wait for filtering
-      await page.waitForTimeout(500);
-
-      // Should show filtered results count
+      // Wait for the results count to be visible
       const resultsCount = page.getByTestId('bet-search-results-count');
       await expect(resultsCount).toBeVisible();
 
-      // Should filter bet cards
-      const betCards = page.getByTestId('bet-card');
-      const count = await betCards.count();
-      expect(count).toBeGreaterThanOrEqual(0);
+      // Should filter bet cards - at least one Lakers bet should be visible
+      await expect(page.getByTestId('bet-card').filter({ hasText: 'Lakers' })).toHaveCount(1);
     });
 
     test('should clear search input', async ({ page }) => {
-      // Enter search query
-      await page.getByTestId('bet-search-input').fill('Lakers');
-      await page.waitForTimeout(300);
+      // Enter search query using type() to trigger React onChange events
+      const searchInput = page.getByTestId('bet-search-input');
+      await searchInput.click();
+      await searchInput.type('Lakers');
 
-      // Clear button should appear
+      // Clear button should appear when text is typed
       const clearButton = page.getByTestId('bet-search-clear-button');
-      await expect(clearButton).toBeVisible();
+      await expect(clearButton).toBeVisible({ timeout: 10000 });
 
       // Click clear button
       await clearButton.click();
 
-      // Search input should be empty
-      await expect(page.getByTestId('bet-search-input')).toHaveValue('');
+      // Search input should be empty and clear button should disappear
+      await expect(searchInput).toHaveValue('');
+      await expect(clearButton).not.toBeVisible();
     });
 
     test('should toggle filters panel', async ({ page }) => {
@@ -120,12 +115,10 @@ test.describe('Notebook Search and Filter', () => {
       // Select status filter
       await page.getByTestId('bet-filter-status-select').selectOption('pending');
 
-      // Wait for filtering
-      await page.waitForTimeout(500);
-
-      // Active filter count should show
+      // Active filter count should show immediately after selecting
       const activeCount = page.getByTestId('bet-filters-active-count');
       await expect(activeCount).toBeVisible();
+      await expect(activeCount).toHaveText('1');
     });
   });
 
@@ -134,12 +127,14 @@ test.describe('Notebook Search and Filter', () => {
    */
   test.describe('Error Scenarios', () => {
     test('should handle search with no results', async ({ page }) => {
-      // Search for something that doesn't exist
-      await page.getByTestId('bet-search-input').fill('NonexistentBet12345');
-      await page.waitForTimeout(500);
+      // Search for something that doesn't exist using type() to trigger React onChange
+      const searchInput = page.getByTestId('bet-search-input');
+      await searchInput.click();
+      await searchInput.type('NonexistentBet12345');
 
-      // Should show empty state or "no bets match"
-      await expect(page.getByText(/no bets match/i)).toBeVisible();
+      // Wait for "no bets match" message to appear after debounced search completes
+      // The search has a 300ms debounce, so we use a generous timeout
+      await expect(page.getByText('No bets match your search criteria')).toBeVisible({ timeout: 10000 });
     });
 
     // NOTE: "should handle invalid date range" test removed due to DateInput component interaction issues
@@ -154,12 +149,11 @@ test.describe('Notebook Search and Filter', () => {
       await page.getByTestId('bet-filter-odds-min').fill('500');
       await page.getByTestId('bet-filter-odds-max').fill('100');
 
-      await page.waitForTimeout(500);
+      // Should show active filter count (even with invalid range)
+      await expect(page.getByTestId('bet-filters-active-count')).toBeVisible();
 
-      // Should handle gracefully
-      const betCards = page.getByTestId('bet-card');
-      const count = await betCards.count();
-      expect(count).toBeGreaterThanOrEqual(0);
+      // Should handle gracefully - no bets should match
+      await expect(page.getByText(/no bets match/i)).toBeVisible();
     });
 
     test('should handle invalid wager range', async ({ page }) => {
@@ -170,12 +164,11 @@ test.describe('Notebook Search and Filter', () => {
       await page.getByTestId('bet-filter-wager-min').fill('1000');
       await page.getByTestId('bet-filter-wager-max').fill('10');
 
-      await page.waitForTimeout(500);
+      // Should show active filter count (even with invalid range)
+      await expect(page.getByTestId('bet-filters-active-count')).toBeVisible();
 
-      // Should handle gracefully
-      const betCards = page.getByTestId('bet-card');
-      const count = await betCards.count();
-      expect(count).toBeGreaterThanOrEqual(0);
+      // Should handle gracefully - no bets should match
+      await expect(page.getByText(/no bets match/i)).toBeVisible();
     });
 
     test('should clear all filters', async ({ page }) => {
@@ -184,18 +177,16 @@ test.describe('Notebook Search and Filter', () => {
 
       await page.getByTestId('bet-filter-status-select').selectOption('pending');
       await page.getByTestId('bet-search-input').fill('Lakers');
-      await page.waitForTimeout(500);
 
-      // Should show active filter count
-      await expect(page.getByTestId('bet-filters-active-count')).toBeVisible();
+      // Should show active filter count after applying filters
+      const activeCount = page.getByTestId('bet-filters-active-count');
+      await expect(activeCount).toBeVisible();
 
       // Click clear all filters
       await page.getByTestId('bet-filters-clear-button').click();
 
-      // Active filter count should disappear or show 0
-      const activeCount = page.getByTestId('bet-filters-active-count');
-      const isVisible = await activeCount.isVisible().catch(() => false);
-      expect(isVisible).toBe(false);
+      // Active filter count should disappear
+      await expect(activeCount).not.toBeVisible();
 
       // Search input should be empty
       await expect(page.getByTestId('bet-search-input')).toHaveValue('');

@@ -17,7 +17,7 @@ export interface DateInputProps {
 
 const DateInput = React.forwardRef<HTMLDivElement, DateInputProps>(
   (
-    { className, value, onChange, id, disabled, placeholder, ...props },
+    { className, value, onChange, id, disabled, placeholder, "data-testid": dataTestId },
     ref
   ) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -56,6 +56,7 @@ const DateInput = React.forwardRef<HTMLDivElement, DateInputProps>(
           id={id}
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
+          data-testid={dataTestId}
           className={cn(
             "flex h-10 w-full items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50",
             "text-text-primary font-medium cursor-pointer hover:bg-surface-secondary/50 transition-colors",

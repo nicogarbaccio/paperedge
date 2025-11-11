@@ -32,6 +32,11 @@ export function BetSearch({
   const [isExpanded, setIsExpanded] = useState(false);
   const [localQuery, setLocalQuery] = useState(filters.query);
 
+  // Sync local query with parent filters when parent clears it
+  useEffect(() => {
+    setLocalQuery(filters.query);
+  }, [filters.query]);
+
   // Debounced search query
   useEffect(() => {
     const timer = setTimeout(() => {

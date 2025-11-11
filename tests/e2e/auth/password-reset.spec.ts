@@ -46,7 +46,8 @@ test.describe('Password Reset', () => {
       // Click forgot password link
       await page.getByTestId('login-forgot-password-link').click();
 
-      await page.waitForTimeout(500); // Small wait for navigation
+      // Wait for navigation to complete
+      await page.waitForURL(/\/(reset-password|login)/, { timeout: 5000 });
 
       // Request reset
       if (page.url().includes('/reset-password')) {
@@ -80,7 +81,8 @@ test.describe('Password Reset', () => {
       await page.goto('/login');
       await page.getByTestId('login-forgot-password-link').click();
 
-      await page.waitForTimeout(500);
+      // Wait for navigation to complete
+      await page.waitForURL(/\/(reset-password|login)/, { timeout: 5000 });
 
       if (page.url().includes('/reset-password')) {
         await page.getByTestId('reset-password-email-input').fill(testUsers.invalidEmail.email);
@@ -100,7 +102,8 @@ test.describe('Password Reset', () => {
       await page.goto('/login');
       await page.getByTestId('login-forgot-password-link').click();
 
-      await page.waitForTimeout(500);
+      // Wait for navigation to complete
+      await page.waitForURL(/\/(reset-password|login)/, { timeout: 5000 });
 
       if (page.url().includes('/reset-password')) {
         await page.getByTestId('reset-password-email-input').fill(testUsers.nonExistentUser.email);
@@ -129,21 +132,23 @@ test.describe('Password Reset', () => {
       await page.goto('/login');
       await page.getByTestId('login-forgot-password-link').click();
 
-      await page.waitForTimeout(500);
+      // Wait for navigation to complete
+      await page.waitForURL(/\/(reset-password|login)/, { timeout: 5000 });
 
       if (page.url().includes('/reset-password')) {
         // First request
         await page.getByTestId('reset-password-email-input').fill(testUsers.validUser.email);
         await page.getByTestId('reset-password-submit-button').click();
 
-        await page.waitForTimeout(1000);
+        // Wait for first success message to appear
+        const successMessage = page.getByTestId('reset-password-success-message');
+        await expect(successMessage).toBeVisible({ timeout: 5000 });
 
         // Second request
         await page.getByTestId('reset-password-email-input').fill(testUsers.validUser.email);
         await page.getByTestId('reset-password-submit-button').click();
 
         // Should still show success (or rate limiting message)
-        const successMessage = page.getByTestId('reset-password-success-message');
         await expect(successMessage).toBeVisible({ timeout: 5000 });
       }
     });
