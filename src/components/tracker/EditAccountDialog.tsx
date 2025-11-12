@@ -138,9 +138,9 @@ export function EditAccountDialog({
         <DialogFooter className="flex justify-between items-center">
           {!showDeleteConfirm && (
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={() => setShowDeleteConfirm(true)}
-              className="text-loss hover:text-loss hover:bg-loss/10"
+              className="text-loss border-loss hover:bg-loss hover:text-white"
               disabled={isSaving}
               data-testid="edit-account-delete-button"
             >
@@ -149,7 +149,7 @@ export function EditAccountDialog({
           )}
           <div className="flex gap-2 ml-auto">
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSaving || isDeleting}
               data-testid="edit-account-cancel-button"
