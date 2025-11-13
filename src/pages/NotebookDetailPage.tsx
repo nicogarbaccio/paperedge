@@ -38,12 +38,14 @@ import { EditBetDialog } from "@/components/EditBetDialog";
 import { EditNotebookDialog } from "@/components/EditNotebookDialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CalendarView } from "@/components/CalendarView";
+import { DayDetailsDrawer } from "@/components/DayDetailsDrawer";
 import { useNotebooks } from "@/hooks/useNotebooks";
 import { useEffect, useState, useMemo } from "react";
 import { useToast } from "@/hooks/useToast";
 import { BetSearch, SearchFilters } from "@/components/BetSearch";
 import { useBetSearch } from "@/hooks/useBetSearch";
 import { NotebookDetailSkeleton } from "@/components/skeletons/NotebookDetailSkeleton";
+import type { Bet } from "@/hooks/useNotebook";
 
 export function NotebookDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -94,6 +96,13 @@ export function NotebookDetailPage() {
     "history"
   );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // Day details drawer state
+  const [isDayDetailsOpen, setIsDayDetailsOpen] = useState(false);
+  const [selectedDayDate, setSelectedDayDate] = useState<string | null>(null);
+  const [selectedDayBets, setSelectedDayBets] = useState<Bet[]>([]);
+  const [selectedDayProfit, setSelectedDayProfit] = useState(0);
+  const [isEditingFromDayDrawer, setIsEditingFromDayDrawer] = useState(false);
 
   // Handle unauthorized access or notebook not found
   useEffect(() => {
@@ -208,10 +217,51 @@ export function NotebookDetailPage() {
       description: "Your bet has been successfully updated.",
       variant: "success",
     });
+
+    // If we were editing from day drawer, refresh the day's bets
+    if (isEditingFromDayDrawer && selectedDayDate) {
+      const updatedBets = bets.filter(bet => bet.date === selectedDayDate);
+      setSelectedDayBets(updatedBets);
+      // Recalculate profit
+      const dayProfit = updatedBets.reduce((total, bet) => {
+        if (bet.status === "won" && bet.return_amount) {
+          return total + bet.return_amount;
+        } else if (bet.status === "lost") {
+          return total - bet.wager_amount;
+        }
+        return total;
+      }, 0);
+      setSelectedDayProfit(Math.round(dayProfit * 100) / 100);
+    }
   };
 
   const handleDeleteBet = async (betId: string) => {
     await deleteBet(betId);
+
+    // If we were editing from day drawer, we need to update or close it
+    if (isEditingFromDayDrawer && selectedDayDate) {
+      // Refresh the day's bets after deletion
+      const updatedBets = bets.filter(bet => bet.date === selectedDayDate && bet.id !== betId);
+
+      if (updatedBets.length === 0) {
+        // No more bets for this day, close everything
+        setIsEditingFromDayDrawer(false);
+        setIsDayDetailsOpen(false);
+      } else {
+        // Update the day drawer with remaining bets
+        setSelectedDayBets(updatedBets);
+        // Recalculate profit
+        const dayProfit = updatedBets.reduce((total, bet) => {
+          if (bet.status === "won" && bet.return_amount) {
+            return total + bet.return_amount;
+          } else if (bet.status === "lost") {
+            return total - bet.wager_amount;
+          }
+          return total;
+        }, 0);
+        setSelectedDayProfit(Math.round(dayProfit * 100) / 100);
+      }
+    }
   };
 
   const handleUpdateNotebook = async (
@@ -242,6 +292,37 @@ export function NotebookDetailPage() {
         title: "Error",
         description: error.message || "Failed to delete notebook",
         variant: "destructive",
+      });
+    }
+  };
+
+  // Handle day click from calendar
+  const handleDayClick = (dateKey: string, dayBets: Bet[], dayProfit: number) => {
+    setSelectedDayDate(dateKey);
+    setSelectedDayBets(dayBets);
+    setSelectedDayProfit(dayProfit);
+    setIsDayDetailsOpen(true);
+  };
+
+  // Handle "Add Bet" from day details drawer
+  const handleAddBetForDay = (date: string) => {
+    setCreateBetFormData({
+      date,
+      description: "",
+      odds: 0,
+      wager_amount: 0,
+    });
+    setIsCreateBetDialogOpen(true);
+  };
+
+  // Handle "View in History" from day details drawer
+  const handleViewDayInHistory = () => {
+    if (selectedDayDate) {
+      setActiveView("history");
+      setSearchFilters({
+        ...searchFilters,
+        dateFrom: selectedDayDate,
+        dateTo: selectedDayDate,
       });
     }
   };
@@ -640,7 +721,7 @@ export function NotebookDetailPage() {
           </Card>
         </div>
       ) : (
-        <CalendarView bets={filteredBets} />
+        <CalendarView bets={bets} onDayClick={handleDayClick} />
       )}
 
       {/* Create Bet Dialog */}
@@ -658,7 +739,14 @@ export function NotebookDetailPage() {
       {/* Edit Bet Dialog */}
       <EditBetDialog
         open={isEditBetDialogOpen}
-        onOpenChange={setIsEditBetDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditBetDialogOpen(open);
+          // If closing the edit dialog and we were editing from day drawer, reopen the day drawer
+          if (!open && isEditingFromDayDrawer) {
+            setIsEditingFromDayDrawer(false);
+            setIsDayDetailsOpen(true);
+          }
+        }}
         bet={selectedBet}
         onUpdateBet={handleUpdateBet}
         onDeleteBet={handleDeleteBet}
@@ -687,6 +775,22 @@ export function NotebookDetailPage() {
         confirmLabel="Delete"
         variant="destructive"
         onConfirm={handleDeleteNotebook}
+      />
+
+      {/* Day Details Drawer */}
+      <DayDetailsDrawer
+        open={isDayDetailsOpen}
+        onOpenChange={setIsDayDetailsOpen}
+        date={selectedDayDate}
+        bets={selectedDayBets}
+        profit={selectedDayProfit}
+        onAddBet={handleAddBetForDay}
+        onEditBet={(bet) => {
+          setIsDayDetailsOpen(false);
+          setIsEditingFromDayDrawer(true);
+          handleEditBet(bet);
+        }}
+        onViewHistory={handleViewDayInHistory}
       />
     </div>
   );

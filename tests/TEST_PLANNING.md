@@ -76,7 +76,8 @@ Current state analysis reveals that most components lack `data-testid` attribute
 | Bet Search | `tests/e2e/bets/search.spec.ts` | 6 | P1 | Planned | 0% |
 | Bet Status Updates | `tests/e2e/bets/status.spec.ts` | 6 | P0 | Planned | 0% |
 | **Tracker** |
-| Calendar View | `tests/e2e/tracker/calendar.spec.ts` | 12 | P1 | Planned | 0% |
+| Calendar View | `tests/e2e/tracker/calendar.spec.ts` | 12 | P1 | 🚧 In Progress | 40% |
+| Calendar Day View | `tests/e2e/tracker/calendar-day-view.spec.ts` | 10 | P1 | 🚧 Needs Tests | 100% (Feature Complete) |
 | Accounts CRUD | `tests/e2e/tracker/accounts.spec.ts` | 10 | P1 | Planned | 0% |
 | Daily P&L | `tests/e2e/tracker/daily-pl.spec.ts` | 8 | P1 | Planned | 0% |
 | Aggregations | `tests/e2e/tracker/aggregations.spec.ts` | 6 | P1 | Planned | 0% |
@@ -2340,6 +2341,97 @@ For questions about this test plan:
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** November 2025
+## Recent Implementation Updates (November 2025)
+
+### Calendar Day View Feature - COMPLETED ✅
+
+**Feature Branch:** `notebook-updates`
+
+**Components Added:**
+- `DayDetailsDrawer.tsx` - New drawer component for displaying day-specific bet details
+- Enhanced `CalendarView.tsx` with click handlers
+- Updated `NotebookDetailPage.tsx` with state management and handlers
+
+**Implementation Details:**
+
+1. **Interactive Calendar Days**
+   - Click handler added to both mobile timeline and desktop grid views
+   - Only days with bets are clickable (`cursor-pointer` styling)
+   - Passes date, bets array, and profit to drawer callback
+
+2. **DayDetailsDrawer Component Features**
+   - Formatted date header with bet count
+   - Daily P&L prominently displayed (color-coded)
+   - Scrollable bet list with status badges
+   - Click-to-edit functionality for each bet
+   - Two action buttons:
+     - "Add Bet for This Day" - pre-fills create dialog
+     - "View in History" - switches to history view with date filter
+
+3. **Smart Navigation Flow**
+   - Clicking bet in drawer opens EditBetDialog
+   - Canceling/closing edit returns to DayDetailsDrawer (not full close)
+   - After bet update: drawer refreshes with new data
+   - After bet delete:
+     - If bets remain: drawer updates with remaining bets + recalculated P&L
+     - If no bets remain: everything closes gracefully
+
+4. **State Management**
+   - `isEditingFromDayDrawer` flag tracks navigation context
+   - `selectedDayDate`, `selectedDayBets`, `selectedDayProfit` store drawer state
+   - Live updates after bet modifications
+
+**UI/UX Improvements Made:**
+- Dialog button spacing improved on mobile (`space-y-2` with `space-y-reverse`)
+- Cancel/Delete Account buttons changed to outline variant (better visibility)
+- Delete Account button repositioned to bottom-left footer
+- Custom dropdown arrow with `appearance-none` and proper spacing
+- Bet filter layout reorganized (date inputs side-by-side)
+- Calendar view shows all bets regardless of active filters
+- Added `pr-8` spacing to DayDetailsDrawer header (prevents X button overlap)
+- Added `mb-6` spacing between form inputs and footer buttons in EditAccountDialog
+
+**Test IDs Added:**
+- `day-details-drawer`
+- `day-details-title`
+- `day-details-profit`
+- `day-details-bet-card`
+- `day-details-add-bet-button`
+- `day-details-view-history-button`
+
+**Files Modified:**
+1. `/src/components/DayDetailsDrawer.tsx` (new)
+2. `/src/components/CalendarView.tsx`
+3. `/src/pages/NotebookDetailPage.tsx`
+4. `/src/components/ui/Dialog.tsx`
+5. `/src/components/tracker/EditAccountDialog.tsx`
+6. `/src/components/BetSearch.tsx`
+
+**Testing Requirements:**
+- ✅ Feature implementation complete
+- ⏳ E2E tests needed for calendar day view interactions
+- ⏳ Tests for edit/delete flows from day drawer
+- ⏳ Tests for "Add Bet" with pre-filled date
+- ⏳ Tests for "View in History" navigation with filters
+
+**Recommended Test Coverage:**
+```typescript
+// tests/e2e/tracker/calendar-day-view.spec.ts
+- Should open day drawer when clicking calendar day with bets
+- Should display correct bet count and daily P&L
+- Should list all bets for selected day
+- Should open edit dialog when clicking bet card
+- Should return to day drawer after canceling edit
+- Should update day drawer after editing bet
+- Should update day drawer after deleting bet (when bets remain)
+- Should close drawer after deleting last bet
+- Should pre-fill date when adding bet from drawer
+- Should switch to history view with date filter applied
+- Should ignore clicks on days without bets
+```
+
+---
+
+**Document Version:** 1.1
+**Last Updated:** November 13, 2025
 **Next Review:** After Phase 3 completion or December 2025

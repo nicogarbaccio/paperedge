@@ -75,7 +75,7 @@ export function EditAccountDialog({
           <DialogTitle>Edit Account</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 mb-6">
           <div>
             <label className="text-sm text-text-secondary">Name</label>
             <Input
@@ -87,16 +87,23 @@ export function EditAccountDialog({
           </div>
           <div>
             <label className="text-sm text-text-secondary">Type</label>
-            <select
-              className="w-full border border-border rounded-md bg-background p-2 text-sm"
-              value={kind}
-              onChange={(e) => setKind(e.target.value as Account["kind"])}
-              data-testid="edit-account-type-select"
-            >
-              <option value="main">Main</option>
-              <option value="offshore">Offshore</option>
-              <option value="other">Other</option>
-            </select>
+            <div className="relative">
+              <select
+                className="flex h-10 w-full appearance-none rounded-md border border-border bg-input px-3 py-2 pr-10 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={kind}
+                onChange={(e) => setKind(e.target.value as Account["kind"])}
+                data-testid="edit-account-type-select"
+              >
+                <option value="main">Main</option>
+                <option value="offshore">Offshore</option>
+                <option value="other">Other</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                <svg className="h-4 w-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -135,19 +142,21 @@ export function EditAccountDialog({
           </div>
         )}
 
-        <DialogFooter className="flex justify-between items-center">
-          {!showDeleteConfirm && (
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="text-loss border-loss hover:bg-loss hover:text-white"
-              disabled={isSaving}
-              data-testid="edit-account-delete-button"
-            >
-              Delete Account
-            </Button>
-          )}
-          <div className="flex gap-2 ml-auto">
+        <DialogFooter className="!flex-row !justify-between items-center !space-y-0 !space-x-0">
+          <div className="flex-shrink-0">
+            {!showDeleteConfirm && (
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="text-loss border-loss hover:bg-loss hover:text-white"
+                disabled={isSaving}
+                data-testid="edit-account-delete-button"
+              >
+                Delete Account
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}

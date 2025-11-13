@@ -130,6 +130,32 @@ src/
 └── main.tsx           # Application entry point
 ```
 
+## ✨ Recent Updates (November 2025)
+
+### Calendar Day View Feature
+- **Interactive Calendar**: Click any day with bets to see detailed day view
+- **Day Details Drawer**: Slide-out panel showing all bets for selected day
+- **Quick Actions**:
+  - Edit bets directly from day view
+  - Add new bets pre-filled with selected date
+  - View full history with date filter applied
+- **Smart Navigation**: Returns to day view after editing instead of closing entirely
+- **Live Updates**: Day view refreshes automatically after bet edits/deletes
+
+### UI/UX Improvements
+- **Dialog Button Spacing**: Added proper spacing between buttons on mobile
+- **Button Styling**: Changed ghost buttons to outline variant for better visibility
+- **Delete Account Button**: Moved to bottom-left footer (separated from primary actions)
+- **Custom Dropdown Arrow**: Consistent dropdown styling with proper spacing
+- **Filter Layout**: Reorganized bet filters for better alignment and usability
+- **Calendar View Filters**: Calendar always shows all bets regardless of active filters
+
+### Accessibility Enhancements
+- All dialogs properly handle keyboard navigation
+- Focus management improved for modal interactions
+- Better visual hierarchy for destructive actions
+- Consistent button spacing across mobile and desktop
+
 ## 📈 Features in Development
 
 - **Advanced Analytics**: Interactive charts and trend analysis

@@ -154,44 +154,37 @@ export function BetSearch({
       {/* Expanded Filters */}
       {isExpanded && (
         <div className="border border-border rounded-lg p-4 space-y-4 bg-surface-secondary/30" data-testid="bet-filters-panel">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Status Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="status-filter">Status</Label>
-              <select
-                id="status-filter"
-                value={filters.status}
-                onChange={(e) => updateFilter("status", e.target.value)}
-                className="flex h-10 w-full rounded-md border border-border bg-input px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                data-testid="bet-filter-status-select"
-              >
-                <option value="">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="won">Won</option>
-                <option value="lost">Lost</option>
-                <option value="push">Push</option>
-              </select>
-            </div>
+          {/* Status Filter */}
+          <div className="space-y-2">
+            <Label htmlFor="status-filter">Status</Label>
+            <select
+              id="status-filter"
+              value={filters.status}
+              onChange={(e) => updateFilter("status", e.target.value)}
+              className="flex h-10 w-full rounded-md border border-border bg-input px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              data-testid="bet-filter-status-select"
+            >
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
+              <option value="push">Push</option>
+            </select>
+          </div>
 
-            {/* Date Range */}
-            <div className="space-y-2">
-              <Label className="flex items-center space-x-1">
-                <Calendar className="h-4 w-4" />
-                <span>Date From</span>
-              </Label>
+          {/* Date Range */}
+          <div className="space-y-2">
+            <Label className="flex items-center space-x-1">
+              <Calendar className="h-4 w-4" />
+              <span>Date Range</span>
+            </Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <DateInput
                 value={filters.dateFrom}
                 onChange={(value) => updateFilter("dateFrom", value)}
                 placeholder="Start date"
                 data-testid="bet-filter-date-from"
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="flex items-center space-x-1">
-                <Calendar className="h-4 w-4" />
-                <span>Date To</span>
-              </Label>
               <DateInput
                 value={filters.dateTo}
                 onChange={(value) => updateFilter("dateTo", value)}
@@ -199,40 +192,39 @@ export function BetSearch({
                 data-testid="bet-filter-date-to"
               />
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label className="flex items-center space-x-1">
-                <Percent className="h-4 w-4" />
-                <span>Odds Range</span>
-              </Label>
-              <div className="flex space-x-2">
-                <Input
-                  type="number"
-                  placeholder="Min"
-                  value={filters.oddsMin || ""}
-                  onChange={(e) =>
-                    updateFilter(
-                      "oddsMin",
-                      e.target.value ? Number(e.target.value) : null
-                    )
-                  }
-                  className="flex-1"
-                  data-testid="bet-filter-odds-min"
-                />
-                <Input
-                  type="number"
-                  placeholder="Max"
-                  value={filters.oddsMax || ""}
-                  onChange={(e) =>
-                    updateFilter(
-                      "oddsMax",
-                      e.target.value ? Number(e.target.value) : null
-                    )
-                  }
-                  className="flex-1"
-                  data-testid="bet-filter-odds-max"
-                />
-              </div>
+          {/* Odds Range */}
+          <div className="space-y-2">
+            <Label className="flex items-center space-x-1">
+              <Percent className="h-4 w-4" />
+              <span>Odds Range</span>
+            </Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                type="number"
+                placeholder="Min"
+                value={filters.oddsMin || ""}
+                onChange={(e) =>
+                  updateFilter(
+                    "oddsMin",
+                    e.target.value ? Number(e.target.value) : null
+                  )
+                }
+                data-testid="bet-filter-odds-min"
+              />
+              <Input
+                type="number"
+                placeholder="Max"
+                value={filters.oddsMax || ""}
+                onChange={(e) =>
+                  updateFilter(
+                    "oddsMax",
+                    e.target.value ? Number(e.target.value) : null
+                  )
+                }
+                data-testid="bet-filter-odds-max"
+              />
             </div>
           </div>
 

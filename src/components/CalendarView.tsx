@@ -7,9 +7,10 @@ import type { Bet } from "@/hooks/useNotebook";
 
 interface CalendarViewProps {
   bets: Bet[];
+  onDayClick?: (dateKey: string, bets: Bet[], profit: number) => void;
 }
 
-export function CalendarView({ bets }: CalendarViewProps) {
+export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
   // Initialize calendar to show the month of the most recent bet, or current month if no bets
   const [currentDate, setCurrentDate] = useState(() => {
     if (bets.length === 0) {
@@ -316,7 +317,16 @@ export function CalendarView({ bets }: CalendarViewProps) {
                 return (
                   <div
                     key={day.dateKey}
-                    className={`p-4 hover:bg-surface-secondary transition-colors ${bgColor}`}
+                    className={`p-4 hover:bg-surface-secondary transition-colors ${
+                      day.hasBets ? "cursor-pointer" : ""
+                    } ${bgColor}`}
+                    onClick={() => {
+                      if (day.hasBets && onDayClick) {
+                        const dayBets = dailyPL[day.dateKey]?.bets || [];
+                        const dayProfit = day.profit ?? 0;
+                        onDayClick(day.dateKey, dayBets, dayProfit);
+                      }
+                    }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
@@ -384,8 +394,15 @@ export function CalendarView({ bets }: CalendarViewProps) {
                           : "bg-surface hover:bg-surface-secondary"
                         : "bg-background"
                     }
-                    transition-colors cursor-pointer
+                    transition-colors ${day.hasBets ? "cursor-pointer" : ""}
                   `}
+                  onClick={() => {
+                    if (day.hasBets && day.isCurrentMonth && onDayClick) {
+                      const dayBets = dailyPL[day.dateKey]?.bets || [];
+                      const dayProfit = day.profit ?? 0;
+                      onDayClick(day.dateKey, dayBets, dayProfit);
+                    }
+                  }}
                 >
                   <div
                     className={`
