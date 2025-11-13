@@ -637,7 +637,10 @@ export function NotebookDetailPage() {
                               </div>
                               <div className="flex items-center gap-4 mt-1 text-sm">
                                 <span className="text-text-secondary">
-                                  Record: <span className="font-medium text-text-primary">{group.record.wins}-{group.record.losses}</span>
+                                  Record: <span className="font-medium text-text-primary">
+                                    {group.record.wins}-{group.record.losses}
+                                    {group.record.pushes > 0 && `-${group.record.pushes}`}
+                                  </span>
                                   {group.record.pending > 0 && <span className="text-text-secondary"> ({group.record.pending} pending)</span>}
                                 </span>
                                 <span className="text-text-secondary">

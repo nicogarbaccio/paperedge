@@ -140,6 +140,7 @@ export function DayDetailsDrawer({
                           <div className="flex items-center gap-3 mt-1 text-xs text-text-secondary">
                             <span>
                               {group.record.wins}-{group.record.losses}
+                              {group.record.pushes > 0 && `-${group.record.pushes}`}
                             </span>
                             <span className={`font-medium ${group.totalReturn >= 0 ? 'text-profit' : 'text-loss'}`}>
                               {group.totalReturn >= 0 ? '+' : ''}{formatCurrency(group.totalReturn)}
