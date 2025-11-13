@@ -40,39 +40,8 @@ export interface ParlayValidationErrors {
   general?: string;
 }
 
-// Arbitrage/Hedge Calculator Types
-export interface ArbitrageInputs {
-  totalStake: number;
-  sideAOdds: string;
-  sideBOdds: string;
-  originalBet?: number;
-  originalOdds?: string;
-  mode: 'arbitrage' | 'hedge';
-}
-
-export interface ArbitrageResult {
-  sideAStake: number;
-  sideBStake: number;
-  sideAReturn: number;
-  sideBReturn: number;
-  guaranteedProfit: number;
-  profitMargin: number;
-  isArbitrage: boolean;
-  hedgeResult?: {
-    hedgeStake: number;
-    guaranteedWin: number;
-    maxPossibleWin: number;
-  };
-}
-
-export interface ArbitrageValidationErrors {
-  totalStake?: string;
-  sideAOdds?: string;
-  sideBOdds?: string;
-  originalBet?: string;
-  originalOdds?: string;
-  general?: string;
-}
+// Note: Arbitrage and Hedge calculators now manage their own types inline
+// The types were separated to support independent calculator components
 
 // Kelly Criterion Calculator Types
 export interface KellyInputs {

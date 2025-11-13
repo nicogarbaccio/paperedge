@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/Label";
 import { UnitBettingCalculator } from "@/components/calculators/UnitBettingCalculator";
 import { ParlayCalculator } from "@/components/calculators/ParlayCalculator";
 import { ArbitrageCalculator } from "@/components/calculators/ArbitrageCalculator";
+import { HedgeCalculator } from "@/components/calculators/HedgeCalculator";
 
 // Betting odds conversion utilities
 function americanToDecimal(americanOdds: number): number {
@@ -102,8 +103,13 @@ export function CalculatorsPage() {
     },
     {
       id: "arbitrage",
-      name: "Arbitrage/Hedge",
-      description: "Find arbitrage opportunities or hedge bets",
+      name: "Arbitrage",
+      description: "Find arbitrage opportunities",
+    },
+    {
+      id: "hedge",
+      name: "Hedge",
+      description: "Hedge existing bets to guarantee profit",
     },
   ];
 
@@ -194,12 +200,12 @@ export function CalculatorsPage() {
       </div>
 
       {/* Calculator Navigation */}
-      <div className="flex flex-wrap gap-2 p-4 bg-surface rounded-lg border border-border" data-testid="calculator-nav">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 bg-surface rounded-lg border border-border" data-testid="calculator-nav">
         {calculators.map((calc) => (
           <button
             key={calc.id}
             onClick={() => setActiveCalculator(calc.id)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-3 rounded-md text-sm font-medium transition-colors ${
               activeCalculator === calc.id
                 ? "bg-accent text-accent-foreground"
                 : "bg-surface-secondary text-text-secondary hover:bg-surface-secondary/80 hover:text-text-primary"
@@ -347,8 +353,11 @@ export function CalculatorsPage() {
       {/* Parlay Calculator */}
       {activeCalculator === "parlay" && <ParlayCalculator />}
 
-      {/* Arbitrage/Hedge Calculator */}
+      {/* Arbitrage Calculator */}
       {activeCalculator === "arbitrage" && <ArbitrageCalculator />}
+
+      {/* Hedge Calculator */}
+      {activeCalculator === "hedge" && <HedgeCalculator />}
     </div>
   );
 }

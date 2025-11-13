@@ -52,6 +52,16 @@ export function BetSearch({
     onFiltersChange({ ...filters, [key]: value });
   };
 
+  const setTodayFilter = () => {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    onFiltersChange({
+      ...filters,
+      dateFrom: todayStr,
+      dateTo: todayStr
+    });
+  };
+
   const clearFilters = () => {
     const clearedFilters: SearchFilters = {
       query: "",
@@ -174,10 +184,21 @@ export function BetSearch({
 
           {/* Date Range */}
           <div className="space-y-2">
-            <Label className="flex items-center space-x-1">
-              <Calendar className="h-4 w-4" />
-              <span>Date Range</span>
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center space-x-1">
+                <Calendar className="h-4 w-4" />
+                <span>Date Range</span>
+              </Label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={setTodayFilter}
+                className="text-xs h-7 px-3"
+                data-testid="bet-filter-today-button"
+              >
+                Today
+              </Button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <DateInput
                 value={filters.dateFrom}

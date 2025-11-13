@@ -137,17 +137,138 @@ export function calculateTotalPL(bets: Array<{
  * @param bets Array of bet objects
  * @returns ROI as percentage
  */
-export function calculateROI(bets: Array<{ 
+export function calculateROI(bets: Array<{
   status: string
   wager_amount: number
-  return_amount: number | null 
+  return_amount: number | null
 }>): number {
   const totalWagered = bets
     .filter(bet => ['won', 'lost'].includes(bet.status))
     .reduce((total, bet) => total + bet.wager_amount, 0)
-  
+
   if (totalWagered === 0) return 0
-  
+
   const totalPL = calculateTotalPL(bets)
   return (totalPL / totalWagered) * 100
+}
+
+export interface BetWithGame {
+  id: string
+  date: string
+  status: string
+  wager_amount: number
+  return_amount: number | null
+  game?: string
+  [key: string]: any
+}
+
+export interface BetGroup {
+  gameName: string
+  date: string
+  bets: BetWithGame[]
+  totalWager: number
+  totalReturn: number
+  record: {
+    wins: number
+    losses: number
+    pending: number
+    pushes: number
+  }
+}
+
+/**
+ * Group bets by game name and date
+ * @param bets Array of bets with game field
+ * @param betCustomData Map of custom field data keyed by bet ID
+ * @param customColumns Array of custom column definitions
+ * @returns Object with grouped and ungrouped bets
+ */
+export function groupBetsByGame(
+  bets: BetWithGame[],
+  betCustomData: Record<string, Record<string, string>>,
+  customColumns: Array<{ id: string; column_name: string }>
+): {
+  grouped: BetGroup[]
+  ungrouped: BetWithGame[]
+} {
+  // Find the game column ID
+  const gameColumn = customColumns.find(col => {
+    const name = col.column_name.toLowerCase();
+    return name === 'game' ||
+           name === 'matchup' ||
+           name === 'teams' ||
+           name === 'vs' ||
+           name === 'match' ||
+           name === 'opponent';
+  });
+
+  if (!gameColumn) {
+    // No game column found, return all as ungrouped
+    return { grouped: [], ungrouped: bets };
+  }
+
+  // Separate bets with and without game values
+  const betsWithGame: BetWithGame[] = [];
+  const betsWithoutGame: BetWithGame[] = [];
+
+  bets.forEach(bet => {
+    const gameValue = betCustomData[bet.id]?.[gameColumn.id];
+    if (gameValue && gameValue.trim()) {
+      betsWithGame.push({ ...bet, game: gameValue.trim() });
+    } else {
+      betsWithoutGame.push(bet);
+    }
+  });
+
+  // Group bets by game name (case-insensitive) and date
+  const groupMap = new Map<string, BetWithGame[]>();
+
+  betsWithGame.forEach(bet => {
+    // Create a key combining lowercase game name and date
+    const key = `${bet.game!.toLowerCase()}|${bet.date}`;
+
+    if (!groupMap.has(key)) {
+      groupMap.set(key, []);
+    }
+    groupMap.get(key)!.push(bet);
+  });
+
+  // Convert map to array of groups, only including groups with 2+ bets
+  const grouped: BetGroup[] = [];
+  const additionalUngrouped: BetWithGame[] = [];
+
+  groupMap.forEach((bets, key) => {
+    if (bets.length >= 2) {
+      // Multiple bets for this game - create a group
+      const totalWager = bets.reduce((sum, bet) => sum + bet.wager_amount, 0);
+      const totalReturn = calculateTotalPL(bets);
+
+      const record = {
+        wins: bets.filter(b => b.status === 'won').length,
+        losses: bets.filter(b => b.status === 'lost').length,
+        pending: bets.filter(b => b.status === 'pending').length,
+        pushes: bets.filter(b => b.status === 'push').length,
+      };
+
+      grouped.push({
+        gameName: bets[0].game!, // Use original case from first bet
+        date: bets[0].date,
+        bets,
+        totalWager,
+        totalReturn,
+        record,
+      });
+    } else {
+      // Single bet for this game - add to ungrouped
+      additionalUngrouped.push(...bets);
+    }
+  });
+
+  // Sort groups by date (most recent first)
+  grouped.sort((a, b) => b.date.localeCompare(a.date));
+
+  return {
+    grouped,
+    ungrouped: [...betsWithoutGame, ...additionalUngrouped],
+  };
 } 

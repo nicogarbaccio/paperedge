@@ -13,6 +13,10 @@ import {
   History,
   Trash2,
   Pencil,
+  ChevronDown,
+  ChevronRight,
+  Grid3x3,
+  List,
 } from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useNotebook } from "@/hooks/useNotebook";
@@ -31,6 +35,7 @@ import {
   calculateTotalPL,
   calculateWinRate,
   calculateROI,
+  groupBetsByGame,
 } from "@/lib/betting";
 import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { CreateBetDialog } from "@/components/CreateBetDialog";
@@ -96,6 +101,8 @@ export function NotebookDetailPage() {
     "history"
   );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isGroupedView, setIsGroupedView] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Day details drawer state
   const [isDayDetailsOpen, setIsDayDetailsOpen] = useState(false);
@@ -103,6 +110,25 @@ export function NotebookDetailPage() {
   const [selectedDayBets, setSelectedDayBets] = useState<Bet[]>([]);
   const [selectedDayProfit, setSelectedDayProfit] = useState(0);
   const [isEditingFromDayDrawer, setIsEditingFromDayDrawer] = useState(false);
+
+  // Sync selectedDayBets when bets change and drawer is open
+  useEffect(() => {
+    if (isDayDetailsOpen && selectedDayDate) {
+      const dayBets = bets.filter(bet => bet.date === selectedDayDate);
+      setSelectedDayBets(dayBets);
+
+      // Recalculate profit
+      const dayProfit = dayBets.reduce((total, bet) => {
+        if (bet.status === "won" && bet.return_amount) {
+          return total + bet.return_amount;
+        } else if (bet.status === "lost") {
+          return total - bet.wager_amount;
+        }
+        return total;
+      }, 0);
+      setSelectedDayProfit(Math.round(dayProfit * 100) / 100);
+    }
+  }, [bets, isDayDetailsOpen, selectedDayDate]);
 
   // Handle unauthorized access or notebook not found
   useEffect(() => {
@@ -217,51 +243,27 @@ export function NotebookDetailPage() {
       description: "Your bet has been successfully updated.",
       variant: "success",
     });
-
-    // If we were editing from day drawer, refresh the day's bets
-    if (isEditingFromDayDrawer && selectedDayDate) {
-      const updatedBets = bets.filter(bet => bet.date === selectedDayDate);
-      setSelectedDayBets(updatedBets);
-      // Recalculate profit
-      const dayProfit = updatedBets.reduce((total, bet) => {
-        if (bet.status === "won" && bet.return_amount) {
-          return total + bet.return_amount;
-        } else if (bet.status === "lost") {
-          return total - bet.wager_amount;
-        }
-        return total;
-      }, 0);
-      setSelectedDayProfit(Math.round(dayProfit * 100) / 100);
-    }
+    // Note: selectedDayBets will be synced automatically by the useEffect
   };
 
   const handleDeleteBet = async (betId: string) => {
     await deleteBet(betId);
 
-    // If we were editing from day drawer, we need to update or close it
+    // If we were editing from day drawer and no bets remain, close the drawer
     if (isEditingFromDayDrawer && selectedDayDate) {
-      // Refresh the day's bets after deletion
-      const updatedBets = bets.filter(bet => bet.date === selectedDayDate && bet.id !== betId);
-
-      if (updatedBets.length === 0) {
-        // No more bets for this day, close everything
+      const remainingBets = bets.filter(bet => bet.date === selectedDayDate && bet.id !== betId);
+      if (remainingBets.length === 0) {
         setIsEditingFromDayDrawer(false);
         setIsDayDetailsOpen(false);
-      } else {
-        // Update the day drawer with remaining bets
-        setSelectedDayBets(updatedBets);
-        // Recalculate profit
-        const dayProfit = updatedBets.reduce((total, bet) => {
-          if (bet.status === "won" && bet.return_amount) {
-            return total + bet.return_amount;
-          } else if (bet.status === "lost") {
-            return total - bet.wager_amount;
-          }
-          return total;
-        }, 0);
-        setSelectedDayProfit(Math.round(dayProfit * 100) / 100);
       }
+      // Otherwise, useEffect will sync the updated bets automatically
     }
+
+    toast({
+      title: "Bet deleted",
+      description: "Your bet has been successfully deleted.",
+      variant: "success",
+    });
   };
 
   const handleUpdateNotebook = async (
@@ -332,6 +334,24 @@ export function NotebookDetailPage() {
     bets,
     searchFilters
   );
+
+  // Group bets by game
+  const { grouped: groupedBets, ungrouped: ungroupedBets } = useMemo(() => {
+    return groupBetsByGame(filteredBets, betCustomData, customColumns || []);
+  }, [filteredBets, betCustomData, customColumns]);
+
+  // Toggle group expansion
+  const toggleGroup = (key: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   // Helper function to check if any filters are active
   const hasActiveFilters = () => {
@@ -536,12 +556,37 @@ export function NotebookDetailPage() {
           {/* Betting History */}
           <Card>
             <CardHeader>
-              <CardTitle>Betting History</CardTitle>
-              <CardDescription>
-                {hasActiveFilters()
-                  ? `Showing ${filteredCount} of ${totalBets} bets`
-                  : `All bets for this notebook`}
-              </CardDescription>
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle>Betting History</CardTitle>
+                  <CardDescription>
+                    {hasActiveFilters()
+                      ? `Showing ${filteredCount} of ${totalBets} bets`
+                      : `All bets for this notebook`}
+                  </CardDescription>
+                </div>
+                {groupedBets.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsGroupedView(!isGroupedView)}
+                    className="flex items-center space-x-1"
+                    data-testid="toggle-grouped-view-button"
+                  >
+                    {isGroupedView ? (
+                      <>
+                        <List className="h-4 w-4" />
+                        <span>Flat View</span>
+                      </>
+                    ) : (
+                      <>
+                        <Grid3x3 className="h-4 w-4" />
+                        <span>Grouped View</span>
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {filteredBets.length === 0 ? (
@@ -559,7 +604,387 @@ export function NotebookDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {filteredBets.map((bet) => (
+                  {/* Render grouped bets */}
+                  {isGroupedView && groupedBets.length > 0 && groupedBets.map((group) => {
+                    const groupKey = `${group.gameName}|${group.date}`;
+                    const isExpanded = expandedGroups.has(groupKey);
+
+                    return (
+                      <div key={groupKey} className="space-y-2">
+                        {/* Group Header */}
+                        <div
+                          className="flex items-center justify-between p-4 bg-surface-secondary/50 border border-border rounded-lg cursor-pointer hover:bg-surface-secondary/70 transition-colors"
+                          onClick={() => toggleGroup(groupKey)}
+                          data-testid="bet-group-header"
+                        >
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            {isExpanded ? (
+                              <ChevronDown className="h-5 w-5 text-text-secondary flex-shrink-0" />
+                            ) : (
+                              <ChevronRight className="h-5 w-5 text-text-secondary flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <h4 className="font-semibold text-text-primary text-lg" data-testid="bet-group-name">
+                                  {group.gameName}
+                                </h4>
+                                <span className="text-sm text-text-secondary" data-testid="bet-group-date">
+                                  {formatDate(group.date)}
+                                </span>
+                                <span className="text-xs px-2 py-1 bg-accent/20 text-accent-foreground rounded-md" data-testid="bet-group-count">
+                                  {group.bets.length} bets
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-4 mt-1 text-sm">
+                                <span className="text-text-secondary">
+                                  Record: <span className="font-medium text-text-primary">{group.record.wins}-{group.record.losses}</span>
+                                  {group.record.pending > 0 && <span className="text-text-secondary"> ({group.record.pending} pending)</span>}
+                                </span>
+                                <span className="text-text-secondary">
+                                  Total Wager: <span className="font-medium text-text-primary">{formatCurrency(group.totalWager)}</span>
+                                </span>
+                                <span className={`font-medium ${group.totalReturn >= 0 ? 'text-profit' : 'text-loss'}`}>
+                                  {group.totalReturn >= 0 ? '+' : ''}{formatCurrency(group.totalReturn)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Group Bets (Collapsible) */}
+                        {isExpanded && (
+                          <div className="ml-8 space-y-3" data-testid="bet-group-bets">
+                            {group.bets.map((bet) => (
+                              <div
+                                key={bet.id}
+                                data-testid="bet-card"
+                                className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 transition-colors cursor-pointer"
+                                onClick={() => handleEditBet(bet)}
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
+                                      {bet.description}
+                                    </h3>
+                                  </div>
+                                  <span
+                                    className={`px-2 py-1 text-xs font-medium rounded-md ${getStatusColorClass(
+                                      bet.status
+                                    )} bg-surface-secondary/30`}
+                                    data-testid="bet-card-status"
+                                  >
+                                    {bet.status.charAt(0).toUpperCase() +
+                                      bet.status.slice(1)}
+                                  </span>
+                                </div>
+
+                                {customColumns && customColumns.length > 0 && (
+                                  <div className="space-y-2">
+                                    {(() => {
+                                      // Get all custom fields with values
+                                      const fieldsWithValues = customColumns
+                                        .filter(
+                                          (col, idx, arr) =>
+                                            arr.findIndex(
+                                              (c) =>
+                                                c.column_name.toLowerCase() ===
+                                                col.column_name.toLowerCase()
+                                            ) === idx
+                                        )
+                                        .map((col) => {
+                                          const value = betCustomData[bet.id]?.[col.id];
+                                          if (!value) return null;
+                                          return {
+                                            ...col,
+                                            value,
+                                            category: categorizeCustomField(
+                                              col.column_name
+                                            ),
+                                          };
+                                        })
+                                        .filter(
+                                          (field): field is NonNullable<typeof field> =>
+                                            field !== null
+                                        )
+                                        .sort(
+                                          (a, b) =>
+                                            getCustomFieldPriority(a.category) -
+                                            getCustomFieldPriority(b.category)
+                                        );
+
+                                      if (fieldsWithValues.length === 0) return null;
+
+                                      // Separate primary (game) fields from others
+                                      const primaryFields = fieldsWithValues.filter(
+                                        (field) => field.category === "game"
+                                      );
+                                      const secondaryFields = fieldsWithValues.filter(
+                                        (field) => field.category !== "game"
+                                      );
+
+                                      return (
+                                        <div className="space-y-2">
+                                          {/* Primary fields (games) - larger and more prominent */}
+                                          {primaryFields.length > 0 && (
+                                            <div className="flex flex-wrap gap-2">
+                                              {primaryFields.map((field) => (
+                                                <span
+                                                  key={field.id}
+                                                  className={getCustomFieldStyles(
+                                                    field.category,
+                                                    true
+                                                  )}
+                                                >
+                                                  {field.value}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          )}
+
+                                          {/* Secondary fields - smaller, organized by category */}
+                                          {secondaryFields.length > 0 && (
+                                            <div className="flex flex-wrap gap-1.5">
+                                              {secondaryFields.map((field) => (
+                                                <span
+                                                  key={field.id}
+                                                  className={getCustomFieldStyles(
+                                                    field.category,
+                                                    false
+                                                  )}
+                                                  title={`${capitalizeFirst(
+                                                    field.column_name
+                                                  )}: ${field.value}`}
+                                                >
+                                                  {field.value}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                )}
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
+                                  <div>
+                                    <p className="text-text-secondary text-xs">Date</p>
+                                    <p className="font-medium" data-testid="bet-card-date">{formatDate(bet.date)}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-text-secondary text-xs">Odds</p>
+                                    <p className="font-medium" data-testid="bet-card-odds">
+                                      {bet.odds > 0 ? "+" : ""}
+                                      {bet.odds}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-text-secondary text-xs">Wager</p>
+                                    <p className="font-medium" data-testid="bet-card-wager">
+                                      {formatCurrency(bet.wager_amount)}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-text-secondary text-xs">Return</p>
+                                    <p
+                                      className={`font-medium ${
+                                        bet.status === "won"
+                                          ? "text-profit"
+                                          : bet.status === "lost"
+                                          ? "text-loss"
+                                          : "text-text-secondary"
+                                      }`}
+                                      data-testid="bet-card-return"
+                                    >
+                                      {bet.status === "pending"
+                                        ? "Pending"
+                                        : bet.status === "push"
+                                        ? "Push"
+                                        : bet.status === "won" && bet.return_amount
+                                        ? formatCurrency(bet.return_amount) // Show profit only
+                                        : bet.status === "lost"
+                                        ? `-${formatCurrency(bet.wager_amount)}`
+                                        : "-"}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {/* Render ungrouped bets in grouped view */}
+                  {isGroupedView && ungroupedBets.length > 0 && (
+                    <>
+                      {groupedBets.length > 0 && (
+                        <div className="border-t border-border pt-4 mt-6">
+                          <h4 className="text-sm font-medium text-text-secondary mb-3">Individual Bets</h4>
+                        </div>
+                      )}
+                      {ungroupedBets.map((bet) => (
+                        <div
+                          key={bet.id}
+                          data-testid="bet-card"
+                          className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 transition-colors cursor-pointer"
+                          onClick={() => handleEditBet(bet)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
+                                {bet.description}
+                              </h3>
+                            </div>
+                            <span
+                              className={`px-2 py-1 text-xs font-medium rounded-md ${getStatusColorClass(
+                                bet.status
+                              )} bg-surface-secondary/30`}
+                              data-testid="bet-card-status"
+                            >
+                              {bet.status.charAt(0).toUpperCase() +
+                                bet.status.slice(1)}
+                            </span>
+                          </div>
+
+                          {customColumns && customColumns.length > 0 && (
+                            <div className="space-y-2">
+                              {(() => {
+                                // Get all custom fields with values
+                                const fieldsWithValues = customColumns
+                                  .filter(
+                                    (col, idx, arr) =>
+                                      arr.findIndex(
+                                        (c) =>
+                                          c.column_name.toLowerCase() ===
+                                          col.column_name.toLowerCase()
+                                      ) === idx
+                                  )
+                                  .map((col) => {
+                                    const value = betCustomData[bet.id]?.[col.id];
+                                    if (!value) return null;
+                                    return {
+                                      ...col,
+                                      value,
+                                      category: categorizeCustomField(
+                                        col.column_name
+                                      ),
+                                    };
+                                  })
+                                  .filter(
+                                    (field): field is NonNullable<typeof field> =>
+                                      field !== null
+                                  )
+                                  .sort(
+                                    (a, b) =>
+                                      getCustomFieldPriority(a.category) -
+                                      getCustomFieldPriority(b.category)
+                                  );
+
+                                if (fieldsWithValues.length === 0) return null;
+
+                                // Separate primary (game) fields from others
+                                const primaryFields = fieldsWithValues.filter(
+                                  (field) => field.category === "game"
+                                );
+                                const secondaryFields = fieldsWithValues.filter(
+                                  (field) => field.category !== "game"
+                                );
+
+                                return (
+                                  <div className="space-y-2">
+                                    {/* Primary fields (games) - larger and more prominent */}
+                                    {primaryFields.length > 0 && (
+                                      <div className="flex flex-wrap gap-2">
+                                        {primaryFields.map((field) => (
+                                          <span
+                                            key={field.id}
+                                            className={getCustomFieldStyles(
+                                              field.category,
+                                              true
+                                            )}
+                                          >
+                                            {field.value}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {/* Secondary fields - smaller, organized by category */}
+                                    {secondaryFields.length > 0 && (
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {secondaryFields.map((field) => (
+                                          <span
+                                            key={field.id}
+                                            className={getCustomFieldStyles(
+                                              field.category,
+                                              false
+                                            )}
+                                            title={`${capitalizeFirst(
+                                              field.column_name
+                                            )}: ${field.value}`}
+                                          >
+                                            {field.value}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
+                            <div>
+                              <p className="text-text-secondary text-xs">Date</p>
+                              <p className="font-medium" data-testid="bet-card-date">{formatDate(bet.date)}</p>
+                            </div>
+                            <div>
+                              <p className="text-text-secondary text-xs">Odds</p>
+                              <p className="font-medium" data-testid="bet-card-odds">
+                                {bet.odds > 0 ? "+" : ""}
+                                {bet.odds}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-text-secondary text-xs">Wager</p>
+                              <p className="font-medium" data-testid="bet-card-wager">
+                                {formatCurrency(bet.wager_amount)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-text-secondary text-xs">Return</p>
+                              <p
+                                className={`font-medium ${
+                                  bet.status === "won"
+                                    ? "text-profit"
+                                    : bet.status === "lost"
+                                    ? "text-loss"
+                                    : "text-text-secondary"
+                                }`}
+                                data-testid="bet-card-return"
+                              >
+                                {bet.status === "pending"
+                                  ? "Pending"
+                                  : bet.status === "push"
+                                  ? "Push"
+                                  : bet.status === "won" && bet.return_amount
+                                  ? formatCurrency(bet.return_amount) // Show profit only
+                                  : bet.status === "lost"
+                                  ? `-${formatCurrency(bet.wager_amount)}`
+                                  : "-"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+
+                  {/* Flat view - render all bets */}
+                  {!isGroupedView && filteredBets.map((bet) => (
                     <div
                       key={bet.id}
                       data-testid="bet-card"
@@ -791,6 +1216,8 @@ export function NotebookDetailPage() {
           handleEditBet(bet);
         }}
         onViewHistory={handleViewDayInHistory}
+        customColumns={customColumns || []}
+        betCustomData={betCustomData}
       />
     </div>
   );
