@@ -406,7 +406,7 @@ export function NotebookDetailPage() {
     .reduce((total, bet) => total + bet.wager_amount, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-4">

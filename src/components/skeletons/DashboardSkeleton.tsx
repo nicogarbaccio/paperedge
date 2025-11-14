@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 
 export function DashboardSkeleton() {
   return (
-    <div className="space-y-6" aria-busy>
+    <div className="space-y-6 animate-fade-in" aria-busy>
       <div>
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-4 w-72 mt-2" />

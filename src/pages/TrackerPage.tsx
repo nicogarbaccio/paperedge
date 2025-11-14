@@ -180,7 +180,7 @@ export function TrackerPage() {
   }
 
   return (
-    <div className="space-y-6" data-testid="tracker-page">
+    <div className="space-y-6 animate-fade-in" data-testid="tracker-page">
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">

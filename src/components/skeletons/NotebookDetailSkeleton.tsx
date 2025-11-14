@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 
 export function NotebookDetailSkeleton() {
   return (
-    <div className="space-y-6" aria-busy>
+    <div className="space-y-6 animate-fade-in" aria-busy>
       <div className="flex items-center space-x-4">
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-9 w-28" />

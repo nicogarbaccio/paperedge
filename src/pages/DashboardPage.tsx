@@ -17,6 +17,7 @@ import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
 import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { StaggeredGrid, StaggeredList } from "@/components/ui/StaggeredList";
 
 export function DashboardPage() {
   const { stats, recentBets, topNotebooks, loading, error } = useDashboard();
@@ -37,7 +38,7 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6" data-testid="dashboard-page">
+    <div className="space-y-6 animate-fade-in" data-testid="dashboard-page">
       <div>
         <h1 className="text-3xl font-bold text-text-primary" data-testid="dashboard-page-title">Dashboard</h1>
         <p className="text-text-secondary">
@@ -46,7 +47,12 @@ export function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="dashboard-stats-grid">
+      <StaggeredGrid
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        data-testid="dashboard-stats-grid"
+        columns={3}
+        staggerDelay={60}
+      >
         <Card data-testid="dashboard-total-bets-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Bets</CardTitle>
@@ -166,7 +172,7 @@ export function DashboardPage() {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </StaggeredGrid>
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -184,7 +190,7 @@ export function DashboardPage() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4" data-testid="dashboard-recent-bets-list">
+              <StaggeredList className="space-y-4" data-testid="dashboard-recent-bets-list" staggerDelay={80}>
                 {recentBets.map((bet) => (
                   <div
                     key={bet.id}
@@ -217,7 +223,7 @@ export function DashboardPage() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </StaggeredList>
             )}
           </CardContent>
         </Card>
@@ -238,7 +244,7 @@ export function DashboardPage() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4" data-testid="dashboard-top-notebooks-list">
+              <StaggeredList className="space-y-4" data-testid="dashboard-top-notebooks-list" staggerDelay={80}>
                 {topNotebooks.map((notebook) => {
                   const colorClasses = getNotebookColorClasses(notebook.color);
                   return (
@@ -283,7 +289,7 @@ export function DashboardPage() {
                     </Link>
                   );
                 })}
-              </div>
+              </StaggeredList>
             )}
           </CardContent>
         </Card>

@@ -16,6 +16,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/useToast";
 import { NotebooksSkeleton } from "@/components/skeletons/NotebooksSkeleton";
+import { StaggeredGrid } from "@/components/ui/StaggeredList";
 
 export function NotebooksPage() {
   const { notebooks, loading, error, createNotebook } = useNotebooks();
@@ -52,7 +53,7 @@ export function NotebooksPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <h1
@@ -109,9 +110,11 @@ export function NotebooksPage() {
         </div>
       ) : (
         // Notebooks grid
-        <div
+        <StaggeredGrid
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           data-testid="notebooks-grid"
+          columns={3}
+          staggerDelay={70}
         >
           {notebooks.map((notebook) => {
             const colorClasses = getNotebookColorClasses(notebook.color);
@@ -259,7 +262,7 @@ export function NotebooksPage() {
               </Link>
             );
           })}
-        </div>
+        </StaggeredGrid>
       )}
 
       {/* Create Notebook Dialog */}

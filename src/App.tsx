@@ -29,17 +29,14 @@ import FAQsPage from "./pages/FAQsPage";
 import SupportPage from "./pages/SupportPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import { toast } from "@/hooks/useToast";
+import { PageLoading } from "./components/ui/Spinner";
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthStore();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-text-primary">Loading...</div>
-      </div>
-    );
+    return <PageLoading message="Authenticating..." />;
   }
 
   if (!user) {
@@ -132,11 +129,7 @@ function App() {
   }, [setUser, setLoading]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-text-primary">Loading...</div>
-      </div>
-    );
+    return <PageLoading message="Loading application..." />;
   }
 
   return (
