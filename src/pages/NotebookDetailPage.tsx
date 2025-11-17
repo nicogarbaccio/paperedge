@@ -317,6 +317,34 @@ export function NotebookDetailPage() {
     setIsCreateBetDialogOpen(true);
   };
 
+  // Handle "Add Bet" for a specific game
+  const handleAddBetToGame = (gameName: string, date: string) => {
+    // Find the game column ID
+    const gameColumn = customColumns?.find(col => {
+      const name = col.column_name.toLowerCase();
+      return name === 'game' || name === 'matchup' || name === 'teams' ||
+             name === 'vs' || name === 'match' || name === 'opponent';
+    });
+
+    // Pre-fill the form with date
+    setCreateBetFormData({
+      date,
+      description: "",
+      odds: 0,
+      wager_amount: 0,
+    });
+
+    // Pre-fill the game custom field if found
+    if (gameColumn) {
+      setCreateBetCustomValues({
+        ...createBetCustomValues,
+        [gameColumn.id]: gameName,
+      });
+    }
+
+    setIsCreateBetDialogOpen(true);
+  };
+
   // Handle "View in History" from day details drawer
   const handleViewDayInHistory = () => {
     if (selectedDayDate) {
@@ -327,6 +355,35 @@ export function NotebookDetailPage() {
         dateTo: selectedDayDate,
       });
     }
+  };
+
+  // Helper function to get game name from a bet
+  const getGameNameFromBet = (bet: Bet | { id: string; date: string; game?: string }): string | null => {
+    // If bet already has a game property (BetWithGame), use it
+    if ('game' in bet && bet.game) {
+      const trimmed = bet.game.trim();
+      return trimmed || null;
+    }
+
+    // Otherwise, look up from customColumns
+    if (!customColumns || !betCustomData[bet.id]) return null;
+
+    // Find the game column
+    const gameColumn = customColumns.find(col => {
+      const name = col.column_name.toLowerCase();
+      return name === 'game' || name === 'matchup' || name === 'teams' ||
+             name === 'vs' || name === 'match' || name === 'opponent';
+    });
+
+    if (!gameColumn) return null;
+
+    // Get the game value for this bet
+    const gameValue = betCustomData[bet.id]?.[gameColumn.id];
+
+    // Check if the value exists and is not just whitespace
+    if (!gameValue || !gameValue.trim()) return null;
+
+    return gameValue.trim();
   };
 
   // Get filtered bets using the search hook
@@ -613,29 +670,31 @@ export function NotebookDetailPage() {
                       <div key={groupKey} className="space-y-2">
                         {/* Group Header */}
                         <div
-                          className="flex items-center justify-between p-4 bg-surface-secondary/50 border border-border rounded-lg cursor-pointer hover:bg-surface-secondary/70 transition-colors"
-                          onClick={() => toggleGroup(groupKey)}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-surface-secondary/50 border border-border rounded-lg hover:bg-surface-secondary/70 transition-colors gap-3"
                           data-testid="bet-group-header"
                         >
-                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <div
+                            className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0 cursor-pointer"
+                            onClick={() => toggleGroup(groupKey)}
+                          >
                             {isExpanded ? (
                               <ChevronDown className="h-5 w-5 text-text-secondary flex-shrink-0" />
                             ) : (
                               <ChevronRight className="h-5 w-5 text-text-secondary flex-shrink-0" />
                             )}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-3 flex-wrap">
-                                <h4 className="font-semibold text-text-primary text-lg" data-testid="bet-group-name">
+                              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                <h4 className="font-semibold text-text-primary text-base sm:text-lg" data-testid="bet-group-name">
                                   {group.gameName}
                                 </h4>
-                                <span className="text-sm text-text-secondary" data-testid="bet-group-date">
+                                <span className="text-xs sm:text-sm text-text-secondary" data-testid="bet-group-date">
                                   {formatDate(group.date)}
                                 </span>
                                 <span className="text-xs px-2 py-1 bg-accent/20 text-accent-foreground rounded-md" data-testid="bet-group-count">
                                   {group.bets.length} bets
                                 </span>
                               </div>
-                              <div className="flex items-center gap-4 mt-1 text-sm">
+                              <div className="flex items-center gap-2 sm:gap-4 mt-1 text-xs sm:text-sm flex-wrap">
                                 <span className="text-text-secondary">
                                   Record: <span className="font-medium text-text-primary">
                                     {group.record.wins}-{group.record.losses}
@@ -652,6 +711,20 @@ export function NotebookDetailPage() {
                               </div>
                             </div>
                           </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-shrink-0 w-full sm:w-auto"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddBetToGame(group.gameName, group.date);
+                            }}
+                            data-testid="add-bet-to-game-button"
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:inline">Add Bet to Game</span>
+                            <span className="sm:hidden">Add to Game</span>
+                          </Button>
                         </div>
 
                         {/* Group Bets (Collapsible) */}
@@ -827,14 +900,19 @@ export function NotebookDetailPage() {
                           <h4 className="text-sm font-medium text-text-secondary mb-3">Individual Bets</h4>
                         </div>
                       )}
-                      {ungroupedBets.map((bet) => (
+                      {ungroupedBets.map((bet) => {
+                        const gameName = getGameNameFromBet(bet);
+
+                        return (
                         <div
                           key={bet.id}
                           data-testid="bet-card"
-                          className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 transition-colors cursor-pointer"
-                          onClick={() => handleEditBet(bet)}
+                          className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 transition-colors"
                         >
-                          <div className="flex items-start justify-between">
+                          <div
+                            className="flex items-start justify-between cursor-pointer"
+                            onClick={() => handleEditBet(bet)}
+                          >
                             <div className="flex-1 min-w-0">
                               <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
                                 {bet.description}
@@ -939,62 +1017,88 @@ export function NotebookDetailPage() {
                             </div>
                           )}
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
-                            <div>
-                              <p className="text-text-secondary text-xs">Date</p>
-                              <p className="font-medium" data-testid="bet-card-date">{formatDate(bet.date)}</p>
-                            </div>
-                            <div>
-                              <p className="text-text-secondary text-xs">Odds</p>
-                              <p className="font-medium" data-testid="bet-card-odds">
-                                {bet.odds > 0 ? "+" : ""}
-                                {bet.odds}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-text-secondary text-xs">Wager</p>
-                              <p className="font-medium" data-testid="bet-card-wager">
-                                {formatCurrency(bet.wager_amount)}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-text-secondary text-xs">Return</p>
-                              <p
-                                className={`font-medium ${
-                                  bet.status === "won"
-                                    ? "text-profit"
+                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm flex-1">
+                              <div>
+                                <p className="text-text-secondary text-xs">Date</p>
+                                <p className="font-medium" data-testid="bet-card-date">{formatDate(bet.date)}</p>
+                              </div>
+                              <div>
+                                <p className="text-text-secondary text-xs">Odds</p>
+                                <p className="font-medium" data-testid="bet-card-odds">
+                                  {bet.odds > 0 ? "+" : ""}
+                                  {bet.odds}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-text-secondary text-xs">Wager</p>
+                                <p className="font-medium" data-testid="bet-card-wager">
+                                  {formatCurrency(bet.wager_amount)}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-text-secondary text-xs">Return</p>
+                                <p
+                                  className={`font-medium ${
+                                    bet.status === "won"
+                                      ? "text-profit"
+                                      : bet.status === "lost"
+                                      ? "text-loss"
+                                      : "text-text-secondary"
+                                  }`}
+                                  data-testid="bet-card-return"
+                                >
+                                  {bet.status === "pending"
+                                    ? "Pending"
+                                    : bet.status === "push"
+                                    ? "Push"
+                                    : bet.status === "won" && bet.return_amount
+                                    ? formatCurrency(bet.return_amount) // Show profit only
                                     : bet.status === "lost"
-                                    ? "text-loss"
-                                    : "text-text-secondary"
-                                }`}
-                                data-testid="bet-card-return"
-                              >
-                                {bet.status === "pending"
-                                  ? "Pending"
-                                  : bet.status === "push"
-                                  ? "Push"
-                                  : bet.status === "won" && bet.return_amount
-                                  ? formatCurrency(bet.return_amount) // Show profit only
-                                  : bet.status === "lost"
-                                  ? `-${formatCurrency(bet.wager_amount)}`
-                                  : "-"}
-                              </p>
+                                    ? `-${formatCurrency(bet.wager_amount)}`
+                                    : "-"}
+                                </p>
+                              </div>
                             </div>
+
+                            {/* Add bet to game button */}
+                            {gameName && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full lg:w-auto flex-shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddBetToGame(gameName, bet.date);
+                                }}
+                                data-testid="add-bet-to-game-button"
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                <span className="hidden sm:inline">Add Bet to Game</span>
+                                <span className="sm:hidden">Add to Game</span>
+                              </Button>
+                            )}
                           </div>
                         </div>
-                      ))}
+                      );
+                      })}
                     </>
                   )}
 
                   {/* Flat view - render all bets */}
-                  {!isGroupedView && filteredBets.map((bet) => (
+                  {!isGroupedView && filteredBets.map((bet) => {
+                    const gameName = getGameNameFromBet(bet);
+
+                    return (
                     <div
                       key={bet.id}
                       data-testid="bet-card"
-                      className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 transition-colors cursor-pointer"
-                      onClick={() => handleEditBet(bet)}
+                      className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 transition-colors"
                     >
-                      <div className="flex items-start justify-between">
+                      <div
+                        className="flex items-start justify-between cursor-pointer"
+                        onClick={() => handleEditBet(bet)}
+                      >
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
                             {bet.description}
@@ -1099,50 +1203,71 @@ export function NotebookDetailPage() {
                         </div>
                       )}
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
-                        <div>
-                          <p className="text-text-secondary text-xs">Date</p>
-                          <p className="font-medium" data-testid="bet-card-date">{formatDate(bet.date)}</p>
-                        </div>
-                        <div>
-                          <p className="text-text-secondary text-xs">Odds</p>
-                          <p className="font-medium" data-testid="bet-card-odds">
-                            {bet.odds > 0 ? "+" : ""}
-                            {bet.odds}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-text-secondary text-xs">Wager</p>
-                          <p className="font-medium" data-testid="bet-card-wager">
-                            {formatCurrency(bet.wager_amount)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-text-secondary text-xs">Return</p>
-                          <p
-                            className={`font-medium ${
-                              bet.status === "won"
-                                ? "text-profit"
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm flex-1">
+                          <div>
+                            <p className="text-text-secondary text-xs">Date</p>
+                            <p className="font-medium" data-testid="bet-card-date">{formatDate(bet.date)}</p>
+                          </div>
+                          <div>
+                            <p className="text-text-secondary text-xs">Odds</p>
+                            <p className="font-medium" data-testid="bet-card-odds">
+                              {bet.odds > 0 ? "+" : ""}
+                              {bet.odds}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-text-secondary text-xs">Wager</p>
+                            <p className="font-medium" data-testid="bet-card-wager">
+                              {formatCurrency(bet.wager_amount)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-text-secondary text-xs">Return</p>
+                            <p
+                              className={`font-medium ${
+                                bet.status === "won"
+                                  ? "text-profit"
+                                  : bet.status === "lost"
+                                  ? "text-loss"
+                                  : "text-text-secondary"
+                              }`}
+                              data-testid="bet-card-return"
+                            >
+                              {bet.status === "pending"
+                                ? "Pending"
+                                : bet.status === "push"
+                                ? "Push"
+                                : bet.status === "won" && bet.return_amount
+                                ? formatCurrency(bet.return_amount) // Show profit only
                                 : bet.status === "lost"
-                                ? "text-loss"
-                                : "text-text-secondary"
-                            }`}
-                            data-testid="bet-card-return"
-                          >
-                            {bet.status === "pending"
-                              ? "Pending"
-                              : bet.status === "push"
-                              ? "Push"
-                              : bet.status === "won" && bet.return_amount
-                              ? formatCurrency(bet.return_amount) // Show profit only
-                              : bet.status === "lost"
-                              ? `-${formatCurrency(bet.wager_amount)}`
-                              : "-"}
-                          </p>
+                                ? `-${formatCurrency(bet.wager_amount)}`
+                                : "-"}
+                            </p>
+                          </div>
                         </div>
+
+                        {/* Add bet to game button */}
+                        {gameName && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full lg:w-auto flex-shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddBetToGame(gameName, bet.date);
+                            }}
+                            data-testid="add-bet-to-game-button"
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:inline">Add Bet to Game</span>
+                            <span className="sm:hidden">Add to Game</span>
+                          </Button>
+                        )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

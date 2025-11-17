@@ -200,21 +200,22 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
   const dayNames = ["SU", "M", "T", "W", "TH", "F", "SA"];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="calendar-view">
       {/* Month Navigation */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between" data-testid="calendar-month-navigation">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
-            <h2 className="text-2xl font-bold text-text-primary">
+            <h2 className="text-2xl font-bold text-text-primary" data-testid="calendar-current-month">
               {monthNames[currentDate.getMonth()].toUpperCase()}
             </h2>
-            <span className="text-2xl font-light text-text-secondary">
+            <span className="text-2xl font-light text-text-secondary" data-testid="calendar-current-year">
               {currentDate.getFullYear()}
             </span>
             {/* Monthly Profit Display */}
             <div className="flex items-center space-x-2">
               <span className="text-sm text-text-secondary">•</span>
               <span
+                data-testid="calendar-monthly-profit"
                 className={`text-lg font-semibold ${
                   monthlyProfit > 0
                     ? "text-profit"
@@ -256,6 +257,7 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
             size="sm"
             onClick={() => navigateMonth("prev")}
             className="h-8 w-8 p-0"
+            data-testid="calendar-prev-month-button"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -264,6 +266,7 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
             size="sm"
             onClick={() => navigateMonth("next")}
             className="h-8 w-8 p-0"
+            data-testid="calendar-next-month-button"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -282,6 +285,7 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
                   size="sm"
                   onClick={() => setCurrentDate(new Date())}
                   className="h-8 px-3 text-xs"
+                  data-testid="calendar-today-button"
                 >
                   Today
                 </Button>
@@ -317,6 +321,9 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
                 return (
                   <div
                     key={day.dateKey}
+                    data-testid="calendar-day-cell"
+                    data-date={day.dateKey}
+                    data-has-bets={day.hasBets}
                     className={`p-4 hover:bg-surface-secondary transition-colors ${
                       day.hasBets ? "cursor-pointer" : ""
                     } ${bgColor}`}
@@ -379,6 +386,9 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
               return (
                 <div
                   key={index}
+                  data-testid="calendar-day-cell"
+                  data-date={day.dateKey}
+                  data-has-bets={day.hasBets}
                   className={`
                     h-24 w-full p-2 flex flex-col border-border relative
                     ${!isRightmost ? "border-r" : ""}
@@ -444,16 +454,17 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
       </div>
 
       {/* Summary Stats */}
-      <div className="flex items-center justify-between pt-4 border-t border-border">
+      <div className="flex items-center justify-between pt-4 border-t border-border" data-testid="calendar-summary-stats">
         <div>
           <div className="text-sm text-text-secondary mb-1">Record</div>
-          <div className="text-2xl font-bold text-text-primary">
+          <div className="text-2xl font-bold text-text-primary" data-testid="calendar-record">
             {stats.record}
           </div>
         </div>
         <div className="text-right">
           <div className="text-sm text-text-secondary mb-1">Profit</div>
           <div
+            data-testid="calendar-total-profit"
             className={`
             text-2xl font-bold
             ${

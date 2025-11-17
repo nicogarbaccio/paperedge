@@ -37,14 +37,14 @@ test.describe('Notebook CRUD Operations', () => {
       // Either empty state OR notebooks grid should be visible (depends on existing data)
       const emptyState = page.getByTestId('notebooks-empty-state');
       const notebooksGrid = page.getByTestId('notebooks-grid');
-      const createCard = page.getByTestId('create-notebook-card');
 
-      const hasEmptyState = await emptyState.isVisible().catch(() => false);
-      const hasGrid = await notebooksGrid.isVisible().catch(() => false);
-      const hasCreateCard = await createCard.isVisible().catch(() => false);
-
-      // At least one of these should be visible
-      expect(hasEmptyState || hasGrid || hasCreateCard).toBeTruthy();
+      // Use web-first assertions with timeout
+      try {
+        await expect(emptyState).toBeVisible({ timeout: 2000 });
+      } catch {
+        // If empty state is not visible, notebooks grid should be visible
+        await expect(notebooksGrid).toBeVisible();
+      }
     });
 
     test('should create a new notebook with all fields', async ({ page }) => {

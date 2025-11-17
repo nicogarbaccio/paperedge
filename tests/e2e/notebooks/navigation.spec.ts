@@ -31,8 +31,8 @@ test.describe('Notebook Navigation', () => {
       await page.getByTestId('notebook-save-button').click();
       await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
 
-      // Click notebook card
-      await page.getByTestId('notebook-card').first().click();
+      // Click the specific notebook by its title (use first since we just created it)
+      await page.getByTestId('notebook-card').filter({ hasText: 'Nav Test' }).first().click();
 
       // Verify we're on detail page
       await expect(page).toHaveURL(/\/notebooks\/[a-f0-9-]+/);
@@ -50,7 +50,8 @@ test.describe('Notebook Navigation', () => {
       await page.getByTestId('notebook-save-button').click();
       await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
 
-      await page.getByTestId('notebook-card').first().click();
+      // Click the specific notebook by its title (use first since we just created it)
+      await page.getByTestId('notebook-card').filter({ hasText: 'Back Nav Test' }).first().click();
       await expect(page.getByTestId('notebook-detail-title')).toBeVisible();
 
       // Click back link
@@ -71,7 +72,8 @@ test.describe('Notebook Navigation', () => {
       await page.getByTestId('notebook-save-button').click();
       await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
 
-      await page.getByTestId('notebook-card').first().click();
+      // Click the specific notebook by its title (use first since we just created it)
+      await page.getByTestId('notebook-card').filter({ hasText: 'View Switch' }).first().click();
 
       // Default should be history view
       await expect(page.getByTestId('notebook-history-view-button')).toBeVisible();
@@ -97,7 +99,8 @@ test.describe('Notebook Navigation', () => {
       await page.getByTestId('notebook-save-button').click();
       await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
 
-      await page.getByTestId('notebook-card').first().click();
+      // Click the specific notebook by its title (use first since we just created it)
+      await page.getByTestId('notebook-card').filter({ hasText: 'Direct Nav' }).first().click();
 
       // Get the URL
       const url = page.url();

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
-import { ReactNode } from "react";
+import { ReactNode, HTMLAttributes } from "react";
 
-interface StaggeredListProps {
+interface StaggeredListProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   className?: string;
   staggerDelay?: number;
@@ -11,9 +11,10 @@ export function StaggeredList({
   children,
   className,
   staggerDelay = 50,
+  ...props
 }: StaggeredListProps) {
   return (
-    <div className={className}>
+    <div className={className} {...props}>
       {Array.isArray(children)
         ? children.map((child, index) => (
             <div
@@ -32,7 +33,7 @@ export function StaggeredList({
   );
 }
 
-interface StaggeredGridProps {
+interface StaggeredGridProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   className?: string;
   staggerDelay?: number;
@@ -44,9 +45,10 @@ export function StaggeredGrid({
   className,
   staggerDelay = 40,
   columns = 3,
+  ...props
 }: StaggeredGridProps) {
   return (
-    <div className={className}>
+    <div className={className} {...props}>
       {Array.isArray(children)
         ? children.map((child, index) => {
             // Calculate row and column for more natural stagger
