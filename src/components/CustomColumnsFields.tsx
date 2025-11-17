@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import type { CustomColumn } from "@/hooks/useNotebook";
@@ -8,6 +8,7 @@ interface CustomColumnsFieldsProps {
   customValues: Record<string, string>;
   setCustomValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   loading?: boolean;
+  autoExpand?: boolean;
 }
 
 function capitalizeFirst(str: string): string {
@@ -42,9 +43,17 @@ export function CustomColumnsFields({
   customValues,
   setCustomValues,
   loading = false,
+  autoExpand = false,
 }: CustomColumnsFieldsProps) {
   const [showAdditional, setShowAdditional] = useState(false);
   const [otherMode, setOtherMode] = useState<Record<string, boolean>>({});
+
+  // Auto-expand if autoExpand prop is true or if there are pre-filled values
+  useEffect(() => {
+    if (autoExpand || (customValues && Object.keys(customValues).length > 0)) {
+      setShowAdditional(true);
+    }
+  }, [autoExpand, customValues]);
 
   if (!customColumns || customColumns.length === 0) {
     return null;

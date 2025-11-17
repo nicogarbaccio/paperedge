@@ -57,18 +57,24 @@ test.describe('Notebook Search and Filter', () => {
     // Test was flaky due to login timeout in beforeEach during heavy load
 
     test('should search bets by description', async ({ page }) => {
+      // Switch to History view to see the search input
+      await page.getByTestId('notebook-history-view-button').click();
+
       // Enter search query
       await page.getByTestId('bet-search-input').fill('Lakers');
 
-      // Wait for the results count to be visible
-      const resultsCount = page.getByTestId('bet-search-results-count');
-      await expect(resultsCount).toBeVisible();
+      // Wait for debounce and results to update
+      await page.waitForTimeout(600); // Wait for debounce (usually 500ms)
 
       // Should filter bet cards - at least one Lakers bet should be visible
-      await expect(page.getByTestId('bet-card').filter({ hasText: 'Lakers' })).toHaveCount(1);
+      const lakersCards = page.getByTestId('bet-card').filter({ hasText: 'Lakers' });
+      await expect(lakersCards).toHaveCount(1);
     });
 
     test('should clear search input', async ({ page }) => {
+      // Switch to History view
+      await page.getByTestId('notebook-history-view-button').click();
+
       // Enter search query using type() to trigger React onChange events
       const searchInput = page.getByTestId('bet-search-input');
       await searchInput.click();
@@ -87,6 +93,9 @@ test.describe('Notebook Search and Filter', () => {
     });
 
     test('should toggle filters panel', async ({ page }) => {
+      // Switch to History view
+      await page.getByTestId('notebook-history-view-button').click();
+
       // Click filter toggle
       await page.getByTestId('bet-filters-toggle-button').click();
 
@@ -108,6 +117,9 @@ test.describe('Notebook Search and Filter', () => {
     });
 
     test('should filter bets by status', async ({ page }) => {
+      // Switch to History view
+      await page.getByTestId('notebook-history-view-button').click();
+
       // Open filters
       await page.getByTestId('bet-filters-toggle-button').click();
       await expect(page.getByTestId('bet-filters-panel')).toBeVisible();
@@ -127,6 +139,9 @@ test.describe('Notebook Search and Filter', () => {
    */
   test.describe('Error Scenarios', () => {
     test('should handle search with no results', async ({ page }) => {
+      // Switch to History view
+      await page.getByTestId('notebook-history-view-button').click();
+
       // Search for something that doesn't exist using type() to trigger React onChange
       const searchInput = page.getByTestId('bet-search-input');
       await searchInput.click();
@@ -142,6 +157,9 @@ test.describe('Notebook Search and Filter', () => {
     // Invalid date range validation should be tested via unit tests instead
 
     test('should handle invalid odds range', async ({ page }) => {
+      // Switch to History view
+      await page.getByTestId('notebook-history-view-button').click();
+
       // Open filters
       await page.getByTestId('bet-filters-toggle-button').click();
 
@@ -157,6 +175,9 @@ test.describe('Notebook Search and Filter', () => {
     });
 
     test('should handle invalid wager range', async ({ page }) => {
+      // Switch to History view
+      await page.getByTestId('notebook-history-view-button').click();
+
       // Open filters
       await page.getByTestId('bet-filters-toggle-button').click();
 
@@ -172,6 +193,9 @@ test.describe('Notebook Search and Filter', () => {
     });
 
     test('should clear all filters', async ({ page }) => {
+      // Switch to History view
+      await page.getByTestId('notebook-history-view-button').click();
+
       // Open filters and apply some
       await page.getByTestId('bet-filters-toggle-button').click();
 

@@ -203,7 +203,7 @@ export const successMessages = {
   },
 
   bet: {
-    created: 'Bet created',
+    created: 'Bet added',
     updated: 'Bet updated',
     deleted: 'Bet deleted',
   },
