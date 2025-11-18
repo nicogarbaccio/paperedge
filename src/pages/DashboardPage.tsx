@@ -42,7 +42,7 @@ export function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold text-text-primary" data-testid="dashboard-page-title">Dashboard</h1>
         <p className="text-text-secondary">
-          Overview of your paper trading performance
+          Track. Analyze. Win.
         </p>
       </div>
 

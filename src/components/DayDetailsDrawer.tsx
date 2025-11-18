@@ -156,7 +156,7 @@ export function DayDetailsDrawer({
                         {group.bets.map((bet) => (
                           <div
                             key={bet.id}
-                            className="p-3 border border-border rounded-lg hover:border-accent/50 transition-colors cursor-pointer bg-surface"
+                            className="p-3 border border-border rounded-lg hover:border-accent/50 hover:bg-surface-secondary/30 transition-all cursor-pointer bg-surface"
                             onClick={() => onEditBet(bet as Bet)}
                             data-testid="day-details-bet-card"
                           >
@@ -231,7 +231,7 @@ export function DayDetailsDrawer({
                   {ungroupedBets.map((bet) => (
                     <div
                       key={bet.id}
-                      className="p-4 border border-border rounded-lg hover:border-accent/50 transition-colors cursor-pointer bg-surface"
+                      className="p-4 border border-border rounded-lg hover:border-accent/50 hover:bg-surface-secondary/30 transition-all cursor-pointer bg-surface"
                       onClick={() => onEditBet(bet as Bet)}
                       data-testid="day-details-bet-card"
                     >

@@ -104,7 +104,7 @@ export function RegisterPage() {
           </div>
           <CardTitle className="text-2xl">Create your account</CardTitle>
           <CardDescription>
-            Get started with PaperEdge paper trading
+            Track Your Strategy, Perfect Your Edge
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -97,7 +97,7 @@ export function LoginPage() {
           </div>
           <CardTitle className="text-2xl">Welcome to PaperEdge</CardTitle>
           <CardDescription>
-            Sign in to your account to start paper trading
+            Track Your Strategy, Perfect Your Edge
           </CardDescription>
         </CardHeader>
         <CardContent>

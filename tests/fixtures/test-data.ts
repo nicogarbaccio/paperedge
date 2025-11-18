@@ -128,14 +128,14 @@ export const testBets = {
 };
 
 export const testAccounts = {
-  main: {
+  sportsbook: {
     name: 'DraftKings',
     kind: 'main' as const,
   },
 
-  offshore: {
-    name: 'Betonline',
-    kind: 'offshore' as const,
+  casino: {
+    name: 'Stake Casino',
+    kind: 'casino' as const,
   },
 
   other: {

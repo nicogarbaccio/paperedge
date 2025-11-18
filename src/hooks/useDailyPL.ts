@@ -10,12 +10,29 @@ export interface DailyPLEntry {
   note: string | null
   created_at: string
   updated_at: string
+  // Casino-specific transaction fields
+  deposited_usd?: number | null
+  withdrew_usd?: number | null
+  in_casino?: number | null
+  usd_value?: number | null
+  tokens_received?: string | null
+  deposit_method?: string | null
 }
 
 export interface DailyPLByDate {
   [date: string]: {
     total: number
-    byAccount: Record<string, { amount: number; entryId?: string }>
+    byAccount: Record<string, {
+      amount: number
+      entryId?: string
+      deposited_usd?: number | null
+      withdrew_usd?: number | null
+      in_casino?: number | null
+      usd_value?: number | null
+      tokens_received?: string | null
+      deposit_method?: string | null
+      note?: string | null
+    }>
   }
 }
 
@@ -117,11 +134,29 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
     }
   }
 
-  async function upsertValue(accountId: string, date: string, amount: number, note?: string) {
+  async function upsertValue(
+    accountId: string,
+    date: string,
+    amount: number,
+    casinoData?: {
+      deposited_usd?: number | null
+      withdrew_usd?: number | null
+      in_casino?: number | null
+      usd_value?: number | null
+      tokens_received?: string | null
+      deposit_method?: string | null
+      note?: string | null
+    }
+  ) {
     const { error } = await supabase
       .from('account_daily_pl')
       .upsert(
-        [{ account_id: accountId, date, amount, note: note ?? null }],
+        [{
+          account_id: accountId,
+          date,
+          amount,
+          ...(casinoData || {}),
+        }],
         { onConflict: 'account_id,date' }
       )
     if (error) throw error
@@ -144,7 +179,17 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
       if (!map[e.date]) map[e.date] = { total: 0, byAccount: {} }
       const amt = Number(e.amount) || 0
       map[e.date].total += amt
-      map[e.date].byAccount[e.account_id] = { amount: amt, entryId: e.id }
+      map[e.date].byAccount[e.account_id] = {
+        amount: amt,
+        entryId: e.id,
+        deposited_usd: e.deposited_usd,
+        withdrew_usd: e.withdrew_usd,
+        in_casino: e.in_casino,
+        usd_value: e.usd_value,
+        tokens_received: e.tokens_received,
+        deposit_method: e.deposit_method,
+        note: e.note,
+      }
     }
     return map
   }, [data])

@@ -81,7 +81,13 @@ export function EditAccountDialog({
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="DraftKings, Offshore A..."
+              placeholder={
+                kind === "casino"
+                  ? "e.g., Stake, DraftKings Casino..."
+                  : kind === "main"
+                  ? "e.g., DraftKings, FanDuel, BetMGM..."
+                  : "e.g., My Account..."
+              }
               data-testid="edit-account-name-input"
             />
           </div>
@@ -94,8 +100,8 @@ export function EditAccountDialog({
                 onChange={(e) => setKind(e.target.value as Account["kind"])}
                 data-testid="edit-account-type-select"
               >
-                <option value="main">Main</option>
-                <option value="offshore">Offshore</option>
+                <option value="main">Sportsbook</option>
+                <option value="casino">Casino</option>
                 <option value="other">Other</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">

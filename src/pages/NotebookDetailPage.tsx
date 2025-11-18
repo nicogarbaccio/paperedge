@@ -734,7 +734,7 @@ export function NotebookDetailPage() {
                               <div
                                 key={bet.id}
                                 data-testid="bet-card"
-                                className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 transition-colors cursor-pointer"
+                                className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 hover:bg-surface-secondary/30 transition-all cursor-pointer"
                                 onClick={() => handleEditBet(bet)}
                               >
                                 <div className="flex items-start justify-between">
@@ -907,11 +907,11 @@ export function NotebookDetailPage() {
                         <div
                           key={bet.id}
                           data-testid="bet-card"
-                          className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 transition-colors"
+                          className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 hover:bg-surface-secondary/30 transition-all cursor-pointer"
+                          onClick={() => handleEditBet(bet)}
                         >
                           <div
-                            className="flex items-start justify-between cursor-pointer"
-                            onClick={() => handleEditBet(bet)}
+                            className="flex items-start justify-between"
                           >
                             <div className="flex-1 min-w-0">
                               <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
@@ -1093,11 +1093,11 @@ export function NotebookDetailPage() {
                     <div
                       key={bet.id}
                       data-testid="bet-card"
-                      className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 transition-colors"
+                      className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 hover:bg-surface-secondary/30 transition-all cursor-pointer"
+                      onClick={() => handleEditBet(bet)}
                     >
                       <div
-                        className="flex items-start justify-between cursor-pointer"
-                        onClick={() => handleEditBet(bet)}
+                        className="flex items-start justify-between"
                       >
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-text-primary" data-testid="bet-card-description">

@@ -12,7 +12,7 @@ export function Footer() {
               <h3 className="text-xl font-bold text-text-primary">PaperEdge</h3>
             </div>
             <p className="text-sm text-text-secondary">
-              Your practice ground for profits
+              Track Your Strategy, Perfect Your Edge
             </p>
           </div>
 

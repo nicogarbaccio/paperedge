@@ -54,7 +54,7 @@ export function Header() {
                 PaperEdge
               </h1>
               <p className="text-xs text-text-secondary hidden sm:block">
-                Your practice ground for profits
+                Track. Analyze. Win.
               </p>
             </div>
           </Link>

@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { useAccount, useAccounts } from "@/hooks/useAccounts";
+import { useAccount, useAccounts, getAccountKindLabel } from "@/hooks/useAccounts";
 import { useDailyPL } from "@/hooks/useDailyPL";
 import { EditDailyPLDialog } from "@/components/tracker/EditDailyPLDialog";
 import EditAccountDialog from "@/components/tracker/EditAccountDialog";
@@ -162,13 +162,25 @@ export function AccountTrackerPage() {
   }, [gridStart, currentDate, byDate]);
 
   async function handleSaveDaily(
-    updates: Array<{ accountId: string; amount: number }>
+    updates: Array<{
+      accountId: string;
+      amount: number;
+      casinoData?: {
+        deposited_usd?: number | null;
+        withdrew_usd?: number | null;
+        in_casino?: number | null;
+        usd_value?: number | null;
+        tokens_received?: string | null;
+        deposit_method?: string | null;
+        note?: string | null;
+      };
+    }>
   ) {
     if (!editDate || !id) return;
     // Only save for this account id
     const target = updates.find((u) => u.accountId === id);
     if (target) {
-      await upsertValue(id, editDate, target.amount);
+      await upsertValue(id, editDate, target.amount, target.casinoData);
       try {
         const [all, ytd] = await Promise.all([
           fetchAllTimeTotal(id),
@@ -225,8 +237,8 @@ export function AccountTrackerPage() {
             <h1 className="text-3xl font-bold text-text-primary">
               {account.name}
             </h1>
-            <span className="text-sm capitalize text-text-secondary">
-              {account.kind}
+            <span className="text-sm text-text-secondary">
+              {getAccountKindLabel(account.kind)}
             </span>
             <Button
               variant="outline"

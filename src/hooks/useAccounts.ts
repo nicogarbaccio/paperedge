@@ -6,9 +6,19 @@ export interface Account {
   id: string
   user_id: string
   name: string
-  kind: 'main' | 'offshore' | 'other'
+  kind: 'main' | 'casino' | 'other'
   created_at: string
   updated_at: string
+}
+
+// Helper function to get user-friendly label for account kind
+export function getAccountKindLabel(kind: Account['kind']): string {
+  const labels: Record<Account['kind'], string> = {
+    main: 'Sportsbook',
+    casino: 'Casino',
+    other: 'Other',
+  }
+  return labels[kind]
 }
 
 export function useAccounts() {

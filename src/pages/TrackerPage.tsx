@@ -15,7 +15,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { useAccounts } from "@/hooks/useAccounts";
+import { useAccounts, getAccountKindLabel } from "@/hooks/useAccounts";
 import { useDailyPL } from "@/hooks/useDailyPL";
 import { CreateAccountDialog } from "@/components/tracker/CreateAccountDialog";
 import { EditDailyPLDialog } from "@/components/tracker/EditDailyPLDialog";
@@ -139,11 +139,23 @@ export function TrackerPage() {
   }, [gridStart, currentDate, byDate]);
 
   async function handleSaveDaily(
-    updates: Array<{ accountId: string; amount: number }>
+    updates: Array<{
+      accountId: string;
+      amount: number;
+      casinoData?: {
+        deposited_usd?: number | null;
+        withdrew_usd?: number | null;
+        in_casino?: number | null;
+        usd_value?: number | null;
+        tokens_received?: string | null;
+        deposit_method?: string | null;
+        note?: string | null;
+      };
+    }>
   ) {
     if (!editDate) return;
     await Promise.all(
-      updates.map((u) => upsertValue(u.accountId, editDate, u.amount))
+      updates.map((u) => upsertValue(u.accountId, editDate, u.amount, u.casinoData))
     );
     try {
       const [all, ytd] = await Promise.all([
@@ -210,7 +222,7 @@ export function TrackerPage() {
                       How to use the Bet Tracker
                     </div>
                     <ul className="list-disc pl-4 space-y-1 text-text-secondary">
-                      <li>Add accounts (Main/Offshore) to track each book</li>
+                      <li>Add accounts (Sportsbook/Casino) to track each book</li>
                       <li>
                         Click a date to enter daily profit/loss per account
                       </li>
@@ -344,8 +356,8 @@ export function TrackerPage() {
                       data-testid={`tracker-account-link-${a.id}`}
                     >
                       <span className="font-medium">{a.name}</span>
-                      <span className="text-xs text-text-secondary capitalize">
-                        ({a.kind})
+                      <span className="text-xs text-text-secondary">
+                        ({getAccountKindLabel(a.kind)})
                       </span>
                       <ArrowUpRight className="h-3.5 w-3.5 ml-1 text-text-secondary" />
                     </Link>
