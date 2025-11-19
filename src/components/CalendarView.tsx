@@ -324,11 +324,9 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
                     data-testid="calendar-day-cell"
                     data-date={day.dateKey}
                     data-has-bets={day.hasBets}
-                    className={`p-4 hover:bg-surface-secondary transition-colors ${
-                      day.hasBets ? "cursor-pointer" : ""
-                    } ${bgColor}`}
+                    className={`p-4 hover:bg-surface-secondary transition-colors cursor-pointer ${bgColor}`}
                     onClick={() => {
-                      if (day.hasBets && onDayClick) {
+                      if (onDayClick) {
                         const dayBets = dailyPL[day.dateKey]?.bets || [];
                         const dayProfit = day.profit ?? 0;
                         onDayClick(day.dateKey, dayBets, dayProfit);
@@ -404,10 +402,10 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
                           : "bg-surface hover:bg-surface-secondary"
                         : "bg-background"
                     }
-                    transition-colors ${day.hasBets ? "cursor-pointer" : ""}
+                    transition-colors ${day.isCurrentMonth ? "cursor-pointer" : ""}
                   `}
                   onClick={() => {
-                    if (day.hasBets && day.isCurrentMonth && onDayClick) {
+                    if (day.isCurrentMonth && onDayClick) {
                       const dayBets = dailyPL[day.dateKey]?.bets || [];
                       const dayProfit = day.profit ?? 0;
                       onDayClick(day.dateKey, dayBets, dayProfit);

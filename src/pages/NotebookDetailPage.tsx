@@ -197,15 +197,9 @@ export function NotebookDetailPage() {
     });
   };
 
-  // Reset create form state when dialog opens or closes
+  // Reset create form state when dialog closes
   useEffect(() => {
-    if (isCreateBetDialogOpen) {
-      // When dialog opens, reset date to today (but keep other fields to preserve partial edits)
-      setCreateBetFormData((prev) => ({
-        ...prev,
-        date: getCurrentLocalDate(),
-      }));
-    } else {
+    if (!isCreateBetDialogOpen) {
       // When dialog closes, reset all fields
       setCreateBetFormData({
         date: getCurrentLocalDate(),
@@ -591,7 +585,17 @@ export function NotebookDetailPage() {
           </Button>
         </div>
         <Button
-          onClick={() => setIsCreateBetDialogOpen(true)}
+          onClick={() => {
+            // Reset form to today's date when clicking the main "Add Bet" button
+            setCreateBetFormData({
+              date: getCurrentLocalDate(),
+              description: "",
+              odds: 0,
+              wager_amount: 0,
+            });
+            setCreateBetCustomValues({});
+            setIsCreateBetDialogOpen(true);
+          }}
           data-testid="create-bet-button"
         >
           <Plus className="h-4 w-4 mr-2" />

@@ -52,13 +52,54 @@ export function BetSearch({
     onFiltersChange({ ...filters, [key]: value });
   };
 
+  const formatDateString = (date: Date): string => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+
   const setTodayFilter = () => {
     const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayStr = formatDateString(today);
     onFiltersChange({
       ...filters,
       dateFrom: todayStr,
       dateTo: todayStr
+    });
+  };
+
+  const setYesterdayFilter = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = formatDateString(yesterday);
+    onFiltersChange({
+      ...filters,
+      dateFrom: yesterdayStr,
+      dateTo: yesterdayStr
+    });
+  };
+
+  const setThisWeekFilter = () => {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 (Sunday) to 6 (Saturday)
+    const startOfWeek = new Date(today);
+    // Start from Sunday
+    startOfWeek.setDate(today.getDate() - dayOfWeek);
+
+    onFiltersChange({
+      ...filters,
+      dateFrom: formatDateString(startOfWeek),
+      dateTo: formatDateString(today)
+    });
+  };
+
+  const setLast30DaysFilter = () => {
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+
+    onFiltersChange({
+      ...filters,
+      dateFrom: formatDateString(thirtyDaysAgo),
+      dateTo: formatDateString(today)
     });
   };
 
@@ -184,21 +225,52 @@ export function BetSearch({
 
           {/* Date Range */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="flex items-center space-x-1">
-                <Calendar className="h-4 w-4" />
-                <span>Date Range</span>
-              </Label>
+            <Label className="flex items-center space-x-1">
+              <Calendar className="h-4 w-4" />
+              <span>Date Range</span>
+            </Label>
+
+            {/* Quick Date Filter Buttons */}
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={setTodayFilter}
-                className="text-xs h-7 px-3"
+                className="text-xs h-8 px-3"
                 data-testid="bet-filter-today-button"
               >
                 Today
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={setYesterdayFilter}
+                className="text-xs h-8 px-3"
+                data-testid="bet-filter-yesterday-button"
+              >
+                Yesterday
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={setThisWeekFilter}
+                className="text-xs h-8 px-3"
+                data-testid="bet-filter-this-week-button"
+              >
+                This Week
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={setLast30DaysFilter}
+                className="text-xs h-8 px-3"
+                data-testid="bet-filter-last-30-days-button"
+              >
+                Last 30 Days
+              </Button>
             </div>
+
+            {/* Custom Date Range Inputs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <DateInput
                 value={filters.dateFrom}
