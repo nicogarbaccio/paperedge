@@ -172,6 +172,7 @@ export function AccountTrackerPage() {
         usd_value?: number | null;
         tokens_received?: string | null;
         deposit_method?: string | null;
+        casino_name?: string | null;
         note?: string | null;
       };
     }>

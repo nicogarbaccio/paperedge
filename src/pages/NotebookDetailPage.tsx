@@ -172,6 +172,9 @@ export function NotebookDetailPage() {
     wagerMax: null,
   });
 
+  // Sort order state
+  const [sortOrder, setSortOrder] = useState<"date-desc" | "date-asc" | "status" | "wager">("date-desc");
+
   // Form state for create bet dialog - persists across tab switches
   const [createBetFormData, setCreateBetFormData] = useState({
     date: getCurrentLocalDate(),
@@ -380,16 +383,65 @@ export function NotebookDetailPage() {
     return gameValue.trim();
   };
 
-  // Get filtered bets using the search hook
+  // Get filtered and sorted bets using the search hook
   const { filteredBets, totalBets, filteredCount } = useBetSearch(
     bets,
-    searchFilters
+    searchFilters,
+    sortOrder
   );
 
   // Group bets by game
   const { grouped: groupedBets, ungrouped: ungroupedBets } = useMemo(() => {
     return groupBetsByGame(filteredBets, betCustomData, customColumns || []);
   }, [filteredBets, betCustomData, customColumns]);
+
+  // Create a merged array of groups and individual bets, sorted together
+  type MergedItem =
+    | { type: 'group'; data: typeof groupedBets[0]; sortDate: string }
+    | { type: 'bet'; data: typeof ungroupedBets[0]; sortDate: string };
+
+  const mergedBetsAndGroups = useMemo(() => {
+    const merged: MergedItem[] = [];
+
+    // Add all groups
+    groupedBets.forEach(group => {
+      merged.push({
+        type: 'group',
+        data: group,
+        sortDate: group.date
+      });
+    });
+
+    // Add all ungrouped bets
+    ungroupedBets.forEach(bet => {
+      merged.push({
+        type: 'bet',
+        data: bet,
+        sortDate: bet.date
+      });
+    });
+
+    // Sort the merged array based on the current sort order
+    merged.sort((a, b) => {
+      switch (sortOrder) {
+        case "date-desc":
+          return b.sortDate.localeCompare(a.sortDate);
+        case "date-asc":
+          return a.sortDate.localeCompare(b.sortDate);
+        case "status":
+        case "wager":
+          // For status and wager sorting, groups come first, then individual bets
+          // Both sorted by date within their sections
+          if (a.type === 'group' && b.type === 'bet') return -1;
+          if (a.type === 'bet' && b.type === 'group') return 1;
+          return b.sortDate.localeCompare(a.sortDate);
+        default:
+          return b.sortDate.localeCompare(a.sortDate);
+      }
+    });
+
+    return merged;
+  }, [groupedBets, ungroupedBets, sortOrder]);
 
   // Toggle group expansion
   const toggleGroup = (key: string) => {
@@ -617,7 +669,7 @@ export function NotebookDetailPage() {
           {/* Betting History */}
           <Card>
             <CardHeader>
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <CardTitle>Betting History</CardTitle>
                   <CardDescription>
@@ -626,27 +678,49 @@ export function NotebookDetailPage() {
                       : `All bets for this notebook`}
                   </CardDescription>
                 </div>
-                {groupedBets.length > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsGroupedView(!isGroupedView)}
-                    className="flex items-center space-x-1"
-                    data-testid="toggle-grouped-view-button"
-                  >
-                    {isGroupedView ? (
-                      <>
-                        <List className="h-4 w-4" />
-                        <span>Flat View</span>
-                      </>
-                    ) : (
-                      <>
-                        <Grid3x3 className="h-4 w-4" />
-                        <span>Grouped View</span>
-                      </>
-                    )}
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  {/* Sort Order Dropdown */}
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="sort-order" className="text-sm text-text-secondary whitespace-nowrap">
+                      Sort by:
+                    </label>
+                    <select
+                      id="sort-order"
+                      value={sortOrder}
+                      onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
+                      className="select-with-arrow h-9 rounded-md border border-border bg-input pl-3 !pr-12 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+                      data-testid="sort-order-select"
+                    >
+                      <option value="date-desc">Date (Newest First)</option>
+                      <option value="date-asc">Date (Oldest First)</option>
+                      <option value="status">Status</option>
+                      <option value="wager">Wager Amount</option>
+                    </select>
+                  </div>
+
+                  {/* Grouped View Toggle */}
+                  {groupedBets.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsGroupedView(!isGroupedView)}
+                      className="flex items-center space-x-1"
+                      data-testid="toggle-grouped-view-button"
+                    >
+                      {isGroupedView ? (
+                        <>
+                          <List className="h-4 w-4" />
+                          <span className="hidden sm:inline">Flat View</span>
+                        </>
+                      ) : (
+                        <>
+                          <Grid3x3 className="h-4 w-4" />
+                          <span className="hidden sm:inline">Grouped View</span>
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -665,8 +739,10 @@ export function NotebookDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {/* Render grouped bets */}
-                  {isGroupedView && groupedBets.length > 0 && groupedBets.map((group) => {
+                  {/* Render merged groups and individual bets */}
+                  {isGroupedView && mergedBetsAndGroups.map((item) => {
+                    if (item.type === 'group') {
+                      const group = item.data;
                     const groupKey = `${group.gameName}|${group.date}`;
                     const isExpanded = expandedGroups.has(groupKey);
 
@@ -894,17 +970,9 @@ export function NotebookDetailPage() {
                         )}
                       </div>
                     );
-                  })}
-
-                  {/* Render ungrouped bets in grouped view */}
-                  {isGroupedView && ungroupedBets.length > 0 && (
-                    <>
-                      {groupedBets.length > 0 && (
-                        <div className="border-t border-border pt-4 mt-6">
-                          <h4 className="text-sm font-medium text-text-secondary mb-3">Individual Bets</h4>
-                        </div>
-                      )}
-                      {ungroupedBets.map((bet) => {
+                    } else {
+                      // Render individual bet
+                      const bet = item.data;
                         const gameName = getGameNameFromBet(bet);
 
                         return (
@@ -1085,9 +1153,8 @@ export function NotebookDetailPage() {
                           </div>
                         </div>
                       );
-                      })}
-                    </>
-                  )}
+                    }
+                  })}
 
                   {/* Flat view - render all bets */}
                   {!isGroupedView && filteredBets.map((bet) => {

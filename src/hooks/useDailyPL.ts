@@ -17,6 +17,7 @@ export interface DailyPLEntry {
   usd_value?: number | null
   tokens_received?: string | null
   deposit_method?: string | null
+  casino_name?: string | null
 }
 
 export interface DailyPLByDate {
@@ -31,6 +32,7 @@ export interface DailyPLByDate {
       usd_value?: number | null
       tokens_received?: string | null
       deposit_method?: string | null
+      casino_name?: string | null
       note?: string | null
     }>
   }
@@ -81,6 +83,7 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
         .from('account_daily_pl')
         .select(`
           id, account_id, date, amount, note, created_at, updated_at,
+          deposited_usd, withdrew_usd, in_casino, usd_value, tokens_received, deposit_method, casino_name,
           accounts!inner ( user_id )
         `)
         .gte('date', toISODate(rangeStart))
@@ -145,6 +148,7 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
       usd_value?: number | null
       tokens_received?: string | null
       deposit_method?: string | null
+      casino_name?: string | null
       note?: string | null
     }
   ) {
@@ -188,6 +192,7 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
         usd_value: e.usd_value,
         tokens_received: e.tokens_received,
         deposit_method: e.deposit_method,
+        casino_name: e.casino_name,
         note: e.note,
       }
     }
@@ -261,6 +266,7 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
         .from('account_daily_pl')
         .select(`
           id, account_id, date, amount, note, created_at, updated_at,
+          deposited_usd, withdrew_usd, in_casino, usd_value, tokens_received, deposit_method, casino_name,
           accounts!inner ( user_id )
         `)
         .gte('date', toISODate(targetStart))

@@ -74,14 +74,9 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
     }
     const newDate = new Date(year, month - 1); // month is 0-indexed in JavaScript
 
-    // Only update if the month is different to avoid unnecessary re-renders
-    if (
-      newDate.getMonth() !== currentDate.getMonth() ||
-      newDate.getFullYear() !== currentDate.getFullYear()
-    ) {
-      setCurrentDate(newDate);
-    }
-  }, [bets, currentDate]);
+    // Always update to the most recent bet's month when bets change
+    setCurrentDate(newDate);
+  }, [bets]);
 
   // Calculate daily P&L from bets
   const dailyPL = useMemo(() => {
@@ -228,27 +223,6 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
                 {formatCurrency(monthlyProfit)}
               </span>
             </div>
-
-            {/* Show indicator when viewing a different month */}
-            {(() => {
-              const now = new Date();
-              const isCurrentMonth =
-                currentDate.getMonth() === now.getMonth() &&
-                currentDate.getFullYear() === now.getFullYear();
-
-              if (!isCurrentMonth) {
-                return (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-text-secondary">•</span>
-                    <span className="text-sm text-accent">
-                      Viewing {monthNames[currentDate.getMonth()]}{" "}
-                      {currentDate.getFullYear()}
-                    </span>
-                  </div>
-                );
-              }
-              return null;
-            })()}
           </div>
         </div>
         <div className="flex items-center space-x-2">

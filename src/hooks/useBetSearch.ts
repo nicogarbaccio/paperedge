@@ -3,9 +3,11 @@ import { Bet } from "./useNotebook";
 import { SearchFilters } from "@/components/BetSearch";
 import { parseLocalDate } from "@/lib/utils";
 
-export function useBetSearch(bets: Bet[], filters: SearchFilters) {
+export type SortOrder = "date-desc" | "date-asc" | "status" | "wager";
+
+export function useBetSearch(bets: Bet[], filters: SearchFilters, sortOrder: SortOrder = "date-desc") {
   const filteredBets = useMemo(() => {
-    return bets.filter((bet) => {
+    const filtered = bets.filter((bet) => {
       // Text search filter
       if (filters.query) {
         const query = filters.query.toLowerCase();
@@ -63,7 +65,44 @@ export function useBetSearch(bets: Bet[], filters: SearchFilters) {
 
       return true;
     });
-  }, [bets, filters]);
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortOrder) {
+        case "date-desc":
+          // Most recent first
+          return b.date.localeCompare(a.date);
+
+        case "date-asc":
+          // Oldest first
+          return a.date.localeCompare(b.date);
+
+        case "status":
+          // Sort by status: pending, won, lost, push
+          const statusOrder = { pending: 0, won: 1, lost: 2, push: 3 };
+          const aOrder = statusOrder[a.status as keyof typeof statusOrder] ?? 999;
+          const bOrder = statusOrder[b.status as keyof typeof statusOrder] ?? 999;
+          if (aOrder !== bOrder) {
+            return aOrder - bOrder;
+          }
+          // Secondary sort by date (most recent first)
+          return b.date.localeCompare(a.date);
+
+        case "wager":
+          // Highest wager first
+          if (b.wager_amount !== a.wager_amount) {
+            return b.wager_amount - a.wager_amount;
+          }
+          // Secondary sort by date (most recent first)
+          return b.date.localeCompare(a.date);
+
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [bets, filters, sortOrder]);
 
   return {
     filteredBets,
