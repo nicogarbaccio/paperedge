@@ -164,6 +164,7 @@ export interface BetWithGame {
 
 export interface BetGroup {
   gameName: string
+  league?: string
   date: string
   bets: BetWithGame[]
   totalWager: number
@@ -202,6 +203,14 @@ export function groupBetsByGame(
            name === 'opponent';
   });
 
+  // Find the league column ID
+  const leagueColumn = customColumns.find(col => {
+    const name = col.column_name.toLowerCase();
+    return name === 'league' ||
+           name === 'sport' ||
+           name === 'competition';
+  });
+
   if (!gameColumn) {
     // No game column found, return all as ungrouped
     return { grouped: [], ungrouped: bets };
@@ -237,7 +246,7 @@ export function groupBetsByGame(
   const grouped: BetGroup[] = [];
   const additionalUngrouped: BetWithGame[] = [];
 
-  groupMap.forEach((bets, key) => {
+  groupMap.forEach((bets) => {
     if (bets.length >= 2) {
       // Multiple bets for this game - create a group
       const totalWager = bets.reduce((sum, bet) => sum + bet.wager_amount, 0);
@@ -250,8 +259,18 @@ export function groupBetsByGame(
         pushes: bets.filter(b => b.status === 'push').length,
       };
 
+      // Extract league from the first bet if league column exists
+      let league: string | undefined;
+      if (leagueColumn) {
+        const leagueValue = betCustomData[bets[0].id]?.[leagueColumn.id];
+        if (leagueValue && leagueValue.trim()) {
+          league = leagueValue.trim();
+        }
+      }
+
       grouped.push({
         gameName: bets[0].game!, // Use original case from first bet
+        league,
         date: bets[0].date,
         bets,
         totalWager,

@@ -315,12 +315,18 @@ export function NotebookDetailPage() {
   };
 
   // Handle "Add Bet" for a specific game
-  const handleAddBetToGame = (gameName: string, date: string) => {
+  const handleAddBetToGame = (gameName: string, date: string, league?: string) => {
     // Find the game column ID
     const gameColumn = customColumns?.find(col => {
       const name = col.column_name.toLowerCase();
       return name === 'game' || name === 'matchup' || name === 'teams' ||
              name === 'vs' || name === 'match' || name === 'opponent';
+    });
+
+    // Find the league column ID
+    const leagueColumn = customColumns?.find(col => {
+      const name = col.column_name.toLowerCase();
+      return name === 'league' || name === 'sport' || name === 'competition';
     });
 
     // Pre-fill the form with date
@@ -331,13 +337,21 @@ export function NotebookDetailPage() {
       wager_amount: 0,
     });
 
-    // Pre-fill the game custom field if found
+    // Pre-fill the game and league custom fields if found
+    const customValuesToSet: Record<string, string> = {};
+
     if (gameColumn) {
-      setCreateBetCustomValues({
-        ...createBetCustomValues,
-        [gameColumn.id]: gameName,
-      });
+      customValuesToSet[gameColumn.id] = gameName;
     }
+
+    if (leagueColumn && league) {
+      customValuesToSet[leagueColumn.id] = league;
+    }
+
+    setCreateBetCustomValues({
+      ...createBetCustomValues,
+      ...customValuesToSet,
+    });
 
     setIsCreateBetDialogOpen(true);
   };
@@ -381,6 +395,33 @@ export function NotebookDetailPage() {
     if (!gameValue || !gameValue.trim()) return null;
 
     return gameValue.trim();
+  };
+
+  const getLeagueNameFromBet = (bet: Bet | { id: string; date: string; league?: string }): string | undefined => {
+    // If bet already has a league property, use it
+    if ('league' in bet && bet.league) {
+      const trimmed = bet.league.trim();
+      return trimmed || undefined;
+    }
+
+    // Otherwise, look up from customColumns
+    if (!customColumns || !betCustomData[bet.id]) return undefined;
+
+    // Find the league column
+    const leagueColumn = customColumns.find(col => {
+      const name = col.column_name.toLowerCase();
+      return name === 'league' || name === 'sport' || name === 'competition';
+    });
+
+    if (!leagueColumn) return undefined;
+
+    // Get the league value for this bet
+    const leagueValue = betCustomData[bet.id]?.[leagueColumn.id];
+
+    // Check if the value exists and is not just whitespace
+    if (!leagueValue || !leagueValue.trim()) return undefined;
+
+    return leagueValue.trim();
   };
 
   // Get filtered and sorted bets using the search hook
@@ -797,7 +838,7 @@ export function NotebookDetailPage() {
                             className="flex-shrink-0 w-full sm:w-auto"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleAddBetToGame(group.gameName, group.date);
+                              handleAddBetToGame(group.gameName, group.date, group.league);
                             }}
                             data-testid="add-bet-to-game-button"
                           >
@@ -974,6 +1015,7 @@ export function NotebookDetailPage() {
                       // Render individual bet
                       const bet = item.data;
                         const gameName = getGameNameFromBet(bet);
+                        const leagueName = getLeagueNameFromBet(bet);
 
                         return (
                         <div
@@ -1141,7 +1183,7 @@ export function NotebookDetailPage() {
                                 className="w-full lg:w-auto flex-shrink-0"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleAddBetToGame(gameName, bet.date);
+                                  handleAddBetToGame(gameName, bet.date, leagueName);
                                 }}
                                 data-testid="add-bet-to-game-button"
                               >
@@ -1159,6 +1201,7 @@ export function NotebookDetailPage() {
                   {/* Flat view - render all bets */}
                   {!isGroupedView && filteredBets.map((bet) => {
                     const gameName = getGameNameFromBet(bet);
+                    const leagueName = getLeagueNameFromBet(bet);
 
                     return (
                     <div
@@ -1326,7 +1369,7 @@ export function NotebookDetailPage() {
                             className="w-full lg:w-auto flex-shrink-0"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleAddBetToGame(gameName, bet.date);
+                              handleAddBetToGame(gameName, bet.date, leagueName);
                             }}
                             data-testid="add-bet-to-game-button"
                           >
