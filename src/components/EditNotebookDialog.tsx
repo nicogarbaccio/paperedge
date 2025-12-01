@@ -29,7 +29,7 @@ interface EditNotebookDialogProps {
   notebook: Notebook | null;
   onUpdateNotebook: (
     id: string,
-    updates: { name?: string; description?: string; color?: string }
+    updates: { name?: string; description?: string | null; color?: string }
   ) => Promise<void>;
 }
 
@@ -74,7 +74,7 @@ export function EditNotebookDialog({
 
       await onUpdateNotebook(notebook.id, {
         name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
+        description: formData.description.trim() || null,
         color: formData.color,
       });
 

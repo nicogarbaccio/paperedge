@@ -265,7 +265,7 @@ export function NotebookDetailPage() {
 
   const handleUpdateNotebook = async (
     id: string,
-    updates: { name?: string; description?: string; color?: string }
+    updates: { name?: string; description?: string | null; color?: string }
   ) => {
     await updateNotebook(id, updates);
     toast({
