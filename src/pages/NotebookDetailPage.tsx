@@ -110,6 +110,7 @@ export function NotebookDetailPage() {
   const [selectedDayBets, setSelectedDayBets] = useState<Bet[]>([]);
   const [selectedDayProfit, setSelectedDayProfit] = useState(0);
   const [isEditingFromDayDrawer, setIsEditingFromDayDrawer] = useState(false);
+  const [isAddingFromDayDrawer, setIsAddingFromDayDrawer] = useState(false);
 
   // Sync selectedDayBets when bets change and drawer is open
   useEffect(() => {
@@ -305,6 +306,7 @@ export function NotebookDetailPage() {
 
   // Handle "Add Bet" from day details drawer
   const handleAddBetForDay = (date: string) => {
+    setIsAddingFromDayDrawer(true);
     setCreateBetFormData({
       date,
       description: "",
@@ -1394,7 +1396,14 @@ export function NotebookDetailPage() {
       {/* Create Bet Dialog */}
       <CreateBetDialog
         open={isCreateBetDialogOpen}
-        onOpenChange={setIsCreateBetDialogOpen}
+        onOpenChange={(open) => {
+          setIsCreateBetDialogOpen(open);
+          // If closing the create dialog and we were adding from day drawer, reopen the day drawer
+          if (!open && isAddingFromDayDrawer) {
+            setIsAddingFromDayDrawer(false);
+            setIsDayDetailsOpen(true);
+          }
+        }}
         onCreateBet={handleCreateBet}
         formData={createBetFormData}
         setFormData={setCreateBetFormData}
