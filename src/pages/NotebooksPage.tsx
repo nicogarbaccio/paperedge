@@ -166,7 +166,7 @@ export function NotebooksPage() {
                       className="text-sm"
                       data-testid="notebook-card-description"
                     >
-                      {notebook.description || "No description"}
+                      {notebook.description}
                     </CardDescription>
                   </CardHeader>
                   <CardContent
