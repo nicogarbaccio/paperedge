@@ -10,14 +10,6 @@ export interface DailyPLEntry {
   note: string | null
   created_at: string
   updated_at: string
-  // Casino-specific transaction fields
-  deposited_usd?: number | null
-  withdrew_usd?: number | null
-  in_casino?: number | null
-  usd_value?: number | null
-  tokens_received?: string | null
-  deposit_method?: string | null
-  casino_name?: string | null
 }
 
 export interface DailyPLByDate {
@@ -26,13 +18,6 @@ export interface DailyPLByDate {
     byAccount: Record<string, {
       amount: number
       entryId?: string
-      deposited_usd?: number | null
-      withdrew_usd?: number | null
-      in_casino?: number | null
-      usd_value?: number | null
-      tokens_received?: string | null
-      deposit_method?: string | null
-      casino_name?: string | null
       note?: string | null
     }>
   }
@@ -83,7 +68,6 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
         .from('account_daily_pl')
         .select(`
           id, account_id, date, amount, note, created_at, updated_at,
-          deposited_usd, withdrew_usd, in_casino, usd_value, tokens_received, deposit_method, casino_name,
           accounts!inner ( user_id )
         `)
         .gte('date', toISODate(rangeStart))
@@ -140,17 +124,7 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
   async function upsertValue(
     accountId: string,
     date: string,
-    amount: number,
-    casinoData?: {
-      deposited_usd?: number | null
-      withdrew_usd?: number | null
-      in_casino?: number | null
-      usd_value?: number | null
-      tokens_received?: string | null
-      deposit_method?: string | null
-      casino_name?: string | null
-      note?: string | null
-    }
+    amount: number
   ) {
     const { error } = await supabase
       .from('account_daily_pl')
@@ -159,7 +133,6 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
           account_id: accountId,
           date,
           amount,
-          ...(casinoData || {}),
         }],
         { onConflict: 'account_id,date' }
       )
@@ -186,13 +159,6 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
       map[e.date].byAccount[e.account_id] = {
         amount: amt,
         entryId: e.id,
-        deposited_usd: e.deposited_usd,
-        withdrew_usd: e.withdrew_usd,
-        in_casino: e.in_casino,
-        usd_value: e.usd_value,
-        tokens_received: e.tokens_received,
-        deposit_method: e.deposit_method,
-        casino_name: e.casino_name,
         note: e.note,
       }
     }
@@ -266,7 +232,6 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
         .from('account_daily_pl')
         .select(`
           id, account_id, date, amount, note, created_at, updated_at,
-          deposited_usd, withdrew_usd, in_casino, usd_value, tokens_received, deposit_method, casino_name,
           accounts!inner ( user_id )
         `)
         .gte('date', toISODate(targetStart))
@@ -306,5 +271,3 @@ export function useDailyPL(rangeStart: Date, rangeEnd: Date, accountId?: string)
 
   return { data, byDate, loading, initialized, isFetching, error, refetch: fetchRange, prefetchRange, upsertValue, deleteValue, fetchAllTimeTotal, fetchYearTotal }
 }
-
-

@@ -13,6 +13,7 @@ import { UnitBettingCalculator } from "@/components/calculators/UnitBettingCalcu
 import { ParlayCalculator } from "@/components/calculators/ParlayCalculator";
 import { ArbitrageCalculator } from "@/components/calculators/ArbitrageCalculator";
 import { HedgeCalculator } from "@/components/calculators/HedgeCalculator";
+import { KellyCalculator } from "@/components/calculators/KellyCalculator";
 
 // Betting odds conversion utilities
 function americanToDecimal(americanOdds: number): number {
@@ -110,6 +111,11 @@ export function CalculatorsPage() {
       id: "hedge",
       name: "Hedge",
       description: "Hedge existing bets to guarantee profit",
+    },
+    {
+      id: "kelly",
+      name: "Kelly Criterion",
+      description: "Calculate optimal bet size based on edge",
     },
   ];
 
@@ -358,6 +364,9 @@ export function CalculatorsPage() {
 
       {/* Hedge Calculator */}
       {activeCalculator === "hedge" && <HedgeCalculator />}
+
+      {/* Kelly Calculator */}
+      {activeCalculator === "kelly" && <KellyCalculator />}
     </div>
   );
 }

@@ -9,8 +9,8 @@ export const testUsers = {
   // Valid test user for most tests
   // These credentials match .env.test file
   validUser: {
-    email: 'test@example.com',
-    password: 'test123456',
+    email: process.env.TEST_EMAIL || 'test@example.com',
+    password: process.env.TEST_PASSWORD || 'test123456',
     name: 'Test User',
   },
 
@@ -131,11 +131,6 @@ export const testAccounts = {
   sportsbook: {
     name: 'DraftKings',
     kind: 'main' as const,
-  },
-
-  casino: {
-    name: 'Stake Casino',
-    kind: 'casino' as const,
   },
 
   other: {

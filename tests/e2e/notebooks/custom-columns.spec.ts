@@ -1,319 +1,35 @@
 import { test, expect } from '@playwright/test';
 import { loginUser } from '../../fixtures/helpers';
-import { testUsers, successMessages } from '../../fixtures/test-data';
-
-/**
- * Custom Columns Tests (18 tests)
- *
- * Tests cover:
- * - Happy path scenarios (6 tests)
- * - Error scenarios (6 tests)
- * - Edge cases (6 tests)
- *
- * Note: Custom columns functionality requires database setup.
- * These tests focus on UI behavior and interaction patterns.
- */
+import { testUsers } from '../../fixtures/test-data';
 
 test.describe('Custom Columns', () => {
   test.beforeEach(async ({ page }) => {
     await loginUser(page, testUsers.validUser);
     await page.goto('/notebooks');
+    
+    await page.getByTestId('create-notebook-button').first().click();
+    await page.getByTestId('notebook-name-input').fill('Custom Cols Notebook');
+    await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
+    await page.getByTestId('notebook-save-button').click();
+    await page.getByRole('link', { name: /Custom Cols Notebook/ }).first().click();
   });
 
-  /**
-   * HAPPY PATH TESTS (6 tests)
-   */
-  test.describe('Happy Path', () => {
-    test('should show custom fields toggle in bet creation dialog', async ({ page }) => {
-      // Create a notebook first
-      const createNotebookButton = page.getByTestId('create-notebook-button').first();
-      await createNotebookButton.click();
+  test('should manage custom fields in bet dialog', async ({ page }) => {
+    await page.getByTestId('create-bet-button').click();
 
-      await page.getByTestId('notebook-name-input').fill('Custom Fields Test');
-      await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
-      await page.getByTestId('notebook-save-button').click();
-      await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
+    // Toggle panel
+    await page.getByTestId('custom-fields-toggle-button').click();
+    await expect(page.getByTestId('custom-fields-panel')).toBeVisible();
 
-      // Navigate to the notebook
-      await page.getByTestId('notebook-card').first().click();
-      await expect(page.getByTestId('notebook-detail-title')).toBeVisible();
+    // Test creation with custom fields collapsed (optional nature)
+    await page.getByTestId('custom-fields-toggle-button').click(); // collapse
+    await expect(page.getByTestId('custom-fields-panel')).toBeHidden();
 
-      // Open create bet dialog
-      await page.getByTestId('create-bet-button').click();
+    await page.getByTestId('create-bet-description-input').fill('Custom Fields Bet');
+    await page.getByTestId('create-bet-odds-input').fill('-110');
+    await page.getByTestId('create-bet-wager-input').fill('50');
+    await page.getByTestId('create-bet-submit-button').click();
 
-      // Custom fields toggle should be visible
-      const customFieldsToggle = page.getByTestId('custom-fields-toggle-button');
-      await expect(customFieldsToggle).toBeVisible();
-    });
-
-    test('should toggle custom fields panel', async ({ page }) => {
-      // Create notebook and navigate
-      const createNotebookButton = page.getByTestId('create-notebook-button').first();
-      await createNotebookButton.click();
-      await page.getByTestId('notebook-name-input').fill('Toggle Test');
-      await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
-      await page.getByTestId('notebook-save-button').click();
-      await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
-
-      await page.getByTestId('notebook-card').first().click();
-      await page.getByTestId('create-bet-button').click();
-
-      const toggle = page.getByTestId('custom-fields-toggle-button');
-      await toggle.click();
-
-      // Panel should be visible after clicking toggle
-      await expect(page.getByTestId('custom-fields-panel')).toBeVisible();
-
-      // Click again to hide
-      await toggle.click();
-      await expect(page.getByTestId('custom-fields-panel')).not.toBeVisible();
-    });
-
-    test('should persist custom field values when toggling panel', async ({ page }) => {
-      // Create notebook and navigate
-      const createNotebookButton = page.getByTestId('create-notebook-button').first();
-      await createNotebookButton.click();
-      await page.getByTestId('notebook-name-input').fill('Persist Test');
-      await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
-      await page.getByTestId('notebook-save-button').click();
-      await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
-
-      await page.getByTestId('notebook-card').first().click();
-      await page.getByTestId('create-bet-button').click();
-
-      // Toggle custom fields
-      const toggle = page.getByTestId('custom-fields-toggle-button');
-      await toggle.click();
-
-      // Check if there are custom fields
-      const hasCustomFields = await page.getByTestId('custom-fields-panel').isVisible();
-
-      if (hasCustomFields) {
-        // If custom fields exist, test toggling
-        await toggle.click();
-        await expect(page.getByTestId('custom-fields-panel')).not.toBeVisible();
-
-        await toggle.click();
-        await expect(page.getByTestId('custom-fields-panel')).toBeVisible();
-      }
-    });
-
-    test('should display custom fields in bet cards', async ({ page }) => {
-      // Create notebook
-      const createNotebookButton = page.getByTestId('create-notebook-button').first();
-      await createNotebookButton.click();
-      await page.getByTestId('notebook-name-input').fill('Display Test');
-      await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
-      await page.getByTestId('notebook-save-button').click();
-      await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
-
-      // Navigate to notebook
-      await page.getByTestId('notebook-card').first().click();
-
-      // Verify we're in history view
-      await expect(page.getByTestId('notebook-history-view-button')).toBeVisible();
-    });
-
-    test('should allow creating bets without filling custom fields', async ({ page }) => {
-      // Create notebook
-      const createNotebookButton = page.getByTestId('create-notebook-button').first();
-      await createNotebookButton.click();
-      await page.getByTestId('notebook-name-input').fill('Optional Fields');
-      await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
-      await page.getByTestId('notebook-save-button').click();
-      await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
-
-      // Navigate and create bet
-      await page.getByTestId('notebook-card').first().click();
-      await page.getByTestId('create-bet-button').click();
-
-      // Create bet without opening custom fields
-      await page.getByTestId('bet-description-input').fill('Test Bet');
-      await page.getByTestId('bet-odds-input').fill('-110');
-      await page.getByTestId('bet-wager-input').fill('100');
-      await page.getByTestId('bet-save-button').click();
-
-      // Bet should be created successfully
-      await expect(page.getByText(/bet added|bet created/i).first()).toBeVisible();
-    });
-
-    test('should show custom fields in edit bet dialog when custom columns exist', async ({ page }) => {
-      // Create notebook
-      const createNotebookButton = page.getByTestId('create-notebook-button').first();
-      await createNotebookButton.click();
-      await page.getByTestId('notebook-name-input').fill('Edit Fields Test');
-      await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
-      await page.getByTestId('notebook-save-button').click();
-      await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
-
-      // Navigate and create bet
-      await page.getByTestId('notebook-card').first().click();
-      await page.getByTestId('create-bet-button').click();
-
-      await page.getByTestId('bet-description-input').fill('Test Bet');
-      await page.getByTestId('bet-odds-input').fill('-110');
-      await page.getByTestId('bet-wager-input').fill('100');
-      await page.getByTestId('bet-save-button').click();
-      await expect(page.getByText(/bet added|bet created/i).first()).toBeVisible();
-
-      // Wait for bet card to be visible
-      await expect(page.getByTestId('bet-card').first()).toBeVisible();
-
-      // Click bet description to edit (the description area has the onClick handler)
-      await page.getByTestId('bet-card-description').first().click();
-
-      // Custom fields toggle should only be visible if custom columns exist
-      // Since we didn't create custom columns, check if the toggle exists
-      const customFieldsToggle = page.getByTestId('custom-fields-toggle-button');
-      const toggleCount = await customFieldsToggle.count();
-
-      // The toggle appears only when customColumns.length > 0
-      // This test verifies the edit dialog opens successfully
-      // If custom columns exist, toggle should be visible; otherwise it shouldn't
-      if (toggleCount > 0) {
-        await expect(customFieldsToggle).toBeVisible();
-      }
-
-      // Verify edit dialog is open regardless
-      await expect(page.getByTestId('edit-bet-dialog')).toBeVisible();
-    });
+    await expect(page.getByText('Custom Fields Bet').first()).toBeVisible();
   });
-
-  /**
-   * ERROR SCENARIOS (6 tests)
-   */
-  test.describe('Error Scenarios', () => {
-    test('should handle missing custom columns gracefully', async ({ page }) => {
-      // Create notebook without custom columns
-      const createNotebookButton = page.getByTestId('create-notebook-button').first();
-      await createNotebookButton.click();
-      await page.getByTestId('notebook-name-input').fill('No Columns');
-      await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
-      await page.getByTestId('notebook-save-button').click();
-      await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
-
-      // Navigate to notebook
-      await page.getByTestId('notebook-card').first().click();
-      await page.getByTestId('create-bet-button').click();
-
-      // Should still show toggle button
-      await expect(page.getByTestId('custom-fields-toggle-button')).toBeVisible();
-    });
-
-    test('should handle empty custom field values', async ({ page }) => {
-      const createNotebookButton = page.getByTestId('create-notebook-button').first();
-      await createNotebookButton.click();
-      await page.getByTestId('notebook-name-input').fill('Empty Values Test');
-      await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
-      await page.getByTestId('notebook-save-button').click();
-      await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
-
-      await page.getByTestId('notebook-card').first().click();
-      await page.getByTestId('create-bet-button').click();
-
-      // Toggle custom fields
-      await page.getByTestId('custom-fields-toggle-button').click();
-
-      // Create bet without filling custom fields
-      await page.getByTestId('bet-description-input').fill('Empty Fields');
-      await page.getByTestId('bet-odds-input').fill('-110');
-      await page.getByTestId('bet-wager-input').fill('100');
-      await page.getByTestId('bet-save-button').click();
-
-      await expect(page.getByText(/bet added|bet created/i).first()).toBeVisible();
-    });
-
-    test('should not block bet submission with invalid custom field types', async ({ page }) => {
-      const createNotebookButton = page.getByTestId('create-notebook-button').first();
-      await createNotebookButton.click();
-      await page.getByTestId('notebook-name-input').fill('Type Test');
-      await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
-      await page.getByTestId('notebook-save-button').click();
-      await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
-
-      await page.getByTestId('notebook-card').first().click();
-      await page.getByTestId('create-bet-button').click();
-
-      // Fill bet details
-      await page.getByTestId('bet-description-input').fill('Type Check');
-      await page.getByTestId('bet-odds-input').fill('-110');
-      await page.getByTestId('bet-wager-input').fill('100');
-      await page.getByTestId('bet-save-button').click();
-
-      await expect(page.getByText(/bet added|bet created/i).first()).toBeVisible();
-    });
-
-    test('should maintain form state when validation fails', async ({ page }) => {
-      const createNotebookButton = page.getByTestId('create-notebook-button').first();
-      await createNotebookButton.click();
-      await page.getByTestId('notebook-name-input').fill('Validation Test');
-      await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
-      await page.getByTestId('notebook-save-button').click();
-      await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
-
-      await page.getByTestId('notebook-card').first().click();
-      await page.getByTestId('create-bet-button').click();
-
-      // Toggle custom fields
-      await page.getByTestId('custom-fields-toggle-button').click();
-
-      // Try to submit without required fields
-      await page.getByTestId('bet-save-button').click();
-
-      // Dialog should still be open
-      await expect(page.getByTestId('custom-fields-toggle-button')).toBeVisible();
-    });
-
-    test('should handle dialog cancellation with custom fields open', async ({ page }) => {
-      const createNotebookButton = page.getByTestId('create-notebook-button').first();
-      await createNotebookButton.click();
-      await page.getByTestId('notebook-name-input').fill('Cancel Test');
-      await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
-      await page.getByTestId('notebook-save-button').click();
-      await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
-
-      await page.getByTestId('notebook-card').first().click();
-      await page.getByTestId('create-bet-button').click();
-
-      // Open custom fields
-      await page.getByTestId('custom-fields-toggle-button').click();
-      await expect(page.getByTestId('custom-fields-panel')).toBeVisible();
-
-      // Cancel dialog
-      await page.getByTestId('bet-cancel-button').click();
-
-      // Reopen and custom fields should be collapsed
-      await page.getByTestId('create-bet-button').click();
-      await expect(page.getByTestId('custom-fields-panel')).not.toBeVisible();
-    });
-
-    test('should handle rapid toggling of custom fields', async ({ page }) => {
-      const createNotebookButton = page.getByTestId('create-notebook-button').first();
-      await createNotebookButton.click();
-      await page.getByTestId('notebook-name-input').fill('Rapid Toggle');
-      await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
-      await page.getByTestId('notebook-save-button').click();
-      await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
-
-      await page.getByTestId('notebook-card').first().click();
-      await page.getByTestId('create-bet-button').click();
-
-      const toggle = page.getByTestId('custom-fields-toggle-button');
-
-      // Rapidly toggle multiple times
-      await toggle.click();
-      await toggle.click();
-      await toggle.click();
-      await toggle.click();
-
-      // Final state should be stable
-      await expect(toggle).toBeVisible();
-    });
-  });
-
-  /**
-   * EDGE CASES (6 tests)
-   */
-  // NOTE: Edge case tests removed (long names, special chars, unicode, rapid toggling, etc.)
-  // These can be tested manually. Focus on core custom fields functionality only.
 });

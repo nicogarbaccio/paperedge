@@ -124,7 +124,7 @@ function validateInputs(inputs: KellyInputs): KellyValidationErrors {
     !inputs.bettingBookOdds.trim(),
     !inputs.sharpBookLine.trim(),
     !inputs.sharpBookOdds.trim(),
-    inputs.bankroll <= 0 || isNaN(inputs.bankroll),
+    inputs.bankroll === 0 || isNaN(inputs.bankroll),
   ].filter(Boolean).length;
 
   if (emptyFields >= 1) {
@@ -307,6 +307,7 @@ ${result.maxBetReached ? "⚠️ Bet capped at maximum percentage" : ""}`;
               <Input
                 id="betting-line"
                 type="text"
+                data-testid="kelly-betting-book-line"
                 value={bettingBookLine}
                 onChange={(e) => setBettingBookLine(e.target.value)}
                 placeholder="e.g., Under 19.5 total points"
@@ -326,6 +327,7 @@ ${result.maxBetReached ? "⚠️ Bet capped at maximum percentage" : ""}`;
               <Input
                 id="betting-odds"
                 type="text"
+                data-testid="kelly-betting-book-odds"
                 value={bettingBookOdds}
                 onChange={(e) => setBettingBookOdds(e.target.value)}
                 placeholder="e.g., +100, -110"
@@ -353,6 +355,7 @@ ${result.maxBetReached ? "⚠️ Bet capped at maximum percentage" : ""}`;
               <Input
                 id="sharp-line"
                 type="text"
+                data-testid="kelly-sharp-book-line"
                 value={sharpBookLine}
                 onChange={(e) => setSharpBookLine(e.target.value)}
                 placeholder="e.g., Under 17.5 total points"
@@ -371,6 +374,7 @@ ${result.maxBetReached ? "⚠️ Bet capped at maximum percentage" : ""}`;
               <Input
                 id="sharp-odds"
                 type="text"
+                data-testid="kelly-sharp-book-odds"
                 value={sharpBookOdds}
                 onChange={(e) => setSharpBookOdds(e.target.value)}
                 placeholder="e.g., +106, -115"
@@ -401,6 +405,7 @@ ${result.maxBetReached ? "⚠️ Bet capped at maximum percentage" : ""}`;
                 <Input
                   id="bankroll"
                   type="number"
+                  data-testid="kelly-bankroll"
                   value={bankroll}
                   onChange={(e) => setBankroll(e.target.value)}
                   placeholder="1000"
@@ -423,6 +428,7 @@ ${result.maxBetReached ? "⚠️ Bet capped at maximum percentage" : ""}`;
                 <Input
                   id="max-bet"
                   type="number"
+                  data-testid="kelly-max-bet"
                   value={maxBetPercentage}
                   onChange={(e) => setMaxBetPercentage(e.target.value)}
                   placeholder="5"
@@ -449,6 +455,7 @@ ${result.maxBetReached ? "⚠️ Bet capped at maximum percentage" : ""}`;
               <Input
                 id="kelly-fraction"
                 type="number"
+                data-testid="kelly-fraction"
                 value={kellyFraction}
                 onChange={(e) => setKellyFraction(e.target.value)}
                 placeholder="0.25"
@@ -495,6 +502,7 @@ ${result.maxBetReached ? "⚠️ Bet capped at maximum percentage" : ""}`;
                 {/* Status Indicator */}
                 <div className="text-center">
                   <div
+                    data-testid="kelly-result-status"
                     className={cn(
                       "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium",
                       result.isPositiveEdge
@@ -536,6 +544,7 @@ ${result.maxBetReached ? "⚠️ Bet capped at maximum percentage" : ""}`;
                   <div>
                     <Label className="text-sm text-text-secondary">Edge</Label>
                     <div
+                      data-testid="kelly-result-edge"
                       className={cn(
                         "text-xl font-bold",
                         result.edge > 0 ? "text-profit" : "text-loss"
@@ -553,7 +562,10 @@ ${result.maxBetReached ? "⚠️ Bet capped at maximum percentage" : ""}`;
                     <Label className="text-sm text-text-secondary">
                       Kelly Percentage
                     </Label>
-                    <div className="text-xl font-bold text-text-primary">
+                    <div 
+                      data-testid="kelly-result-percentage"
+                      className="text-xl font-bold text-text-primary"
+                    >
                       {result.kellyPercentage.toFixed(2)}%
                     </div>
                   </div>
@@ -561,7 +573,10 @@ ${result.maxBetReached ? "⚠️ Bet capped at maximum percentage" : ""}`;
                     <Label className="text-sm text-text-secondary">
                       Recommended Bet
                     </Label>
-                    <div className="text-2xl font-bold text-accent">
+                    <div 
+                      data-testid="kelly-result-bet-amount"
+                      className="text-2xl font-bold text-accent"
+                    >
                       ${result.finalBetAmount.toFixed(2)}
                     </div>
                   </div>
@@ -570,6 +585,7 @@ ${result.maxBetReached ? "⚠️ Bet capped at maximum percentage" : ""}`;
                       Expected Value
                     </Label>
                     <div
+                      data-testid="kelly-result-ev"
                       className={cn(
                         "text-xl font-bold",
                         result.expectedValue > 0 ? "text-profit" : "text-loss"
@@ -628,7 +644,7 @@ ${result.maxBetReached ? "⚠️ Bet capped at maximum percentage" : ""}`;
 
         {/* Clear Button */}
         <div className="flex justify-center">
-          <Button onClick={handleClear} variant="outline" className="px-8">
+          <Button onClick={handleClear} variant="outline" className="px-8" data-testid="kelly-clear-button">
             Clear All
           </Button>
         </div>

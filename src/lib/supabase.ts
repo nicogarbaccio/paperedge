@@ -23,8 +23,30 @@ export function getAuthRedirectUrl(path: string = '/dashboard'): string {
     return `http://localhost:5173${path}`
   }
 
-  // In production, use the current origin
-  return `${window.location.origin}${path}`
+  // Get the current origin
+  const origin = window.location.origin
+
+  // List of domains that should redirect to the primary custom domain
+  // We want to force paperedge.bet when users are on the default Netlify domains
+  const productionSubdomains = [
+    'https://paperedge.netlify.app',
+    'https://paperedge.netlify.com',
+    'https://main--paperedge.netlify.app',
+    'http://paperedge.netlify.app',
+    'http://paperedge.netlify.com',
+    'http://main--paperedge.netlify.app'
+  ]
+
+  // Check if we are on a production-like subdomain and NOT a deploy preview
+  if (
+    productionSubdomains.includes(origin) && 
+    !origin.includes('deploy-preview-')
+  ) {
+    return `https://paperedge.bet${path}`
+  }
+
+  // Otherwise (custom domain, deploy previews, etc), use the current origin
+  return `${origin}${path}`
 }
 
 // Database types
@@ -106,7 +128,7 @@ export interface Database {
           id: string
           user_id: string
           name: string
-          kind: 'main' | 'casino' | 'other'
+          kind: 'main' | 'other'
           created_at: string
           updated_at: string
         }
@@ -114,7 +136,7 @@ export interface Database {
           id?: string
           user_id: string
           name: string
-          kind: 'main' | 'casino' | 'other'
+          kind: 'main' | 'other'
           created_at?: string
           updated_at?: string
         }
@@ -122,7 +144,7 @@ export interface Database {
           id?: string
           user_id?: string
           name?: string
-          kind?: 'main' | 'casino' | 'other'
+          kind?: 'main' | 'other'
           created_at?: string
           updated_at?: string
         }

@@ -165,23 +165,13 @@ export function AccountTrackerPage() {
     updates: Array<{
       accountId: string;
       amount: number;
-      casinoData?: {
-        deposited_usd?: number | null;
-        withdrew_usd?: number | null;
-        in_casino?: number | null;
-        usd_value?: number | null;
-        tokens_received?: string | null;
-        deposit_method?: string | null;
-        casino_name?: string | null;
-        note?: string | null;
-      };
     }>
   ) {
     if (!editDate || !id) return;
     // Only save for this account id
     const target = updates.find((u) => u.accountId === id);
     if (target) {
-      await upsertValue(id, editDate, target.amount, target.casinoData);
+      await upsertValue(id, editDate, target.amount);
       try {
         const [all, ytd] = await Promise.all([
           fetchAllTimeTotal(id),

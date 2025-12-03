@@ -142,21 +142,11 @@ export function TrackerPage() {
     updates: Array<{
       accountId: string;
       amount: number;
-      casinoData?: {
-        deposited_usd?: number | null;
-        withdrew_usd?: number | null;
-        in_casino?: number | null;
-        usd_value?: number | null;
-        tokens_received?: string | null;
-        deposit_method?: string | null;
-        casino_name?: string | null;
-        note?: string | null;
-      };
     }>
   ) {
     if (!editDate) return;
     await Promise.all(
-      updates.map((u) => upsertValue(u.accountId, editDate, u.amount, u.casinoData))
+      updates.map((u) => upsertValue(u.accountId, editDate, u.amount))
     );
     try {
       const [all, ytd] = await Promise.all([
@@ -223,7 +213,7 @@ export function TrackerPage() {
                       How to use the Bet Tracker
                     </div>
                     <ul className="list-disc pl-4 space-y-1 text-text-secondary">
-                      <li>Add accounts (Sportsbook/Casino) to track each book</li>
+                      <li>Add accounts (Sportsbook/Other) to track each book</li>
                       <li>
                         Click a date to enter daily profit/loss per account
                       </li>

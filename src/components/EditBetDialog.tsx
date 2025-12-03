@@ -582,6 +582,7 @@ export function EditBetDialog({
                   size="sm"
                   onClick={() => setShowDeleteConfirm(false)}
                   disabled={loading}
+                  data-testid="edit-bet-cancel-delete-button"
                 >
                   Cancel
                 </Button>
@@ -592,6 +593,7 @@ export function EditBetDialog({
                   onClick={handleDelete}
                   disabled={loading}
                   className="text-loss border-loss hover:bg-loss hover:text-white"
+                  data-testid="edit-bet-confirm-delete-button"
                 >
                   {loading ? (
                     <>

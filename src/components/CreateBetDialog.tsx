@@ -183,7 +183,7 @@ export function CreateBetDialog({
               }
               disabled={loading}
               required
-              data-testid="bet-date-input"
+              data-testid="create-bet-date-input"
             />
           </div>
 
@@ -202,7 +202,7 @@ export function CreateBetDialog({
               disabled={loading}
               autoFocus
               required
-              data-testid="bet-description-input"
+              data-testid="create-bet-description-input"
             />
             <p className="text-xs text-text-secondary">
               Describe the bet (team, spread, total, etc.)
@@ -231,7 +231,7 @@ export function CreateBetDialog({
               }}
               disabled={loading}
               required
-              data-testid="bet-odds-input"
+              data-testid="create-bet-odds-input"
             />
             <p className="text-xs text-text-secondary">
               Enter American odds (positive for underdogs, negative for
@@ -267,7 +267,7 @@ export function CreateBetDialog({
                 disabled={loading}
                 className="pl-8"
                 required
-                data-testid="bet-wager-input"
+                data-testid="create-bet-wager-input"
               />
             </div>
             {expectedPayout > 0 && (
@@ -311,14 +311,14 @@ export function CreateBetDialog({
               variant="outline"
               onClick={handleCancel}
               disabled={loading}
-              data-testid="bet-cancel-button"
+              data-testid="create-bet-cancel-button"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              data-testid="bet-save-button"
+              data-testid="create-bet-submit-button"
             >
               {loading ? (
                 <>

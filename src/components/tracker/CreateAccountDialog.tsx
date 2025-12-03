@@ -47,9 +47,7 @@ export function CreateAccountDialog({ open, onOpenChange, onCreate }: Props) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={
-                kind === "casino"
-                  ? "e.g., Stake, DraftKings Casino..."
-                  : kind === "main"
+                kind === "main"
                   ? "e.g., DraftKings, FanDuel, BetMGM..."
                   : "e.g., My Account..."
               }
@@ -65,7 +63,6 @@ export function CreateAccountDialog({ open, onOpenChange, onCreate }: Props) {
               data-testid="account-type-select"
             >
               <option value="main">Sportsbook</option>
-              <option value="casino">Casino</option>
               <option value="other">Other</option>
             </select>
           </div>
