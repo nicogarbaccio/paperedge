@@ -1,27 +1,102 @@
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/Card";
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { useState, useMemo } from "react";
+import { Plus, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Plus } from "lucide-react";
-import { Link } from "react-router-dom";
-import { formatCurrency, formatPercentage, getPLColorClass } from "@/lib/utils";
 import { useNotebooks } from "@/hooks/useNotebooks";
 import { CreateNotebookDialog } from "@/components/CreateNotebookDialog";
-import { getNotebookColorClasses } from "@/lib/notebookColors";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/useToast";
 import { NotebooksSkeleton } from "@/components/skeletons/NotebooksSkeleton";
 import { StaggeredGrid } from "@/components/ui/StaggeredList";
+import { NotebookCard } from "@/components/NotebookCard";
+import { SortableNotebookCard } from "@/components/SortableNotebookCard";
+
+type SortOption = 'custom' | 'alphabetical' | 'newest' | 'oldest' | 'color';
 
 export function NotebooksPage() {
-  const { notebooks, loading, error, createNotebook } = useNotebooks();
+  const { notebooks, loading, error, createNotebook, reorderNotebooks } = useNotebooks();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [sortOption, setSortOption] = useState<SortOption>('custom');
+  const [activeId, setActiveId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const sortedNotebooks = useMemo(() => {
+    const sorted = [...notebooks];
+    switch (sortOption) {
+      case 'alphabetical':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case 'newest':
+        return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      case 'oldest':
+        return sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      case 'color':
+         return sorted.sort((a, b) => {
+           const colorA = a.color || '';
+           const colorB = b.color || '';
+           return colorA.localeCompare(colorB);
+         });
+      case 'custom':
+      default:
+        // Assuming notebooks are already sorted by display_order from the hook
+        // But we should ensure stable sort by display_order if not
+        return sorted.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    }
+  }, [notebooks, sortOption]);
+
+  const activeNotebook = useMemo(
+    () => sortedNotebooks.find((n) => n.id === activeId),
+    [activeId, sortedNotebooks]
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    setActiveId(null);
+
+    if (over && active.id !== over.id) {
+      const oldIndex = sortedNotebooks.findIndex((n) => n.id === active.id);
+      const newIndex = sortedNotebooks.findIndex((n) => n.id === over.id);
+
+      const newOrder = arrayMove(sortedNotebooks, oldIndex, newIndex);
+      reorderNotebooks(newOrder);
+      
+      toast({
+        title: "Notebook moved",
+        description: "The notebook order has been updated.",
+        variant: "success",
+      });
+    }
+  };
 
   const handleCreateNotebook = async (data: {
     name: string;
@@ -54,7 +129,7 @@ export function NotebooksPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h1
             className="text-3xl font-bold text-text-primary"
@@ -66,16 +141,32 @@ export function NotebooksPage() {
             Manage your betting strategies and track performance
           </p>
         </div>
-        {/* Only show header button when there are existing notebooks */}
+        {/* Controls */}
         {notebooks.length > 0 && (
-          <Button
-            className="flex items-center space-x-2 w-full sm:w-auto"
-            onClick={() => setIsCreateDialogOpen(true)}
-            data-testid="create-notebook-button"
-          >
-            <Plus className="h-4 w-4" />
-            <span>New Notebook</span>
-          </Button>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+             <div className="relative">
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value as SortOption)}
+                  className="h-10 pl-3 pr-8 bg-surface border border-border rounded-md text-sm text-text-primary focus:ring-2 focus:ring-accent focus:outline-none appearance-none cursor-pointer min-w-[140px]"
+                >
+                  <option value="custom">Custom Order</option>
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="alphabetical">Alphabetical</option>
+                  <option value="color">Color</option>
+                </select>
+                <ArrowUpDown className="absolute right-2.5 top-3 h-4 w-4 text-text-secondary pointer-events-none" />
+             </div>
+            <Button
+              className="flex items-center space-x-2 flex-1 sm:flex-none justify-center"
+              onClick={() => setIsCreateDialogOpen(true)}
+              data-testid="create-notebook-button"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New Notebook</span>
+            </Button>
+          </div>
         )}
       </div>
 
@@ -110,159 +201,48 @@ export function NotebooksPage() {
         </div>
       ) : (
         // Notebooks grid
-        <StaggeredGrid
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          data-testid="notebooks-grid"
-          columns={3}
-          staggerDelay={70}
-        >
-          {notebooks.map((notebook) => {
-            const colorClasses = getNotebookColorClasses(notebook.color);
-            return (
-              <Link key={notebook.id} to={`/notebooks/${notebook.id}`}>
-                <Card
-                  className={cn(
-                    "relative hover:bg-surface-secondary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer h-full border-l-4 rounded-lg overflow-visible",
-                    colorClasses.border,
-                    // Notebook-like styling
-                    "before:absolute before:left-3 before:top-0 before:bottom-0 before:w-0.5 before:bg-border/40",
-                    // Spiral binding holes
-                    "after:absolute after:left-2 after:top-6 after:bottom-6 after:w-1 after:bg-[length:4px_20px] after:bg-repeat-y",
-                    "after:bg-[radial-gradient(circle,_var(--border)_2px,_transparent_2px)]"
-                  )}
-                  data-testid="notebook-card"
-                  style={{
-                    boxShadow:
-                      "2px 2px 8px rgba(0, 0, 0, 0.1), 4px 4px 12px rgba(0, 0, 0, 0.05)",
-                  }}
-                >
-                  <CardHeader className="pb-3 pl-8">
-                    <CardTitle className="flex items-center justify-between text-base sm:text-lg">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <div
-                          className={cn(
-                            "w-3 h-3 rounded-full flex-shrink-0",
-                            colorClasses.accent
-                          )}
-                          data-testid="notebook-card-color"
-                        />
-                        <span
-                          className="truncate"
-                          data-testid="notebook-card-title"
-                        >
-                          {notebook.name}
-                        </span>
-                      </div>
-                      <span
-                        className={`text-sm font-normal flex-shrink-0 ml-2 ${getPLColorClass(
-                          notebook.total_pl || 0
-                        )}`}
-                      >
-                        {(notebook.total_pl || 0) > 0 ? "+" : ""}
-                        {formatCurrency(notebook.total_pl || 0)}
-                      </span>
-                    </CardTitle>
-                    <CardDescription
-                      className="text-sm"
-                      data-testid="notebook-card-description"
-                    >
-                      {notebook.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent
-                    className="pl-8"
-                    data-testid="notebook-card-stats"
-                  >
-                    <div className="space-y-3">
-                      {/* Bankroll Info */}
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-text-secondary">
-                          Bankroll
-                        </span>
-                        <span className="text-sm font-medium">
-                          {formatCurrency(notebook.current_bankroll)}
-                        </span>
-                      </div>
-
-                      {/* Performance Metrics */}
-                      <div className="grid grid-cols-3 gap-4 text-center">
-                        <div>
-                          <div className="text-sm font-medium">
-                            {notebook.bet_count || 0}
-                          </div>
-                          <div className="text-xs text-text-secondary">
-                            Bets
-                          </div>
-                        </div>
-                        <div>
-                          <div
-                            className={`text-sm font-medium ${
-                              (notebook.win_rate || 0) >= 55
-                                ? "text-profit"
-                                : (notebook.win_rate || 0) >= 45
-                                ? "text-pending"
-                                : "text-loss"
-                            }`}
-                          >
-                            {formatPercentage(notebook.win_rate || 0)}
-                          </div>
-                          <div className="text-xs text-text-secondary">
-                            Win Rate
-                          </div>
-                        </div>
-                        <div>
-                          <div
-                            className={`text-sm font-medium ${getPLColorClass(
-                              notebook.roi || 0
-                            )}`}
-                          >
-                            {formatPercentage(notebook.roi || 0)}
-                          </div>
-                          <div className="text-xs text-text-secondary">ROI</div>
-                        </div>
-                      </div>
-
-                      {/* Progress Bar */}
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs text-text-secondary">
-                          <span>
-                            Starting:{" "}
-                            {formatCurrency(notebook.starting_bankroll)}
-                          </span>
-                        </div>
-                        <div className="w-full bg-surface-secondary rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${(() => {
-                              const percentage =
-                                (notebook.current_bankroll /
-                                  notebook.starting_bankroll) *
-                                100;
-                              if (percentage >= 100) return "bg-profit"; // Green: Profit
-                              if (percentage >= 90) return "bg-yellow-500"; // Yellow: Minor loss
-                              if (percentage >= 75) return "bg-orange-500"; // Orange: Moderate loss
-                              return "bg-loss"; // Red: Critical loss
-                            })()}`}
-                            style={{
-                              width: `${Math.min(
-                                100,
-                                Math.max(
-                                  10,
-                                  (notebook.current_bankroll /
-                                    notebook.starting_bankroll) *
-                                    100
-                                )
-                              )}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
-        </StaggeredGrid>
+        <>
+          {sortOption === 'custom' ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={sortedNotebooks.map(n => n.id)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {sortedNotebooks.map((notebook) => (
+                    <SortableNotebookCard key={notebook.id} notebook={notebook} />
+                  ))}
+                </div>
+              </SortableContext>
+              <DragOverlay dropAnimation={null}>
+                 {activeNotebook ? (
+                   <div className="cursor-grabbing">
+                     <NotebookCard
+                       notebook={activeNotebook}
+                       className="shadow-2xl rotate-3 scale-105 opacity-90"
+                     />
+                   </div>
+                 ) : null}
+              </DragOverlay>
+            </DndContext>
+          ) : (
+            <StaggeredGrid
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              data-testid="notebooks-grid"
+              columns={3}
+              staggerDelay={70}
+            >
+              {sortedNotebooks.map((notebook) => (
+                <NotebookCard key={notebook.id} notebook={notebook} />
+              ))}
+            </StaggeredGrid>
+          )}
+        </>
       )}
 
       {/* Create Notebook Dialog */}

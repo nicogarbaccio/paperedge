@@ -11,6 +11,7 @@ export interface Notebook {
   starting_bankroll: number
   current_bankroll: number
   color: string | null
+  display_order: number
   created_at: string
   updated_at: string
   // Computed fields
@@ -50,7 +51,7 @@ export function useNotebooks() {
           )
         `)
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        .order('display_order', { ascending: true })
 
       if (notebooksError) throw notebooksError
 
@@ -157,6 +158,56 @@ export function useNotebooks() {
     }
   }
 
+  const reorderNotebooks = async (reorderedNotebooks: Notebook[]) => {
+    // Update the display_order on the objects themselves before setting state
+    // so that any sorting logic based on display_order (like in the component's useMemo)
+    // sees the correct new values immediately.
+    // Use functional update to avoid stale closure issues if any, though here we pass explicit data
+    const updatedNotebooks = reorderedNotebooks.map((notebook, index) => ({
+      ...notebook,
+      display_order: index
+    }))
+
+    // Optimistic update - ensuring we don't trigger unnecessary re-fetches
+    setNotebooks(updatedNotebooks)
+
+    // Do NOT await the Supabase call within the UI blocking path.
+    // Let it happen in background.
+    // If it fails, we revert.
+    
+    // We use a separate async function to handle the side effect to avoid blocking
+    const persistOrder = async () => {
+      try {
+        // We must include all required columns for upsert to work, even if we are just updating.
+        // Supabase/Postgres treats upsert as a potential INSERT, so strict schema validation applies.
+        const updates = updatedNotebooks.map((notebook) => ({
+          id: notebook.id,
+          user_id: notebook.user_id,
+          name: notebook.name,
+          description: notebook.description,
+          starting_bankroll: notebook.starting_bankroll,
+          current_bankroll: notebook.current_bankroll,
+          color: notebook.color,
+          display_order: notebook.display_order,
+          created_at: notebook.created_at,
+          updated_at: new Date().toISOString()
+        }))
+
+        const { error } = await supabase
+          .from('notebooks')
+          .upsert(updates)
+
+        if (error) throw error
+      } catch (error: unknown) {
+        console.error('Failed to persist notebook order:', error)
+        // Revert to server state on error
+        await fetchNotebooks()
+      }
+    }
+
+    persistOrder()
+  }
+
   useEffect(() => {
     let cancelled = false
 
@@ -178,6 +229,7 @@ export function useNotebooks() {
     createNotebook,
     updateNotebook,
     deleteNotebook,
+    reorderNotebooks,
     refetch: fetchNotebooks
   }
-} 
+}
