@@ -14,6 +14,7 @@ import {
   Trash2,
   Pencil,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Grid3x3,
   List,
@@ -178,6 +179,15 @@ export function NotebookDetailPage() {
 
   // Sort order state
   const [sortOrder, setSortOrder] = useState<"date-desc" | "date-asc" | "status" | "wager">("date-desc");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Reset pagination when filters, sort order, or items per page change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchFilters, sortOrder, itemsPerPage]);
 
   // Form state for create bet dialog - persists across tab switches
   const [createBetFormData, setCreateBetFormData] = useState({
@@ -454,10 +464,17 @@ export function NotebookDetailPage() {
     sortOrder
   );
 
-  // Group bets by game
+  // Pagination logic
+  const totalPages = Math.ceil(filteredBets.length / itemsPerPage);
+  const paginatedBets = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredBets.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredBets, currentPage, itemsPerPage]);
+
+  // Group bets by game (using paginated bets)
   const { grouped: groupedBets, ungrouped: ungroupedBets } = useMemo(() => {
-    return groupBetsByGame(filteredBets, betCustomData, customColumns || []);
-  }, [filteredBets, betCustomData, customColumns]);
+    return groupBetsByGame(paginatedBets, betCustomData, customColumns || []);
+  }, [paginatedBets, betCustomData, customColumns]);
 
   // Create a merged array of groups and individual bets, sorted together
   type MergedItem =
@@ -531,6 +548,61 @@ export function NotebookDetailPage() {
       searchFilters.oddsMax !== null ||
       searchFilters.wagerMin !== null ||
       searchFilters.wagerMax !== null
+    );
+  };
+
+  // Render pagination controls
+  const renderPagination = () => {
+    if (filteredBets.length === 0) return null;
+
+    return (
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 border-t border-border pt-4">
+        <div className="flex items-center gap-2">
+          <label htmlFor="items-per-page" className="text-sm text-text-secondary whitespace-nowrap">
+            Show:
+          </label>
+          <select
+            id="items-per-page"
+            value={itemsPerPage}
+            onChange={(e) => setItemsPerPage(Number(e.target.value))}
+            className="h-8 rounded-md border border-border bg-input px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+          <span className="text-sm text-text-secondary whitespace-nowrap">
+            per page
+          </span>
+        </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only">Previous Page</span>
+            </Button>
+            <span className="text-sm text-text-secondary">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+              <span className="sr-only">Next Page</span>
+            </Button>
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -1248,7 +1320,7 @@ export function NotebookDetailPage() {
                   })}
 
                   {/* Flat view - render all bets */}
-                  {!isGroupedView && filteredBets.map((bet) => {
+                  {!isGroupedView && paginatedBets.map((bet) => {
                     const gameName = getGameNameFromBet(bet);
                     const leagueName = getLeagueNameFromBet(bet);
 
@@ -1433,6 +1505,7 @@ export function NotebookDetailPage() {
                   })}
                 </div>
               )}
+              {renderPagination()}
             </CardContent>
           </Card>
         </div>
