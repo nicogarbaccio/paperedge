@@ -119,6 +119,7 @@ export function NotebooksPage() {
     description?: string;
     starting_bankroll: number;
     color?: string;
+    unit_size: number;
   }) => {
     await createNotebook(data);
     toast({
