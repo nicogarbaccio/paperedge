@@ -21,6 +21,7 @@ interface Notebook {
   starting_bankroll: number;
   current_bankroll: number;
   color: string | null;
+  unit_size: number;
 }
 
 interface EditNotebookDialogProps {
@@ -29,7 +30,7 @@ interface EditNotebookDialogProps {
   notebook: Notebook | null;
   onUpdateNotebook: (
     id: string,
-    updates: { name?: string; description?: string | null; color?: string }
+    updates: { name?: string; description?: string | null; color?: string; unit_size?: number }
   ) => Promise<void>;
 }
 
@@ -43,6 +44,7 @@ export function EditNotebookDialog({
     name: "",
     description: "",
     color: DEFAULT_NOTEBOOK_COLOR.id,
+    unit_size: 100,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +55,7 @@ export function EditNotebookDialog({
         name: notebook.name,
         description: notebook.description || "",
         color: notebook.color || DEFAULT_NOTEBOOK_COLOR.id,
+        unit_size: notebook.unit_size || 100,
       });
       setError(null);
     }
@@ -68,6 +71,11 @@ export function EditNotebookDialog({
       return;
     }
 
+    if (formData.unit_size <= 0) {
+      setError("Unit size must be greater than 0");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -76,6 +84,7 @@ export function EditNotebookDialog({
         name: formData.name.trim(),
         description: formData.description.trim() || null,
         color: formData.color,
+        unit_size: formData.unit_size,
       });
 
       onOpenChange(false);
@@ -92,6 +101,7 @@ export function EditNotebookDialog({
         name: notebook.name,
         description: notebook.description || "",
         color: notebook.color || DEFAULT_NOTEBOOK_COLOR.id,
+        unit_size: notebook.unit_size || 100,
       });
       setError(null);
       onOpenChange(false);
@@ -141,6 +151,36 @@ export function EditNotebookDialog({
               disabled={loading}
               data-testid="edit-notebook-description-input"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="unit_size">Unit Size *</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary">
+                $
+              </span>
+              <Input
+                id="unit_size"
+                type="number"
+                min="1"
+                step="0.01"
+                placeholder="100.00"
+                value={formData.unit_size}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    unit_size: parseFloat(e.target.value) || 0,
+                  }))
+                }
+                disabled={loading}
+                className="pl-8"
+                required
+                data-testid="edit-notebook-unit-size-input"
+              />
+            </div>
+            <p className="text-xs text-text-secondary">
+              Update your standard bet size.
+            </p>
           </div>
 
           <div className="space-y-2">

@@ -14,11 +14,13 @@ export interface Notebook {
   display_order: number
   created_at: string
   updated_at: string
+  unit_size: number
   // Computed fields
   bet_count?: number
   win_rate?: number
   total_pl?: number
   roi?: number
+  units_won?: number
 }
 
 export function useNotebooks() {
@@ -63,6 +65,8 @@ export function useNotebooks() {
         const win_rate = calculateWinRate(bets)
         const total_pl = calculateTotalPL(bets)
         const roi = calculateROI(bets)
+        const unit_size = notebook.unit_size || 100
+        const units_won = total_pl / unit_size
         
         // Calculate current bankroll dynamically: starting bankroll + total P/L
         const current_bankroll = notebook.starting_bankroll + total_pl
@@ -74,6 +78,7 @@ export function useNotebooks() {
           win_rate,
           total_pl,
           roi,
+          units_won,
           current_bankroll // Override with calculated value
         }
       }) || []
@@ -93,6 +98,7 @@ export function useNotebooks() {
     description?: string
     starting_bankroll: number
     color?: string
+    unit_size: number
   }) => {
     if (!user || !user.id) throw new Error('User not authenticated')
 
@@ -103,7 +109,8 @@ export function useNotebooks() {
           {
             ...notebookData,
             user_id: user.id,
-            current_bankroll: notebookData.starting_bankroll
+            current_bankroll: notebookData.starting_bankroll,
+            unit_size: notebookData.unit_size
           }
         ])
         .select()
@@ -158,6 +165,25 @@ export function useNotebooks() {
     }
   }
 
+  const duplicateNotebook = async (id: string, newName: string) => {
+    try {
+      const { data, error } = await supabase.rpc('clone_notebook', {
+        original_notebook_id: id,
+        new_name: newName
+      })
+
+      if (error) throw error
+
+      // Refresh notebooks list
+      await fetchNotebooks()
+      
+      return data // This is the new notebook ID
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to duplicate notebook'
+      throw new Error(errorMessage)
+    }
+  }
+
   const reorderNotebooks = async (reorderedNotebooks: Notebook[]) => {
     // Update the display_order on the objects themselves before setting state
     // so that any sorting logic based on display_order (like in the component's useMemo)
@@ -190,7 +216,8 @@ export function useNotebooks() {
           color: notebook.color,
           display_order: notebook.display_order,
           created_at: notebook.created_at,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          unit_size: notebook.unit_size
         }))
 
         const { error } = await supabase
@@ -229,6 +256,7 @@ export function useNotebooks() {
     createNotebook,
     updateNotebook,
     deleteNotebook,
+    duplicateNotebook,
     reorderNotebooks,
     refetch: fetchNotebooks
   }

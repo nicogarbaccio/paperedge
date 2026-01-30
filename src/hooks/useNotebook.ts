@@ -13,6 +13,7 @@ export interface NotebookDetail {
   color: string | null
   created_at: string
   updated_at: string
+  unit_size: number
 }
 
 export interface Bet {

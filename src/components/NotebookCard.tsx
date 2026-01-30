@@ -89,7 +89,7 @@ export const NotebookCard = memo(function NotebookCard({ notebook, className, st
             </div>
 
             {/* Performance Metrics */}
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-4 gap-2 text-center">
               <div>
                 <div className="text-sm font-medium">
                   {notebook.bet_count || 0}
@@ -123,6 +123,17 @@ export const NotebookCard = memo(function NotebookCard({ notebook, className, st
                   {formatPercentage(notebook.roi || 0)}
                 </div>
                 <div className="text-xs text-text-secondary">ROI</div>
+              </div>
+              <div>
+                <div
+                  className={`text-sm font-medium ${getPLColorClass(
+                    notebook.units_won || 0
+                  )}`}
+                >
+                  {(notebook.units_won || 0) > 0 ? "+" : ""}
+                  {(notebook.units_won || 0).toFixed(1)}u
+                </div>
+                <div className="text-xs text-text-secondary">Units</div>
               </div>
             </div>
 
@@ -182,6 +193,7 @@ export const NotebookCard = memo(function NotebookCard({ notebook, className, st
     prevProps.notebook.win_rate === nextProps.notebook.win_rate &&
     prevProps.notebook.total_pl === nextProps.notebook.total_pl &&
     prevProps.notebook.roi === nextProps.notebook.roi &&
+    prevProps.notebook.units_won === nextProps.notebook.units_won &&
     prevProps.notebook.starting_bankroll === nextProps.notebook.starting_bankroll
     // display_order and updated_at are IGNORED
   );

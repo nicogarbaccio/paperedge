@@ -8,6 +8,8 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
+  TouchSensor,
+  MouseSensor,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -31,14 +33,28 @@ type SortOption = 'custom' | 'alphabetical' | 'newest' | 'oldest' | 'color';
 export function NotebooksPage() {
   const { notebooks, loading, error, createNotebook, reorderNotebooks } = useNotebooks();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [sortOption, setSortOption] = useState<SortOption>('custom');
+  
+  // Default to "newest" sort on mobile to prevent accidental drags, "custom" otherwise
+  const [sortOption, setSortOption] = useState<SortOption>(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return 'newest';
+    }
+    return 'custom';
+  });
+  
   const [activeId, setActiveId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {

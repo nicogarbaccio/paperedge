@@ -22,6 +22,7 @@ interface CreateNotebookDialogProps {
     description?: string;
     starting_bankroll: number;
     color?: string;
+    unit_size: number;
   }) => Promise<void>;
 }
 
@@ -35,6 +36,7 @@ export function CreateNotebookDialog({
     description: "",
     starting_bankroll: 1000,
     color: DEFAULT_NOTEBOOK_COLOR.id,
+    unit_size: 100,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +54,11 @@ export function CreateNotebookDialog({
       return;
     }
 
+    if (formData.unit_size <= 0) {
+      setError("Unit size must be greater than 0");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -61,6 +68,7 @@ export function CreateNotebookDialog({
         description: formData.description.trim() || undefined,
         starting_bankroll: formData.starting_bankroll,
         color: formData.color,
+        unit_size: formData.unit_size,
       });
 
       // Reset form and close dialog
@@ -69,6 +77,7 @@ export function CreateNotebookDialog({
         description: "",
         starting_bankroll: 1000,
         color: DEFAULT_NOTEBOOK_COLOR.id,
+        unit_size: 100,
       });
       onOpenChange(false);
     } catch (error: any) {
@@ -85,6 +94,7 @@ export function CreateNotebookDialog({
         description: "",
         starting_bankroll: 1000,
         color: DEFAULT_NOTEBOOK_COLOR.id,
+        unit_size: 100,
       });
       setError(null);
       onOpenChange(false);
@@ -137,35 +147,66 @@ export function CreateNotebookDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="starting_bankroll">Starting Bankroll *</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary">
-                $
-              </span>
-              <Input
-                id="starting_bankroll"
-                type="number"
-                min="1"
-                step="0.01"
-                placeholder="1000.00"
-                value={formData.starting_bankroll}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    starting_bankroll: parseFloat(e.target.value) || 0,
-                  }))
-                }
-                disabled={loading}
-                className="pl-8"
-                required
-                data-testid="notebook-starting-bankroll-input"
-              />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="starting_bankroll">Starting Bankroll *</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary">
+                  $
+                </span>
+                <Input
+                  id="starting_bankroll"
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  placeholder="1000.00"
+                  value={formData.starting_bankroll}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      starting_bankroll: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  disabled={loading}
+                  className="pl-8"
+                  required
+                  data-testid="notebook-starting-bankroll-input"
+                />
+              </div>
+              <p className="text-xs text-text-secondary">
+                Your initial bankroll amount.
+              </p>
             </div>
-            <p className="text-xs text-text-secondary">
-              Your hypothetical starting bankroll. This is the baseline to
-              measure how your strategy performs over time.
-            </p>
+
+            <div className="space-y-2">
+              <Label htmlFor="unit_size">Unit Size *</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary">
+                  $
+                </span>
+                <Input
+                  id="unit_size"
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  placeholder="100.00"
+                  value={formData.unit_size}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      unit_size: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  disabled={loading}
+                  className="pl-8"
+                  required
+                  data-testid="notebook-unit-size-input"
+                />
+              </div>
+              <p className="text-xs text-text-secondary">
+                Your standard bet size.
+              </p>
+            </div>
           </div>
 
           <div className="space-y-2">

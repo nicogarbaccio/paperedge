@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Grid3x3,
   List,
+  Copy,
 } from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useNotebook } from "@/hooks/useNotebook";
@@ -41,6 +42,7 @@ import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { CreateBetDialog } from "@/components/CreateBetDialog";
 import { EditBetDialog } from "@/components/EditBetDialog";
 import { EditNotebookDialog } from "@/components/EditNotebookDialog";
+import { DuplicateNotebookDialog } from "@/components/DuplicateNotebookDialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CalendarView } from "@/components/CalendarView";
 import { DayDetailsDrawer } from "@/components/DayDetailsDrawer";
@@ -90,12 +92,13 @@ export function NotebookDetailPage() {
     updateBetWithCustomData,
     refetch,
   } = useNotebook(isValidNotebookId ? id || "" : "");
-  const { updateNotebook, deleteNotebook, notebooks } = useNotebooks();
+  const { updateNotebook, deleteNotebook, duplicateNotebook, notebooks } = useNotebooks();
 
   const [isCreateBetDialogOpen, setIsCreateBetDialogOpen] = useState(false);
   const [isEditBetDialogOpen, setIsEditBetDialogOpen] = useState(false);
   const [isEditNotebookDialogOpen, setIsEditNotebookDialogOpen] =
     useState(false);
+  const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
   const [selectedBet, setSelectedBet] = useState<any>(null);
   const [activeView, setActiveView] = useState<"history" | "calendar">(
     "history"
@@ -264,9 +267,27 @@ export function NotebookDetailPage() {
     });
   };
 
+  const handleDuplicateNotebook = async (newName: string) => {
+    try {
+      const newNotebookId = await duplicateNotebook(id || "", newName);
+      toast({
+        title: "Notebook duplicated",
+        description: "Your notebook has been successfully duplicated.",
+        variant: "success",
+      });
+      navigate(`/notebooks/${newNotebookId}`);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to duplicate notebook",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleUpdateNotebook = async (
     id: string,
-    updates: { name?: string; description?: string | null; color?: string }
+    updates: { name?: string; description?: string | null; color?: string; unit_size?: number }
   ) => {
     await updateNotebook(id, updates);
     toast({
@@ -547,6 +568,8 @@ export function NotebookDetailPage() {
   const totalPL = calculateTotalPL(bets);
   const winRate = calculateWinRate(bets);
   const roi = calculateROI(bets);
+  const unitSize = notebook.unit_size || 100;
+  const unitsWon = totalPL / unitSize;
   const totalWagered = bets
     .filter((bet) => ["won", "lost"].includes(bet.status))
     .reduce((total, bet) => total + bet.wager_amount, 0);
@@ -574,6 +597,15 @@ export function NotebookDetailPage() {
           >
             <Pencil className="h-4 w-4 mr-2" />
             Edit Notebook
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsDuplicateDialogOpen(true)}
+            data-testid="duplicate-notebook-button"
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            Duplicate
           </Button>
           <Button
             variant="outline"
@@ -609,7 +641,7 @@ export function NotebookDetailPage() {
         </CardHeader>
         {bets.length > 0 && (
           <CardContent data-testid="notebook-detail-stats">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
               <div>
                 <p className="text-text-secondary text-sm">Total P&L</p>
                 <p
@@ -644,6 +676,21 @@ export function NotebookDetailPage() {
                 >
                   {roi > 0 ? "+" : ""}
                   {formatPercentage(roi)}
+                </p>
+              </div>
+              <div>
+                <p className="text-text-secondary text-sm">Units</p>
+                <p
+                  className={`text-lg font-semibold ${
+                    unitsWon > 0
+                      ? "text-profit"
+                      : unitsWon < 0
+                      ? "text-loss"
+                      : "text-text-primary"
+                  }`}
+                >
+                  {unitsWon > 0 ? "+" : ""}
+                  {unitsWon.toFixed(1)}u
                 </p>
               </div>
               <div>
@@ -1440,6 +1487,14 @@ export function NotebookDetailPage() {
         onOpenChange={setIsEditNotebookDialogOpen}
         notebook={notebook}
         onUpdateNotebook={handleUpdateNotebook}
+      />
+
+      {/* Duplicate Notebook Dialog */}
+      <DuplicateNotebookDialog
+        open={isDuplicateDialogOpen}
+        onOpenChange={setIsDuplicateDialogOpen}
+        originalName={notebook.name}
+        onDuplicateNotebook={handleDuplicateNotebook}
       />
 
       {/* Delete Confirmation Dialog */}
