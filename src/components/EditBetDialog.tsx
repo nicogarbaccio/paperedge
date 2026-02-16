@@ -49,6 +49,8 @@ interface EditBetDialogProps {
     updates: Partial<Bet>,
     customValues: Record<string, string>
   ) => Promise<void>;
+  // Whether to keep the dialog open after update (useful when editing from day drawer)
+  keepOpenAfterUpdate?: boolean;
 }
 
 export function EditBetDialog({
@@ -61,6 +63,7 @@ export function EditBetDialog({
   initialCustomValues = {},
   onUpsertBetCustomData,
   onUpdateBetWithCustomData,
+  keepOpenAfterUpdate = false,
 }: EditBetDialogProps) {
   const [formData, setFormData] = useState({
     date: "",
@@ -215,8 +218,10 @@ export function EditBetDialog({
         }
       }
 
-      // Close the modal
-      onOpenChange(false);
+      // Close the modal only if not configured to keep open
+      if (!keepOpenAfterUpdate) {
+        onOpenChange(false);
+      }
     } catch (error: any) {
       setError(error.message || "Failed to update bet");
     } finally {

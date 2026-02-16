@@ -184,10 +184,10 @@ export function NotebookDetailPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Reset pagination when filters, sort order, or items per page change
+  // Reset pagination when filters, sort order, items per page, or view mode change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchFilters, sortOrder, itemsPerPage]);
+  }, [searchFilters, sortOrder, itemsPerPage, isGroupedView]);
 
   // Form state for create bet dialog - persists across tab switches
   const [createBetFormData, setCreateBetFormData] = useState({
@@ -465,27 +465,21 @@ export function NotebookDetailPage() {
   );
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredBets.length / itemsPerPage);
-  const paginatedBets = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredBets.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredBets, currentPage, itemsPerPage]);
-
-  // Group bets by game (using paginated bets)
-  const { grouped: groupedBets, ungrouped: ungroupedBets } = useMemo(() => {
-    return groupBetsByGame(paginatedBets, betCustomData, customColumns || []);
-  }, [paginatedBets, betCustomData, customColumns]);
+  // Group ALL filtered bets first (before pagination) for grouped view
+  const { grouped: allGroupedBets, ungrouped: allUngroupedBets } = useMemo(() => {
+    return groupBetsByGame(filteredBets, betCustomData, customColumns || []);
+  }, [filteredBets, betCustomData, customColumns]);
 
   // Create a merged array of groups and individual bets, sorted together
   type MergedItem =
-    | { type: 'group'; data: typeof groupedBets[0]; sortDate: string }
-    | { type: 'bet'; data: typeof ungroupedBets[0]; sortDate: string };
+    | { type: 'group'; data: typeof allGroupedBets[0]; sortDate: string }
+    | { type: 'bet'; data: typeof allUngroupedBets[0]; sortDate: string };
 
-  const mergedBetsAndGroups = useMemo(() => {
+  const allMergedBetsAndGroups = useMemo(() => {
     const merged: MergedItem[] = [];
 
     // Add all groups
-    groupedBets.forEach(group => {
+    allGroupedBets.forEach(group => {
       merged.push({
         type: 'group',
         data: group,
@@ -494,7 +488,7 @@ export function NotebookDetailPage() {
     });
 
     // Add all ungrouped bets
-    ungroupedBets.forEach(bet => {
+    allUngroupedBets.forEach(bet => {
       merged.push({
         type: 'bet',
         data: bet,
@@ -522,7 +516,24 @@ export function NotebookDetailPage() {
     });
 
     return merged;
-  }, [groupedBets, ungroupedBets, sortOrder]);
+  }, [allGroupedBets, allUngroupedBets, sortOrder]);
+
+  // Paginate the merged groups and individual bets for grouped view
+  const mergedBetsAndGroups = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return allMergedBetsAndGroups.slice(startIndex, startIndex + itemsPerPage);
+  }, [allMergedBetsAndGroups, currentPage, itemsPerPage]);
+
+  // Paginate filtered bets for flat view
+  const paginatedBets = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredBets.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredBets, currentPage, itemsPerPage]);
+
+  // Calculate total pages based on view mode
+  const totalPages = isGroupedView
+    ? Math.ceil(allMergedBetsAndGroups.length / itemsPerPage)
+    : Math.ceil(filteredBets.length / itemsPerPage);
 
   // Toggle group expansion
   const toggleGroup = (key: string) => {
@@ -861,7 +872,7 @@ export function NotebookDetailPage() {
                   </div>
 
                   {/* Grouped View Toggle */}
-                  {groupedBets.length > 0 && (
+                  {allGroupedBets.length > 0 && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -1518,10 +1529,12 @@ export function NotebookDetailPage() {
         open={isCreateBetDialogOpen}
         onOpenChange={(open) => {
           setIsCreateBetDialogOpen(open);
-          // If closing the create dialog and we were adding from day drawer, reopen the day drawer
+          // If closing the create dialog and we were adding from day drawer, reopen the day drawer after a brief delay
           if (!open && isAddingFromDayDrawer) {
             setIsAddingFromDayDrawer(false);
-            setIsDayDetailsOpen(true);
+            setTimeout(() => {
+              setIsDayDetailsOpen(true);
+            }, 150);
           }
         }}
         onCreateBet={handleCreateBet}
@@ -1537,10 +1550,9 @@ export function NotebookDetailPage() {
         open={isEditBetDialogOpen}
         onOpenChange={(open) => {
           setIsEditBetDialogOpen(open);
-          // If closing the edit dialog and we were editing from day drawer, reopen the day drawer
+          // Reset flag when closing manually (e.g., clicking X or outside)
           if (!open && isEditingFromDayDrawer) {
             setIsEditingFromDayDrawer(false);
-            setIsDayDetailsOpen(true);
           }
         }}
         bet={selectedBet}
@@ -1552,6 +1564,7 @@ export function NotebookDetailPage() {
         }
         onUpsertBetCustomData={upsertBetCustomData}
         onUpdateBetWithCustomData={handleUpdateBetWithCustomData}
+        keepOpenAfterUpdate={isEditingFromDayDrawer}
       />
 
       {/* Edit Notebook Dialog */}
@@ -1590,7 +1603,6 @@ export function NotebookDetailPage() {
         profit={selectedDayProfit}
         onAddBet={handleAddBetForDay}
         onEditBet={(bet) => {
-          setIsDayDetailsOpen(false);
           setIsEditingFromDayDrawer(true);
           handleEditBet(bet);
         }}

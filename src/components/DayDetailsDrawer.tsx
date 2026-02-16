@@ -63,11 +63,41 @@ export function DayDetailsDrawer({
     });
   };
 
+  // Helper to get game name from bet custom data
+  const getGameName = (betId: string): string | null => {
+    const gameColumn = customColumns.find(col => {
+      const name = col.column_name.toLowerCase();
+      return name === 'game' ||
+             name === 'matchup' ||
+             name === 'teams' ||
+             name === 'vs' ||
+             name === 'match' ||
+             name === 'opponent';
+    });
+
+    if (!gameColumn) return null;
+
+    const gameValue = betCustomData[betId]?.[gameColumn.id];
+    return gameValue && gameValue.trim() ? gameValue.trim() : null;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="sm:max-w-[600px] max-h-[85vh] flex flex-col"
         data-testid="day-details-drawer"
+        onInteractOutside={(e) => {
+          // Prevent dialog from closing when clicking on toast notifications or other dialogs
+          const target = e.target as HTMLElement;
+          if (target.closest('[data-testid="toast-container"]') ||
+              target.closest('[role="status"]') ||
+              target.closest('[data-radix-toast-viewport]') ||
+              target.closest('[role="dialog"]') ||
+              target.closest('[data-testid="edit-bet-dialog"]') ||
+              target.closest('[data-testid="create-bet-dialog"]')) {
+            e.preventDefault();
+          }
+        }}
       >
         <DialogHeader>
           <div className="flex items-center justify-between pr-8">
@@ -153,7 +183,9 @@ export function DayDetailsDrawer({
                     {/* Group bets (collapsible) */}
                     {isExpanded && (
                       <div className="ml-6 space-y-2">
-                        {group.bets.map((bet) => (
+                        {group.bets.map((bet) => {
+                          const gameName = getGameName(bet.id);
+                          return (
                           <div
                             key={bet.id}
                             className="p-3 border border-border rounded-lg hover:border-accent/50 hover:bg-surface-secondary/30 transition-all cursor-pointer bg-surface"
@@ -162,6 +194,11 @@ export function DayDetailsDrawer({
                           >
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex-1 min-w-0">
+                                {gameName && (
+                                  <p className="text-xs text-accent font-medium mb-1">
+                                    {gameName}
+                                  </p>
+                                )}
                                 <h4 className="font-medium text-text-primary text-sm">
                                   {bet.description}
                                 </h4>
@@ -213,7 +250,8 @@ export function DayDetailsDrawer({
                               </div>
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -228,7 +266,9 @@ export function DayDetailsDrawer({
                       <h5 className="text-xs font-medium text-text-secondary mb-2">Individual Bets</h5>
                     </div>
                   )}
-                  {ungroupedBets.map((bet) => (
+                  {ungroupedBets.map((bet) => {
+                    const gameName = getGameName(bet.id);
+                    return (
                     <div
                       key={bet.id}
                       className="p-4 border border-border rounded-lg hover:border-accent/50 hover:bg-surface-secondary/30 transition-all cursor-pointer bg-surface"
@@ -237,6 +277,11 @@ export function DayDetailsDrawer({
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1 min-w-0">
+                          {gameName && (
+                            <p className="text-xs text-accent font-medium mb-1">
+                              {gameName}
+                            </p>
+                          )}
                           <h4 className="font-medium text-text-primary text-sm">
                             {bet.description}
                           </h4>
@@ -288,7 +333,8 @@ export function DayDetailsDrawer({
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </>
               )}
             </div>
