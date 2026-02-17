@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+// Auth tests must NOT use the shared authenticated state
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test.describe('Reset Password Page', () => {
   test('should handle invalid link state correctly', async ({ page }) => {
     await page.goto('/reset-password');

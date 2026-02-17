@@ -17,6 +17,7 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   variant?: "default" | "destructive";
   onConfirm: () => void;
+  testId?: string;
 }
 
 export function ConfirmDialog({
@@ -28,6 +29,7 @@ export function ConfirmDialog({
   cancelLabel = "Cancel",
   variant = "default",
   onConfirm,
+  testId,
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -46,6 +48,7 @@ export function ConfirmDialog({
               onConfirm();
               onOpenChange(false);
             }}
+            data-testid={testId ? `${testId}-confirm-button` : undefined}
           >
             {confirmLabel}
           </Button>

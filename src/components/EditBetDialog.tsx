@@ -110,40 +110,44 @@ export function EditBetDialog({
     [formData.odds, formData.wager_amount]
   );
 
-  // Track when dialog transitions from closed to open
-  // This is the ONLY time we should initialize from bet prop
+  // Track when dialog transitions from closed to open OR when bet changes while open
   useLayoutEffect(() => {
-    // Dialog is opening (transition from false to true)
-    if (open && !dialogOpenedRef.current && bet) {
-      dialogOpenedRef.current = true;
+    // Dialog is opening (transition from false to true) OR bet changed while dialog is open
+    if (open && bet) {
+      const isBetChanged = betSnapshot.current && betSnapshot.current.id !== bet.id;
+      const isOpening = !dialogOpenedRef.current;
 
-      // Take a snapshot of the bet data - this will never change until dialog closes
-      betSnapshot.current = { ...bet };
+      if (isOpening || isBetChanged) {
+        dialogOpenedRef.current = true;
 
-      // Mark as initializing to block any auto-calculations
-      isInitializing.current = true;
+        // Take a snapshot of the bet data - this will never change until dialog closes or bet changes
+        betSnapshot.current = { ...bet };
 
-      // Update current bet with snapshot
-      setCurrentBet(betSnapshot.current);
+        // Mark as initializing to block any auto-calculations
+        isInitializing.current = true;
 
-      // Initialize form data from the snapshot
-      setFormData({
-        date: betSnapshot.current.date,
-        description: betSnapshot.current.description,
-        odds: betSnapshot.current.odds,
-        wager_amount: betSnapshot.current.wager_amount,
-        status: betSnapshot.current.status,
-        return_amount: betSnapshot.current.return_amount || 0,
-      });
-      setError(null);
-      setShowDeleteConfirm(false);
-      setCustomValues(initialCustomValues || {});
-      setUserModifiedReturn(false);
+        // Update current bet with snapshot
+        setCurrentBet(betSnapshot.current);
 
-      // Unblock after a single frame
-      requestAnimationFrame(() => {
-        isInitializing.current = false;
-      });
+        // Initialize form data from the snapshot
+        setFormData({
+          date: betSnapshot.current.date,
+          description: betSnapshot.current.description,
+          odds: betSnapshot.current.odds,
+          wager_amount: betSnapshot.current.wager_amount,
+          status: betSnapshot.current.status,
+          return_amount: betSnapshot.current.return_amount || 0,
+        });
+        setError(null);
+        setShowDeleteConfirm(false);
+        setCustomValues(initialCustomValues || {});
+        setUserModifiedReturn(false);
+
+        // Unblock after a single frame
+        requestAnimationFrame(() => {
+          isInitializing.current = false;
+        });
+      }
     }
 
     // Dialog is closing (transition from true to false)

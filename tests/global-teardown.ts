@@ -1,8 +1,8 @@
 /**
  * Global teardown for Playwright tests
  *
- * This file runs once after all tests have completed.
- * Cleans up test data from Supabase to prevent database bloat.
+ * Cleans up test data from Supabase after all tests complete.
+ * Authenticates as the test user first so RLS policies allow deletion.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -12,6 +12,8 @@ async function globalTeardown() {
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+  const testEmail = process.env.TEST_USER_EMAIL || 'test@example.com';
+  const testPassword = process.env.TEST_USER_PASSWORD || 'test123456';
 
   if (!supabaseUrl || !supabaseKey) {
     console.warn('Skipping cleanup: Supabase credentials not found');
@@ -21,28 +23,22 @@ async function globalTeardown() {
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get test user email from environment
-    const testUserEmail = process.env.TEST_USER_EMAIL || 'test@example.com';
+    // Authenticate as the test user so RLS policies allow deletion
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: testEmail,
+      password: testPassword,
+    });
 
-    // Get user ID for the test user
-    const { data: userData, error: userError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', testUserEmail)
-      .single();
-
-    if (userError || !userData) {
-      console.warn('Test user not found, skipping cleanup');
+    if (authError) {
+      console.warn('Could not authenticate test user, skipping cleanup:', authError.message);
       return;
     }
-
-    const userId = userData.id;
 
     // Delete notebooks (cascading will delete related bets, custom columns, etc.)
     const { error: notebooksError } = await supabase
       .from('notebooks')
       .delete()
-      .eq('user_id', userId);
+      .neq('id', '00000000-0000-0000-0000-000000000000'); // delete all rows for authenticated user
 
     if (notebooksError) {
       console.error('Error cleaning up notebooks:', notebooksError);
@@ -54,7 +50,7 @@ async function globalTeardown() {
     const { error: accountsError } = await supabase
       .from('accounts')
       .delete()
-      .eq('user_id', userId);
+      .neq('id', '00000000-0000-0000-0000-000000000000');
 
     if (accountsError) {
       console.error('Error cleaning up accounts:', accountsError);
@@ -62,6 +58,7 @@ async function globalTeardown() {
       console.log('Successfully cleaned up test accounts');
     }
 
+    await supabase.auth.signOut();
     console.log('Global teardown: Complete');
   } catch (error) {
     console.error('Error during global teardown:', error);

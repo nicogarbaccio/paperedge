@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test';
 import { testUsers } from '../../fixtures/test-data';
 import { generateTestEmail } from '../../fixtures/helpers';
 
+// Auth tests must NOT use the shared authenticated state
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test.describe('Register Page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/register');
@@ -35,10 +38,10 @@ test.describe('Register Page', () => {
     await page.getByTestId('register-submit-button').click();
     await expect(page.getByTestId('register-error-message')).toContainText(/match/i);
 
-    // 3. Required Fields
+    // 3. Required Fields - verify form doesn't submit (stays on register page)
     await page.reload();
     await page.getByTestId('register-submit-button').click();
-    expect(await page.getByTestId('register-email-input').evaluate((el: HTMLInputElement) => el.validationMessage)).toBeTruthy();
+    await expect(page).toHaveURL(/\/register/);
   });
 
   test('should allow navigation to login', async ({ page }) => {

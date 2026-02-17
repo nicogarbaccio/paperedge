@@ -983,7 +983,9 @@ export function NotebookDetailPage() {
                         {/* Group Bets (Collapsible) */}
                         {isExpanded && (
                           <div className="ml-8 space-y-3" data-testid="bet-group-bets">
-                            {group.bets.map((bet) => (
+                            {group.bets.map((bet) => {
+                              const betGameName = getGameNameFromBet(bet);
+                              return (
                               <div
                                 key={bet.id}
                                 data-testid="bet-card"
@@ -992,6 +994,11 @@ export function NotebookDetailPage() {
                               >
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1 min-w-0">
+                                    {betGameName && (
+                                      <p className="text-xs text-accent font-medium mb-1">
+                                        {betGameName}
+                                      </p>
+                                    )}
                                     <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
                                       {bet.description}
                                     </h3>
@@ -1010,7 +1017,7 @@ export function NotebookDetailPage() {
                                 {customColumns && customColumns.length > 0 && (
                                   <div className="space-y-2">
                                     {(() => {
-                                      // Get all custom fields with values
+                                      // Get non-game custom fields with values
                                       const fieldsWithValues = customColumns
                                         .filter(
                                           (col, idx, arr) =>
@@ -1035,45 +1042,25 @@ export function NotebookDetailPage() {
                                           (field): field is NonNullable<typeof field> =>
                                             field !== null
                                         )
+                                        .filter(
+                                          (field) => field.category !== "game"
+                                        )
                                         .sort(
                                           (a, b) =>
                                             getCustomFieldPriority(a.category) -
                                             getCustomFieldPriority(b.category)
                                         );
 
+                                      const badgeFields = fieldsWithValues.filter((f) => f.category !== "notes");
+                                      const notesFields = fieldsWithValues.filter((f) => f.category === "notes");
+
                                       if (fieldsWithValues.length === 0) return null;
 
-                                      // Separate primary (game) fields from others
-                                      const primaryFields = fieldsWithValues.filter(
-                                        (field) => field.category === "game"
-                                      );
-                                      const secondaryFields = fieldsWithValues.filter(
-                                        (field) => field.category !== "game"
-                                      );
-
                                       return (
-                                        <div className="space-y-2">
-                                          {/* Primary fields (games) - larger and more prominent */}
-                                          {primaryFields.length > 0 && (
-                                            <div className="flex flex-wrap gap-2">
-                                              {primaryFields.map((field) => (
-                                                <span
-                                                  key={field.id}
-                                                  className={getCustomFieldStyles(
-                                                    field.category,
-                                                    true
-                                                  )}
-                                                >
-                                                  {field.value}
-                                                </span>
-                                              ))}
-                                            </div>
-                                          )}
-
-                                          {/* Secondary fields - smaller, organized by category */}
-                                          {secondaryFields.length > 0 && (
+                                        <>
+                                          {badgeFields.length > 0 && (
                                             <div className="flex flex-wrap gap-1.5">
-                                              {secondaryFields.map((field) => (
+                                              {badgeFields.map((field) => (
                                                 <span
                                                   key={field.id}
                                                   className={getCustomFieldStyles(
@@ -1089,7 +1076,16 @@ export function NotebookDetailPage() {
                                               ))}
                                             </div>
                                           )}
-                                        </div>
+                                          {notesFields.map((field) => (
+                                            <p
+                                              key={field.id}
+                                              className="text-xs text-text-secondary italic leading-relaxed"
+                                              title={capitalizeFirst(field.column_name)}
+                                            >
+                                              {field.value}
+                                            </p>
+                                          ))}
+                                        </>
                                       );
                                     })()}
                                   </div>
@@ -1138,7 +1134,8 @@ export function NotebookDetailPage() {
                                   </div>
                                 </div>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -1160,6 +1157,11 @@ export function NotebookDetailPage() {
                             className="flex items-start justify-between"
                           >
                             <div className="flex-1 min-w-0">
+                              {gameName && (
+                                <p className="text-xs text-accent font-medium mb-1">
+                                  {gameName}
+                                </p>
+                              )}
                               <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
                                 {bet.description}
                               </h3>
@@ -1178,7 +1180,7 @@ export function NotebookDetailPage() {
                           {customColumns && customColumns.length > 0 && (
                             <div className="space-y-2">
                               {(() => {
-                                // Get all custom fields with values
+                                // Get non-game custom fields with values
                                 const fieldsWithValues = customColumns
                                   .filter(
                                     (col, idx, arr) =>
@@ -1203,45 +1205,25 @@ export function NotebookDetailPage() {
                                     (field): field is NonNullable<typeof field> =>
                                       field !== null
                                   )
+                                  .filter(
+                                    (field) => field.category !== "game"
+                                  )
                                   .sort(
                                     (a, b) =>
                                       getCustomFieldPriority(a.category) -
                                       getCustomFieldPriority(b.category)
                                   );
 
+                                const badgeFields = fieldsWithValues.filter((f) => f.category !== "notes");
+                                const notesFields = fieldsWithValues.filter((f) => f.category === "notes");
+
                                 if (fieldsWithValues.length === 0) return null;
 
-                                // Separate primary (game) fields from others
-                                const primaryFields = fieldsWithValues.filter(
-                                  (field) => field.category === "game"
-                                );
-                                const secondaryFields = fieldsWithValues.filter(
-                                  (field) => field.category !== "game"
-                                );
-
                                 return (
-                                  <div className="space-y-2">
-                                    {/* Primary fields (games) - larger and more prominent */}
-                                    {primaryFields.length > 0 && (
-                                      <div className="flex flex-wrap gap-2">
-                                        {primaryFields.map((field) => (
-                                          <span
-                                            key={field.id}
-                                            className={getCustomFieldStyles(
-                                              field.category,
-                                              true
-                                            )}
-                                          >
-                                            {field.value}
-                                          </span>
-                                        ))}
-                                      </div>
-                                    )}
-
-                                    {/* Secondary fields - smaller, organized by category */}
-                                    {secondaryFields.length > 0 && (
+                                  <>
+                                    {badgeFields.length > 0 && (
                                       <div className="flex flex-wrap gap-1.5">
-                                        {secondaryFields.map((field) => (
+                                        {badgeFields.map((field) => (
                                           <span
                                             key={field.id}
                                             className={getCustomFieldStyles(
@@ -1257,7 +1239,16 @@ export function NotebookDetailPage() {
                                         ))}
                                       </div>
                                     )}
-                                  </div>
+                                    {notesFields.map((field) => (
+                                      <p
+                                        key={field.id}
+                                        className="text-xs text-text-secondary italic leading-relaxed"
+                                        title={capitalizeFirst(field.column_name)}
+                                      >
+                                        {field.value}
+                                      </p>
+                                    ))}
+                                  </>
                                 );
                               })()}
                             </div>
@@ -1346,6 +1337,11 @@ export function NotebookDetailPage() {
                         className="flex items-start justify-between"
                       >
                         <div className="flex-1 min-w-0">
+                          {gameName && (
+                            <p className="text-xs text-accent font-medium mb-1">
+                              {gameName}
+                            </p>
+                          )}
                           <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
                             {bet.description}
                           </h3>
@@ -1364,7 +1360,7 @@ export function NotebookDetailPage() {
                       {customColumns && customColumns.length > 0 && (
                         <div className="space-y-2">
                           {(() => {
-                            // Get all custom fields with values
+                            // Get non-game custom fields with values
                             const fieldsWithValues = customColumns
                               .filter(
                                 (col, idx, arr) =>
@@ -1389,45 +1385,25 @@ export function NotebookDetailPage() {
                                 (field): field is NonNullable<typeof field> =>
                                   field !== null
                               )
+                              .filter(
+                                (field) => field.category !== "game"
+                              )
                               .sort(
                                 (a, b) =>
                                   getCustomFieldPriority(a.category) -
                                   getCustomFieldPriority(b.category)
                               );
 
+                            const badgeFields = fieldsWithValues.filter((f) => f.category !== "notes");
+                            const notesFields = fieldsWithValues.filter((f) => f.category === "notes");
+
                             if (fieldsWithValues.length === 0) return null;
 
-                            // Separate primary (game) fields from others
-                            const primaryFields = fieldsWithValues.filter(
-                              (field) => field.category === "game"
-                            );
-                            const secondaryFields = fieldsWithValues.filter(
-                              (field) => field.category !== "game"
-                            );
-
                             return (
-                              <div className="space-y-2">
-                                {/* Primary fields (games) - larger and more prominent */}
-                                {primaryFields.length > 0 && (
-                                  <div className="flex flex-wrap gap-2">
-                                    {primaryFields.map((field) => (
-                                      <span
-                                        key={field.id}
-                                        className={getCustomFieldStyles(
-                                          field.category,
-                                          true
-                                        )}
-                                      >
-                                        {field.value}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {/* Secondary fields - smaller, organized by category */}
-                                {secondaryFields.length > 0 && (
+                              <>
+                                {badgeFields.length > 0 && (
                                   <div className="flex flex-wrap gap-1.5">
-                                    {secondaryFields.map((field) => (
+                                    {badgeFields.map((field) => (
                                       <span
                                         key={field.id}
                                         className={getCustomFieldStyles(
@@ -1443,7 +1419,16 @@ export function NotebookDetailPage() {
                                     ))}
                                   </div>
                                 )}
-                              </div>
+                                {notesFields.map((field) => (
+                                  <p
+                                    key={field.id}
+                                    className="text-xs text-text-secondary italic leading-relaxed"
+                                    title={capitalizeFirst(field.column_name)}
+                                  >
+                                    {field.value}
+                                  </p>
+                                ))}
+                              </>
                             );
                           })()}
                         </div>
@@ -1550,9 +1535,10 @@ export function NotebookDetailPage() {
         open={isEditBetDialogOpen}
         onOpenChange={(open) => {
           setIsEditBetDialogOpen(open);
-          // Reset flag when closing manually (e.g., clicking X or outside)
-          if (!open && isEditingFromDayDrawer) {
+          // Reset flag and selected bet when closing
+          if (!open) {
             setIsEditingFromDayDrawer(false);
+            setSelectedBet(null);
           }
         }}
         bet={selectedBet}
@@ -1564,7 +1550,6 @@ export function NotebookDetailPage() {
         }
         onUpsertBetCustomData={upsertBetCustomData}
         onUpdateBetWithCustomData={handleUpdateBetWithCustomData}
-        keepOpenAfterUpdate={isEditingFromDayDrawer}
       />
 
       {/* Edit Notebook Dialog */}
@@ -1592,6 +1577,7 @@ export function NotebookDetailPage() {
         confirmLabel="Delete"
         variant="destructive"
         onConfirm={handleDeleteNotebook}
+        testId="confirm-dialog"
       />
 
       {/* Day Details Drawer */}

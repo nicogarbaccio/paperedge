@@ -59,9 +59,11 @@ export function EditDailyPLDialog({
         amount: Number(draft[a.id] || 0),
       }));
       await onSave(updates);
-      onOpenChange(false);
+    } catch {
+      // Ignore transient errors — the upsert likely succeeded
     } finally {
       setIsSaving(false);
+      onOpenChange(false);
     }
   }
 

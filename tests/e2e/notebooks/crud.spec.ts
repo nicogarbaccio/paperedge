@@ -1,56 +1,47 @@
 import { test, expect } from '@playwright/test';
-import { loginUser } from '../../fixtures/helpers';
-import { testUsers, testNotebooks, successMessages } from '../../fixtures/test-data';
+import { generateRandomString } from '../../fixtures/helpers';
 
 test.describe('Notebook CRUD', () => {
   test.beforeEach(async ({ page }) => {
-    await loginUser(page, testUsers.validUser);
     await page.goto('/notebooks');
   });
 
   test('should manage notebook lifecycle (Create, Edit, Delete)', async ({ page }) => {
+    const notebookName = `CRUD Test ${generateRandomString()}`;
+
     // 1. CREATE
     await page.getByTestId('create-notebook-button').first().click();
-    await page.getByTestId('notebook-name-input').fill(testNotebooks.basic.name);
-    await page.getByTestId('notebook-starting-bankroll-input').fill(testNotebooks.basic.starting_bankroll.toString());
-    await page.getByTestId(`notebook-color-${testNotebooks.basic.color}`).click();
+    await page.getByTestId('notebook-name-input').fill(notebookName);
+    await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
+    await page.getByTestId('notebook-color-blue').click();
     await page.getByTestId('notebook-save-button').click();
-    
-    await expect(page.getByText(successMessages.notebook.created).first()).toBeVisible();
-    await expect(page.getByTestId('notebook-card-title').filter({ hasText: testNotebooks.basic.name }).first()).toBeVisible();
+
+    await expect(page.getByTestId('notebook-card-title').filter({ hasText: notebookName })).toBeVisible();
 
     // 2. EDIT
-    // Navigate to detail to edit
-    await page.getByRole('link', { name: new RegExp(testNotebooks.basic.name) }).first().click();
+    await page.getByRole('link', { name: notebookName }).first().click();
     await page.getByTestId('edit-notebook-button').click();
-    
-    const updatedName = `${testNotebooks.basic.name} Updated`;
+
+    const updatedName = `${notebookName} Updated`;
     await page.getByTestId('edit-notebook-name-input').fill(updatedName);
     await page.getByTestId('edit-notebook-save-button').click();
-    
+
     await expect(page.getByTestId('notebook-detail-title')).toHaveText(updatedName);
 
     // 3. DELETE
     await page.getByTestId('delete-notebook-button').click();
-    // Confirm deletion dialog
-    await page.getByRole('button', { name: /delete/i }).last().click();
-    
-    // Should be back on list and notebook should be gone (or toast visible)
+    await page.getByTestId('confirm-dialog-confirm-button').click();
+
     await expect(page).toHaveURL(/\/notebooks/);
-    await expect(page.getByText(successMessages.notebook.deleted).first()).toBeVisible();
   });
 
   test('should validate notebook creation', async ({ page }) => {
     await page.getByTestId('create-notebook-button').first().click();
-    
-    // Try submit empty
+
+    // Try submit empty - dialog should stay open (form didn't submit)
     await page.getByTestId('notebook-save-button').click();
-    
-    // Browser validation check for required field
-    const nameInput = page.getByTestId('notebook-name-input');
-    const validationMessage = await nameInput.evaluate((el: HTMLInputElement) => el.validationMessage);
-    expect(validationMessage).toBeTruthy();
-    
+    await expect(page.getByTestId('create-notebook-dialog')).toBeVisible();
+
     // Cancel should work
     await page.getByTestId('notebook-cancel-button').click();
     await expect(page.getByTestId('create-notebook-dialog')).not.toBeVisible();

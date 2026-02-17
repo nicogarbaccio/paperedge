@@ -1,17 +1,17 @@
 import { test, expect } from '@playwright/test';
-import { loginUser } from '../../fixtures/helpers';
-import { testUsers } from '../../fixtures/test-data';
+import { generateRandomString } from '../../fixtures/helpers';
 
 test.describe('Custom Columns', () => {
   test.beforeEach(async ({ page }) => {
-    await loginUser(page, testUsers.validUser);
     await page.goto('/notebooks');
-    
+
+    const notebookName = `Custom Cols ${generateRandomString()}`;
+
     await page.getByTestId('create-notebook-button').first().click();
-    await page.getByTestId('notebook-name-input').fill('Custom Cols Notebook');
+    await page.getByTestId('notebook-name-input').fill(notebookName);
     await page.getByTestId('notebook-starting-bankroll-input').fill('1000');
     await page.getByTestId('notebook-save-button').click();
-    await page.getByRole('link', { name: /Custom Cols Notebook/ }).first().click();
+    await page.getByRole('link', { name: notebookName }).first().click();
   });
 
   test('should manage custom fields in bet dialog', async ({ page }) => {

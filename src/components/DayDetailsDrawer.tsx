@@ -82,7 +82,7 @@ export function DayDetailsDrawer({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent
         className="sm:max-w-[600px] max-h-[85vh] flex flex-col"
         data-testid="day-details-drawer"
