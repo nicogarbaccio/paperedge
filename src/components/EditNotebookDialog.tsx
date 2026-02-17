@@ -191,7 +191,7 @@ export function EditNotebookDialog({
                   key={color.id}
                   type="button"
                   className={cn(
-                    "w-8 h-8 rounded-full border-2 transition-all hover:scale-110",
+                    "w-8 h-8 rounded-full border-2 transition-transform hover:scale-110",
                     color.preview,
                     formData.color === color.id
                       ? "border-text-primary ring-2 ring-accent ring-offset-2"
