@@ -81,8 +81,8 @@ export function LoginPage() {
       });
       if (error) throw error;
       setResetSent(true);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setResetLoading(false);
     }

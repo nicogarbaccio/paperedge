@@ -171,14 +171,23 @@ export function useFeatureRequests(): UseFeatureRequestsReturn {
           return false;
         }
 
-        // Increment vote count
-        await supabase
-          .from("feature_requests")
-          .update({ 
-            vote_count: requests.find(r => r.id === requestId)?.vote_count ? 
-              requests.find(r => r.id === requestId)!.vote_count + 1 : 1
-          })
-          .eq("id", requestId);
+        // Increment vote count using RPC to avoid race conditions
+        const { error: incrementError } = await supabase.rpc(
+          "increment_vote_count",
+          { request_id: requestId }
+        );
+        if (incrementError) {
+          // Fallback: fetch current count and update
+          const { data: current } = await supabase
+            .from("feature_requests")
+            .select("vote_count")
+            .eq("id", requestId)
+            .single();
+          await supabase
+            .from("feature_requests")
+            .update({ vote_count: (current?.vote_count ?? 0) + 1 })
+            .eq("id", requestId);
+        }
 
         // Update local state
         setRequests((prev) =>
@@ -223,14 +232,23 @@ export function useFeatureRequests(): UseFeatureRequestsReturn {
           return false;
         }
 
-        // Decrement vote count
-        await supabase
-          .from("feature_requests")
-          .update({ 
-            vote_count: requests.find(r => r.id === requestId)?.vote_count ? 
-              Math.max(0, requests.find(r => r.id === requestId)!.vote_count - 1) : 0
-          })
-          .eq("id", requestId);
+        // Decrement vote count using RPC to avoid race conditions
+        const { error: decrementError } = await supabase.rpc(
+          "decrement_vote_count",
+          { request_id: requestId }
+        );
+        if (decrementError) {
+          // Fallback: fetch current count and update
+          const { data: current } = await supabase
+            .from("feature_requests")
+            .select("vote_count")
+            .eq("id", requestId)
+            .single();
+          await supabase
+            .from("feature_requests")
+            .update({ vote_count: Math.max(0, (current?.vote_count ?? 1) - 1) })
+            .eq("id", requestId);
+        }
 
         // Update local state
         setRequests((prev) =>

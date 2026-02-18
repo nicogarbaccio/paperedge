@@ -30,6 +30,7 @@ import SupportPage from "./pages/SupportPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import { toast } from "@/hooks/useToast";
 import { PageLoading } from "./components/ui/Spinner";
+import useAdminRole from "./hooks/useAdminRole";
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -41,6 +42,26 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return <Navigate to="/login" />;
+  }
+
+  return <>{children}</>;
+}
+
+// Admin route wrapper - requires both authentication and admin role
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuthStore();
+  const { isAdmin, isLoading: isAdminLoading } = useAdminRole();
+
+  if (loading || isAdminLoading) {
+    return <PageLoading message="Checking permissions..." />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/dashboard" />;
   }
 
   return <>{children}</>;
@@ -62,6 +83,12 @@ function App() {
     const refreshToken = urlParams.get("refresh_token");
 
     isOAuthRedirect.current = !!(accessToken || refreshToken);
+
+    // Clean sensitive tokens from URL to prevent exposure in browser history/logs
+    if (accessToken || refreshToken) {
+      const cleanUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -166,7 +193,7 @@ function App() {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="faqs" element={<FAQsPage />} />
           <Route path="support" element={<SupportPage />} />
-          <Route path="admin" element={<AdminDashboard />} />
+          <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         </Route>
       </Routes>
       <Toaster />

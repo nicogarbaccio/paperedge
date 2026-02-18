@@ -70,19 +70,23 @@ export function useAccounts() {
   }
 
   async function updateAccount(id: string, updates: Partial<Pick<Account, 'name' | 'kind'>>) {
+    if (!user?.id) throw new Error('Not authenticated')
     const { error } = await supabase
       .from('accounts')
       .update(updates)
       .eq('id', id)
+      .eq('user_id', user.id)
     if (error) throw error
     await fetchAccounts()
   }
 
   async function deleteAccount(id: string) {
+    if (!user?.id) throw new Error('Not authenticated')
     const { error } = await supabase
       .from('accounts')
       .delete()
       .eq('id', id)
+      .eq('user_id', user.id)
     if (error) throw error
     await fetchAccounts()
   }
