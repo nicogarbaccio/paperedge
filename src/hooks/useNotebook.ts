@@ -375,6 +375,47 @@ export function useNotebook(notebookId: string) {
     }
   }
 
+  const bulkUpdateBets = async (betIds: string[], updates: Partial<Bet>) => {
+    try {
+      if (betIds.length === 0) return
+
+      const { error } = await supabase
+        .from('bets')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .in('id', betIds)
+      if (error) throw error
+
+      await fetchNotebook()
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Operation failed"
+      throw new Error(errorMessage)
+    }
+  }
+
+  const bulkUpsertCustomData = async (betIds: string[], columnId: string, value: string) => {
+    try {
+      const rows = betIds.map((betId) => ({
+        bet_id: betId,
+        column_id: columnId,
+        value,
+      }))
+      if (rows.length === 0) return
+
+      const { error } = await supabase
+        .from('bet_custom_data')
+        .upsert(rows, { onConflict: 'bet_id,column_id' })
+      if (error) throw error
+
+      await fetchNotebook()
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Operation failed"
+      throw new Error(errorMessage)
+    }
+  }
+
   const deleteBet = async (betId: string) => {
     try {
       const { error } = await supabase
@@ -423,6 +464,8 @@ export function useNotebook(notebookId: string) {
     deleteBet,
     upsertBetCustomData,
     updateBetWithCustomData,
+    bulkUpdateBets,
+    bulkUpsertCustomData,
     createColumn,
     updateColumn,
     deleteColumn,

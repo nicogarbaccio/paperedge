@@ -19,6 +19,7 @@ import {
   Grid3x3,
   List,
   Copy,
+  CheckSquare,
 } from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useNotebook } from "@/hooks/useNotebook";
@@ -42,6 +43,7 @@ import {
 import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { CreateBetDialog } from "@/components/CreateBetDialog";
 import { EditBetDialog } from "@/components/EditBetDialog";
+import { BulkEditDialog } from "@/components/BulkEditDialog";
 import { EditNotebookDialog } from "@/components/EditNotebookDialog";
 import { DuplicateNotebookDialog } from "@/components/DuplicateNotebookDialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -91,6 +93,8 @@ export function NotebookDetailPage() {
     deleteBet,
     upsertBetCustomData,
     updateBetWithCustomData,
+    bulkUpdateBets,
+    bulkUpsertCustomData,
     refetch,
   } = useNotebook(isValidNotebookId ? id || "" : "");
   const { updateNotebook, deleteNotebook, duplicateNotebook, notebooks } = useNotebooks();
@@ -107,6 +111,11 @@ export function NotebookDetailPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isGroupedView, setIsGroupedView] = useState(true);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // Bulk edit state
+  const [isBulkEditMode, setIsBulkEditMode] = useState(false);
+  const [selectedBetIds, setSelectedBetIds] = useState<Set<string>>(new Set());
+  const [isBulkEditDialogOpen, setIsBulkEditDialogOpen] = useState(false);
 
   // Day details drawer state
   const [isDayDetailsOpen, setIsDayDetailsOpen] = useState(false);
@@ -455,6 +464,56 @@ export function NotebookDetailPage() {
     if (!leagueValue || !leagueValue.trim()) return undefined;
 
     return leagueValue.trim();
+  };
+
+  // Bulk edit helpers
+  const toggleBetSelection = (betId: string) => {
+    setSelectedBetIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(betId)) {
+        next.delete(betId);
+      } else {
+        next.add(betId);
+      }
+      return next;
+    });
+  };
+
+  const selectAllFilteredBets = () => {
+    setSelectedBetIds(new Set(filteredBets.map((b) => b.id)));
+  };
+
+  const deselectAllBets = () => {
+    setSelectedBetIds(new Set());
+  };
+
+  const handleBulkApplyCustom = async (columnId: string, value: string) => {
+    const betIds = Array.from(selectedBetIds);
+    await bulkUpsertCustomData(betIds, columnId, value);
+    toast({
+      title: "Bulk update applied",
+      description: `Updated ${betIds.length} ${betIds.length === 1 ? "bet" : "bets"}.`,
+      variant: "success",
+    });
+    setSelectedBetIds(new Set());
+    setIsBulkEditMode(false);
+  };
+
+  const handleBulkApplyBetSize = async (wagerAmount: number) => {
+    const betIds = Array.from(selectedBetIds);
+    await bulkUpdateBets(betIds, { wager_amount: wagerAmount });
+    toast({
+      title: "Bulk update applied",
+      description: `Updated bet size for ${betIds.length} ${betIds.length === 1 ? "bet" : "bets"}.`,
+      variant: "success",
+    });
+    setSelectedBetIds(new Set());
+    setIsBulkEditMode(false);
+  };
+
+  const exitBulkEditMode = () => {
+    setIsBulkEditMode(false);
+    setSelectedBetIds(new Set());
   };
 
   // Get filtered and sorted bets using the search hook
@@ -871,6 +930,28 @@ export function NotebookDetailPage() {
                     </select>
                   </div>
 
+                  {/* Bulk Edit Toggle */}
+                  {filteredBets.length > 0 && (
+                    <Button
+                      variant={isBulkEditMode ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        if (isBulkEditMode) {
+                          exitBulkEditMode();
+                        } else {
+                          setIsBulkEditMode(true);
+                        }
+                      }}
+                      className="flex items-center space-x-1"
+                      data-testid="bulk-edit-toggle-button"
+                    >
+                      <CheckSquare className="h-4 w-4" />
+                      <span className="hidden sm:inline">
+                        {isBulkEditMode ? "Cancel" : "Bulk Edit"}
+                      </span>
+                    </Button>
+                  )}
+
                   {/* Grouped View Toggle */}
                   {allGroupedBets.length > 0 && (
                     <Button
@@ -897,6 +978,40 @@ export function NotebookDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
+              {/* Bulk edit select all bar */}
+              {isBulkEditMode && filteredBets.length > 0 && (
+                <div className="flex items-center justify-between mb-4 p-3 bg-surface-secondary/50 border border-border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedBetIds.size === filteredBets.length && filteredBets.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          selectAllFilteredBets();
+                        } else {
+                          deselectAllBets();
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-border accent-accent cursor-pointer"
+                      data-testid="bulk-edit-select-all"
+                    />
+                    <span className="text-sm text-text-secondary">
+                      {selectedBetIds.size === 0
+                        ? `Select all ${filteredBets.length} bets`
+                        : `${selectedBetIds.size} of ${filteredBets.length} selected`}
+                    </span>
+                  </div>
+                  {selectedBetIds.size > 0 && (
+                    <Button
+                      size="sm"
+                      onClick={() => setIsBulkEditDialogOpen(true)}
+                      data-testid="bulk-edit-open-dialog-button"
+                    >
+                      Edit {selectedBetIds.size} {selectedBetIds.size === 1 ? "bet" : "bets"}
+                    </Button>
+                  )}
+                </div>
+              )}
               {filteredBets.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-text-secondary">
@@ -989,11 +1104,32 @@ export function NotebookDetailPage() {
                               <div
                                 key={bet.id}
                                 data-testid="bet-card"
-                                className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 hover:bg-surface-secondary/30 transition-all cursor-pointer"
-                                onClick={() => handleEditBet(bet)}
+                                className={`flex flex-col space-y-3 p-4 border rounded-lg transition-all cursor-pointer ${
+                                  isBulkEditMode && selectedBetIds.has(bet.id)
+                                    ? "border-accent bg-accent/5"
+                                    : "border-border hover:border-accent/50 hover:bg-surface-secondary/30"
+                                }`}
+                                onClick={() => {
+                                  if (isBulkEditMode) {
+                                    toggleBetSelection(bet.id);
+                                  } else {
+                                    handleEditBet(bet);
+                                  }
+                                }}
                               >
                                 <div className="flex items-start justify-between">
-                                  <div className="flex-1 min-w-0">
+                                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                                    {isBulkEditMode && (
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedBetIds.has(bet.id)}
+                                        onChange={() => toggleBetSelection(bet.id)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="h-4 w-4 mt-1 rounded border-border accent-accent cursor-pointer flex-shrink-0"
+                                        data-testid="bet-card-checkbox"
+                                      />
+                                    )}
+                                    <div className="flex-1 min-w-0">
                                     {betGameName && (
                                       <p className="text-xs text-accent font-medium mb-1">
                                         {betGameName}
@@ -1002,6 +1138,7 @@ export function NotebookDetailPage() {
                                     <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
                                       {bet.description}
                                     </h3>
+                                  </div>
                                   </div>
                                   <span
                                     className={`px-2 py-1 text-xs font-medium rounded-md ${getStatusColorClass(
@@ -1017,7 +1154,6 @@ export function NotebookDetailPage() {
                                 {customColumns && customColumns.length > 0 && (
                                   <div className="space-y-2">
                                     {(() => {
-                                      // Get non-game custom fields with values
                                       const fieldsWithValues = customColumns
                                         .filter(
                                           (col, idx, arr) =>
@@ -1126,7 +1262,7 @@ export function NotebookDetailPage() {
                                         : bet.status === "push"
                                         ? "Push"
                                         : bet.status === "won" && bet.return_amount
-                                        ? formatCurrency(bet.return_amount) // Show profit only
+                                        ? formatCurrency(bet.return_amount)
                                         : bet.status === "lost"
                                         ? `-${formatCurrency(bet.wager_amount)}`
                                         : "-"}
@@ -1150,13 +1286,34 @@ export function NotebookDetailPage() {
                         <div
                           key={bet.id}
                           data-testid="bet-card"
-                          className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 hover:bg-surface-secondary/30 transition-all cursor-pointer"
-                          onClick={() => handleEditBet(bet)}
+                          className={`flex flex-col space-y-3 p-4 border rounded-lg transition-all cursor-pointer ${
+                            isBulkEditMode && selectedBetIds.has(bet.id)
+                              ? "border-accent bg-accent/5"
+                              : "border-border hover:border-accent/50 hover:bg-surface-secondary/30"
+                          }`}
+                          onClick={() => {
+                            if (isBulkEditMode) {
+                              toggleBetSelection(bet.id);
+                            } else {
+                              handleEditBet(bet);
+                            }
+                          }}
                         >
                           <div
                             className="flex items-start justify-between"
                           >
-                            <div className="flex-1 min-w-0">
+                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                              {isBulkEditMode && (
+                                <input
+                                  type="checkbox"
+                                  checked={selectedBetIds.has(bet.id)}
+                                  onChange={() => toggleBetSelection(bet.id)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="h-4 w-4 mt-1 rounded border-border accent-accent cursor-pointer flex-shrink-0"
+                                  data-testid="bet-card-checkbox"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
                               {gameName && (
                                 <p className="text-xs text-accent font-medium mb-1">
                                   {gameName}
@@ -1165,6 +1322,7 @@ export function NotebookDetailPage() {
                               <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
                                 {bet.description}
                               </h3>
+                            </div>
                             </div>
                             <span
                               className={`px-2 py-1 text-xs font-medium rounded-md ${getStatusColorClass(
@@ -1330,13 +1488,34 @@ export function NotebookDetailPage() {
                     <div
                       key={bet.id}
                       data-testid="bet-card"
-                      className="flex flex-col space-y-3 p-4 border border-border rounded-lg hover:border-accent/50 hover:bg-surface-secondary/30 transition-all cursor-pointer"
-                      onClick={() => handleEditBet(bet)}
+                      className={`flex flex-col space-y-3 p-4 border rounded-lg transition-all cursor-pointer ${
+                        isBulkEditMode && selectedBetIds.has(bet.id)
+                          ? "border-accent bg-accent/5"
+                          : "border-border hover:border-accent/50 hover:bg-surface-secondary/30"
+                      }`}
+                      onClick={() => {
+                        if (isBulkEditMode) {
+                          toggleBetSelection(bet.id);
+                        } else {
+                          handleEditBet(bet);
+                        }
+                      }}
                     >
                       <div
                         className="flex items-start justify-between"
                       >
-                        <div className="flex-1 min-w-0">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          {isBulkEditMode && (
+                            <input
+                              type="checkbox"
+                              checked={selectedBetIds.has(bet.id)}
+                              onChange={() => toggleBetSelection(bet.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="h-4 w-4 mt-1 rounded border-border accent-accent cursor-pointer flex-shrink-0"
+                              data-testid="bet-card-checkbox"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
                           {gameName && (
                             <p className="text-xs text-accent font-medium mb-1">
                               {gameName}
@@ -1345,6 +1524,7 @@ export function NotebookDetailPage() {
                           <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
                             {bet.description}
                           </h3>
+                        </div>
                         </div>
                         <span
                           className={`px-2 py-1 text-xs font-medium rounded-md ${getStatusColorClass(
@@ -1578,6 +1758,16 @@ export function NotebookDetailPage() {
         variant="destructive"
         onConfirm={handleDeleteNotebook}
         testId="confirm-dialog"
+      />
+
+      {/* Bulk Edit Dialog */}
+      <BulkEditDialog
+        open={isBulkEditDialogOpen}
+        onOpenChange={setIsBulkEditDialogOpen}
+        selectedCount={selectedBetIds.size}
+        customColumns={customColumns || []}
+        onApplyCustom={handleBulkApplyCustom}
+        onApplyBetSize={handleBulkApplyBetSize}
       />
 
       {/* Day Details Drawer */}
