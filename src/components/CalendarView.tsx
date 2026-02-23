@@ -198,7 +198,7 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
     <div className="space-y-6" data-testid="calendar-view">
       {/* Month Navigation */}
       <div className="flex items-center justify-between" data-testid="calendar-month-navigation">
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-0">
           <div className="flex items-center space-x-3">
             <h2 className="text-2xl font-bold text-text-primary" data-testid="calendar-current-month">
               {monthNames[currentDate.getMonth()].toUpperCase()}
@@ -211,7 +211,7 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
               <span className="text-sm text-text-secondary">•</span>
               <span
                 data-testid="calendar-monthly-profit"
-                className={`text-lg font-semibold ${
+                className={`text-lg font-semibold whitespace-nowrap ${
                   monthlyProfit > 0
                     ? "text-profit"
                     : monthlyProfit < 0

@@ -910,7 +910,7 @@ export function NotebookDetailPage() {
                       : `All bets for this notebook`}
                   </CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {/* Sort Order Dropdown */}
                   <div className="flex items-center gap-2">
                     <label htmlFor="sort-order" className="text-sm text-text-secondary whitespace-nowrap">
