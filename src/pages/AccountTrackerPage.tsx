@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/utils";
 import { useAccount, useAccounts, getAccountKindLabel } from "@/hooks/useAccounts";
 import { useDailyPL } from "@/hooks/useDailyPL";
 import { EditDailyPLDialog } from "@/components/tracker/EditDailyPLDialog";
@@ -317,55 +317,78 @@ export function AccountTrackerPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Mobile Layout - Timeline View */}
+          {/* Mobile Layout - Pikkit-style Grid Calendar */}
           <div
             className={`md:hidden bg-surface rounded-lg border border-border overflow-hidden ${
               plIsFetching ? "opacity-80" : ""
             }`}
           >
-            <div className="divide-y divide-border">
-              {days
-                .filter((d) => d.isCurrentMonth)
-                .map((d) => {
-                  const valueColor =
-                    d.total > 0
-                      ? "text-profit"
-                      : d.total < 0
-                      ? "text-loss"
-                      : "text-text-secondary";
+            {/* Day Headers */}
+            <div className="grid grid-cols-7 border-b border-border bg-surface-secondary">
+              {dayNames.map((d) => (
+                <div
+                  key={d}
+                  className="py-2 text-center text-xs font-medium text-text-secondary"
+                >
+                  {d}
+                </div>
+              ))}
+            </div>
 
-                  const bgColor =
-                    d.total !== 0
-                      ? d.total > 0
-                        ? "bg-profit/5"
-                        : "bg-loss/5"
-                      : "";
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7">
+              {days.map((d, idx) => {
+                const isRightmost = (idx + 1) % 7 === 0;
+                const isBottomRow = idx >= 35;
 
-                  return (
-                    <div
-                      key={d.key}
-                      className={`p-4 cursor-pointer hover:bg-surface-secondary transition-colors ${bgColor}`}
-                      onClick={() => setEditDate(d.key)}
+                const hasPL = d.isCurrentMonth && d.total !== 0;
+                const bgColor = hasPL
+                  ? d.total > 0
+                    ? "bg-profit/15"
+                    : "bg-loss/15"
+                  : d.isCurrentMonth
+                  ? "bg-surface"
+                  : "bg-background";
+
+                const valueColor = hasPL
+                  ? d.total > 0
+                    ? "text-profit"
+                    : "text-loss"
+                  : "";
+
+                return (
+                  <div
+                    key={d.key}
+                    className={`
+                      aspect-square flex flex-col items-center justify-center p-0.5 relative
+                      ${!isRightmost ? "border-r border-border" : ""}
+                      ${!isBottomRow ? "border-b border-border" : ""}
+                      ${bgColor}
+                      transition-colors
+                      ${d.isCurrentMonth ? "cursor-pointer active:opacity-70" : ""}
+                    `}
+                    onClick={() => d.isCurrentMonth && setEditDate(d.key)}
+                  >
+                    <span
+                      className={`text-xs font-semibold leading-none ${
+                        d.isCurrentMonth
+                          ? "text-text-primary"
+                          : "text-text-secondary/30"
+                      }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="text-lg font-semibold text-text-primary">
-                            {d.date.getDate()}
-                          </div>
-                          <div className="text-sm text-text-secondary">
-                            {d.date.toLocaleDateString("en-US", {
-                              weekday: "short",
-                            })}
-                          </div>
-                        </div>
-                        <div className={`text-base font-bold ${valueColor}`}>
-                          {d.total > 0 ? "+" : ""}
-                          {formatCurrency(d.total)}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                      {d.date.getDate()}
+                    </span>
+                    {hasPL && (
+                      <span
+                        className={`text-[10px] sm:text-xs font-bold leading-tight mt-0.5 whitespace-nowrap ${valueColor}`}
+                      >
+                        {d.total > 0 ? "+" : ""}
+                        {formatCurrencyCompact(d.total)}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 

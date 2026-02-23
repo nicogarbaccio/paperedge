@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/utils";
 import { calculateTotalPL } from "@/lib/betting";
 import type { Bet } from "@/hooks/useNotebook";
 
@@ -272,66 +272,87 @@ export function CalendarView({ bets, onDayClick }: CalendarViewProps) {
 
       {/* Calendar Container */}
       <div className="bg-surface rounded-lg overflow-hidden border border-border">
-        {/* Mobile/Tablet Layout - Timeline View */}
+        {/* Mobile/Tablet Layout - Pikkit-style Grid Calendar */}
         <div className="lg:hidden">
-          <div className="divide-y divide-border">
-            {calendarData
-              .filter((day) => day.isCurrentMonth)
-              .map((day) => {
-                const valueColor = day.hasBets && day.profit !== null
-                  ? day.profit > 0
-                    ? "text-profit"
-                    : day.profit < 0
-                    ? "text-loss"
-                    : "text-text-secondary"
-                  : "text-text-secondary";
+          {/* Day Headers */}
+          <div className="grid grid-cols-7 border-b border-border bg-surface-secondary">
+            {dayNames.map((day) => (
+              <div
+                key={day}
+                className="py-2 text-center text-xs font-medium text-text-secondary"
+              >
+                {day}
+              </div>
+            ))}
+          </div>
 
-                const bgColor = day.hasBets && day.profit !== null && day.profit !== 0
-                  ? day.profit > 0
-                    ? "bg-profit/5"
-                    : "bg-loss/5"
-                  : "";
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7">
+            {calendarData.map((day, index) => {
+              const isRightmost = (index + 1) % 7 === 0;
+              const isBottomRow = index >= 35;
 
-                return (
-                  <div
-                    key={day.dateKey}
-                    data-testid="calendar-day-cell"
-                    data-date={day.dateKey}
-                    data-has-bets={day.hasBets}
-                    className={`p-4 hover:bg-surface-secondary transition-colors cursor-pointer ${bgColor}`}
-                    onClick={() => {
-                      if (onDayClick) {
-                        const dayBets = dailyPL[day.dateKey]?.bets || [];
-                        const dayProfit = day.profit ?? 0;
-                        onDayClick(day.dateKey, dayBets, dayProfit);
-                      }
-                    }}
+              const hasPL = day.hasBets && day.isCurrentMonth && day.profit !== null;
+              const bgColor = hasPL
+                ? day.profit > 0
+                  ? "bg-profit/15"
+                  : day.profit < 0
+                  ? "bg-loss/15"
+                  : "bg-surface"
+                : day.isCurrentMonth
+                ? "bg-surface"
+                : "bg-background";
+
+              const valueColor = hasPL
+                ? day.profit > 0
+                  ? "text-profit"
+                  : day.profit < 0
+                  ? "text-loss"
+                  : "text-text-secondary"
+                : "";
+
+              return (
+                <div
+                  key={index}
+                  data-testid="calendar-day-cell"
+                  data-date={day.dateKey}
+                  data-has-bets={day.hasBets}
+                  className={`
+                    aspect-square flex flex-col items-center justify-center p-0.5 relative
+                    ${!isRightmost ? "border-r border-border" : ""}
+                    ${!isBottomRow ? "border-b border-border" : ""}
+                    ${bgColor}
+                    transition-colors
+                    ${day.isCurrentMonth ? "cursor-pointer active:opacity-70" : ""}
+                  `}
+                  onClick={() => {
+                    if (day.isCurrentMonth && onDayClick) {
+                      const dayBets = dailyPL[day.dateKey]?.bets || [];
+                      const dayProfit = day.profit ?? 0;
+                      onDayClick(day.dateKey, dayBets, dayProfit);
+                    }
+                  }}
+                >
+                  <span
+                    className={`text-xs font-semibold leading-none ${
+                      day.isCurrentMonth
+                        ? "text-text-primary"
+                        : "text-text-secondary/30"
+                    }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="text-lg font-semibold text-text-primary">
-                          {day.day}
-                        </div>
-                        <div className="text-sm text-text-secondary">
-                          {day.date.toLocaleDateString("en-US", {
-                            weekday: "short",
-                          })}
-                        </div>
-                      </div>
-                      <div className={`text-base font-bold ${valueColor}`}>
-                        {day.hasBets && day.profit !== null ? (
-                          <>
-                            {day.profit > 0 ? "+" : ""}
-                            {formatCurrency(day.profit)}
-                          </>
-                        ) : (
-                          "—"
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                    {day.day}
+                  </span>
+                  {hasPL && day.profit !== null && (
+                    <span
+                      className={`text-[10px] sm:text-xs font-bold leading-tight mt-0.5 whitespace-nowrap ${valueColor}`}
+                    >
+                      {day.profit > 0 ? "+" : ""}
+                      {formatCurrencyCompact(day.profit)}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 

@@ -30,6 +30,27 @@ export function formatCurrencyNoCents(amount: number): string {
 }
 
 /**
+ * Compact currency for tiny UIs like calendar cells.
+ * Shows $1.2K for thousands, $45 for smaller values.
+ */
+export function formatCurrencyCompact(amount: number): string {
+  const abs = Math.abs(amount);
+  if (abs >= 1000) {
+    const k = amount / 1000;
+    const formatted = Math.abs(k) >= 10
+      ? `$${k.toFixed(0)}K`
+      : `$${k.toFixed(1)}K`;
+    return formatted.replace('$-', '-$');
+  }
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+/**
  * Format percentage for display
  */
 export function formatPercentage(value: number): string {
