@@ -260,6 +260,19 @@ export function getCustomFieldStyles(category: CustomFieldCategory, isPrimary: b
 }
 
 /**
+ * Get left-border accent classes for custom field grid display
+ */
+export function getCustomFieldAccentClasses(category: CustomFieldCategory): string {
+  switch (category) {
+    case 'market': return 'border-l-2 border-purple-400/60 pl-2';
+    case 'league': return 'border-l-2 border-green-400/60 pl-2';
+    case 'sportsbook': return 'border-l-2 border-orange-400/60 pl-2';
+    case 'game': return 'border-l-2 border-blue-400/60 pl-2';
+    default: return '';
+  }
+}
+
+/**
  * Get category priority for field ordering (lower = higher priority)
  */
 export function getCustomFieldPriority(category: CustomFieldCategory): number {

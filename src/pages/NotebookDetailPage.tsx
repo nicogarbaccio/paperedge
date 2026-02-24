@@ -27,12 +27,7 @@ import {
   formatCurrency,
   formatPercentage,
   formatDate,
-  getStatusColorClass,
   getCurrentLocalDate,
-  categorizeCustomField,
-  getCustomFieldStyles,
-  getCustomFieldPriority,
-  capitalizeFirst,
 } from "@/lib/utils";
 import {
   calculateTotalPL,
@@ -43,6 +38,7 @@ import {
 import { getNotebookColorClasses } from "@/lib/notebookColors";
 import { CreateBetDialog } from "@/components/CreateBetDialog";
 import { EditBetDialog } from "@/components/EditBetDialog";
+import { BetCard } from "@/components/BetCard";
 import { BulkEditDialog } from "@/components/BulkEditDialog";
 import { EditNotebookDialog } from "@/components/EditNotebookDialog";
 import { DuplicateNotebookDialog } from "@/components/DuplicateNotebookDialog";
@@ -1101,175 +1097,18 @@ export function NotebookDetailPage() {
                             {group.bets.map((bet) => {
                               const betGameName = getGameNameFromBet(bet);
                               return (
-                              <div
+                              <BetCard
                                 key={bet.id}
-                                data-testid="bet-card"
-                                className={`flex flex-col space-y-3 p-4 border rounded-lg transition-all cursor-pointer ${
-                                  isBulkEditMode && selectedBetIds.has(bet.id)
-                                    ? "border-accent bg-accent/5"
-                                    : "border-border hover:border-accent/50 hover:bg-surface-secondary/30"
-                                }`}
-                                onClick={() => {
-                                  if (isBulkEditMode) {
-                                    toggleBetSelection(bet.id);
-                                  } else {
-                                    handleEditBet(bet);
-                                  }
-                                }}
-                              >
-                                <div className="flex items-start justify-between">
-                                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                                    {isBulkEditMode && (
-                                      <input
-                                        type="checkbox"
-                                        checked={selectedBetIds.has(bet.id)}
-                                        onChange={() => toggleBetSelection(bet.id)}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="h-4 w-4 mt-1 rounded border-border accent-accent cursor-pointer flex-shrink-0"
-                                        data-testid="bet-card-checkbox"
-                                      />
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                    {betGameName && (
-                                      <p className="text-xs text-accent font-medium mb-1">
-                                        {betGameName}
-                                      </p>
-                                    )}
-                                    <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
-                                      {bet.description}
-                                    </h3>
-                                  </div>
-                                  </div>
-                                  <span
-                                    className={`px-2 py-1 text-xs font-medium rounded-md ${getStatusColorClass(
-                                      bet.status
-                                    )} bg-surface-secondary/30`}
-                                    data-testid="bet-card-status"
-                                  >
-                                    {bet.status.charAt(0).toUpperCase() +
-                                      bet.status.slice(1)}
-                                  </span>
-                                </div>
-
-                                {customColumns && customColumns.length > 0 && (
-                                  <div className="space-y-2">
-                                    {(() => {
-                                      const fieldsWithValues = customColumns
-                                        .filter(
-                                          (col, idx, arr) =>
-                                            arr.findIndex(
-                                              (c) =>
-                                                c.column_name.toLowerCase() ===
-                                                col.column_name.toLowerCase()
-                                            ) === idx
-                                        )
-                                        .map((col) => {
-                                          const value = betCustomData[bet.id]?.[col.id];
-                                          if (!value) return null;
-                                          return {
-                                            ...col,
-                                            value,
-                                            category: categorizeCustomField(
-                                              col.column_name
-                                            ),
-                                          };
-                                        })
-                                        .filter(
-                                          (field): field is NonNullable<typeof field> =>
-                                            field !== null
-                                        )
-                                        .filter(
-                                          (field) => field.category !== "game"
-                                        )
-                                        .sort(
-                                          (a, b) =>
-                                            getCustomFieldPriority(a.category) -
-                                            getCustomFieldPriority(b.category)
-                                        );
-
-                                      const badgeFields = fieldsWithValues.filter((f) => f.category !== "notes");
-                                      const notesFields = fieldsWithValues.filter((f) => f.category === "notes");
-
-                                      if (fieldsWithValues.length === 0) return null;
-
-                                      return (
-                                        <>
-                                          {badgeFields.length > 0 && (
-                                            <div className="flex flex-wrap gap-1.5">
-                                              {badgeFields.map((field) => (
-                                                <span
-                                                  key={field.id}
-                                                  className={getCustomFieldStyles(
-                                                    field.category,
-                                                    false
-                                                  )}
-                                                  title={`${capitalizeFirst(
-                                                    field.column_name
-                                                  )}: ${field.value}`}
-                                                >
-                                                  {field.value}
-                                                </span>
-                                              ))}
-                                            </div>
-                                          )}
-                                          {notesFields.map((field) => (
-                                            <p
-                                              key={field.id}
-                                              className="text-xs text-text-secondary italic leading-relaxed"
-                                              title={capitalizeFirst(field.column_name)}
-                                            >
-                                              {field.value}
-                                            </p>
-                                          ))}
-                                        </>
-                                      );
-                                    })()}
-                                  </div>
-                                )}
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
-                                  <div>
-                                    <p className="text-text-secondary text-xs">Date</p>
-                                    <p className="font-medium" data-testid="bet-card-date">{formatDate(bet.date)}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-text-secondary text-xs">Odds</p>
-                                    <p className="font-medium" data-testid="bet-card-odds">
-                                      {bet.odds > 0 ? "+" : ""}
-                                      {bet.odds}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="text-text-secondary text-xs">Wager</p>
-                                    <p className="font-medium" data-testid="bet-card-wager">
-                                      {formatCurrency(bet.wager_amount)}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="text-text-secondary text-xs">Return</p>
-                                    <p
-                                      className={`font-medium ${
-                                        bet.status === "won"
-                                          ? "text-profit"
-                                          : bet.status === "lost"
-                                          ? "text-loss"
-                                          : "text-text-secondary"
-                                      }`}
-                                      data-testid="bet-card-return"
-                                    >
-                                      {bet.status === "pending"
-                                        ? "Pending"
-                                        : bet.status === "push"
-                                        ? "Push"
-                                        : bet.status === "won" && bet.return_amount
-                                        ? formatCurrency(bet.return_amount)
-                                        : bet.status === "lost"
-                                        ? `-${formatCurrency(bet.wager_amount)}`
-                                        : "-"}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
+                                bet={bet as any}
+                                customColumns={customColumns}
+                                betCustomData={betCustomData}
+                                isBulkEditMode={isBulkEditMode}
+                                isSelected={selectedBetIds.has(bet.id)}
+                                onToggleSelection={toggleBetSelection}
+                                onEdit={handleEditBet}
+                                gameName={betGameName}
+                                showGameName={true}
+                              />
                               );
                             })}
                           </div>
@@ -1283,198 +1122,20 @@ export function NotebookDetailPage() {
                         const leagueName = getLeagueNameFromBet(bet);
 
                         return (
-                        <div
+                        <BetCard
                           key={bet.id}
-                          data-testid="bet-card"
-                          className={`flex flex-col space-y-3 p-4 border rounded-lg transition-all cursor-pointer ${
-                            isBulkEditMode && selectedBetIds.has(bet.id)
-                              ? "border-accent bg-accent/5"
-                              : "border-border hover:border-accent/50 hover:bg-surface-secondary/30"
-                          }`}
-                          onClick={() => {
-                            if (isBulkEditMode) {
-                              toggleBetSelection(bet.id);
-                            } else {
-                              handleEditBet(bet);
-                            }
-                          }}
-                        >
-                          <div
-                            className="flex items-start justify-between"
-                          >
-                            <div className="flex items-start gap-3 flex-1 min-w-0">
-                              {isBulkEditMode && (
-                                <input
-                                  type="checkbox"
-                                  checked={selectedBetIds.has(bet.id)}
-                                  onChange={() => toggleBetSelection(bet.id)}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="h-4 w-4 mt-1 rounded border-border accent-accent cursor-pointer flex-shrink-0"
-                                  data-testid="bet-card-checkbox"
-                                />
-                              )}
-                              <div className="flex-1 min-w-0">
-                              {gameName && (
-                                <p className="text-xs text-accent font-medium mb-1">
-                                  {gameName}
-                                </p>
-                              )}
-                              <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
-                                {bet.description}
-                              </h3>
-                            </div>
-                            </div>
-                            <span
-                              className={`px-2 py-1 text-xs font-medium rounded-md ${getStatusColorClass(
-                                bet.status
-                              )} bg-surface-secondary/30`}
-                              data-testid="bet-card-status"
-                            >
-                              {bet.status.charAt(0).toUpperCase() +
-                                bet.status.slice(1)}
-                            </span>
-                          </div>
-
-                          {customColumns && customColumns.length > 0 && (
-                            <div className="space-y-2">
-                              {(() => {
-                                // Get non-game custom fields with values
-                                const fieldsWithValues = customColumns
-                                  .filter(
-                                    (col, idx, arr) =>
-                                      arr.findIndex(
-                                        (c) =>
-                                          c.column_name.toLowerCase() ===
-                                          col.column_name.toLowerCase()
-                                      ) === idx
-                                  )
-                                  .map((col) => {
-                                    const value = betCustomData[bet.id]?.[col.id];
-                                    if (!value) return null;
-                                    return {
-                                      ...col,
-                                      value,
-                                      category: categorizeCustomField(
-                                        col.column_name
-                                      ),
-                                    };
-                                  })
-                                  .filter(
-                                    (field): field is NonNullable<typeof field> =>
-                                      field !== null
-                                  )
-                                  .filter(
-                                    (field) => field.category !== "game"
-                                  )
-                                  .sort(
-                                    (a, b) =>
-                                      getCustomFieldPriority(a.category) -
-                                      getCustomFieldPriority(b.category)
-                                  );
-
-                                const badgeFields = fieldsWithValues.filter((f) => f.category !== "notes");
-                                const notesFields = fieldsWithValues.filter((f) => f.category === "notes");
-
-                                if (fieldsWithValues.length === 0) return null;
-
-                                return (
-                                  <>
-                                    {badgeFields.length > 0 && (
-                                      <div className="flex flex-wrap gap-1.5">
-                                        {badgeFields.map((field) => (
-                                          <span
-                                            key={field.id}
-                                            className={getCustomFieldStyles(
-                                              field.category,
-                                              false
-                                            )}
-                                            title={`${capitalizeFirst(
-                                              field.column_name
-                                            )}: ${field.value}`}
-                                          >
-                                            {field.value}
-                                          </span>
-                                        ))}
-                                      </div>
-                                    )}
-                                    {notesFields.map((field) => (
-                                      <p
-                                        key={field.id}
-                                        className="text-xs text-text-secondary italic leading-relaxed"
-                                        title={capitalizeFirst(field.column_name)}
-                                      >
-                                        {field.value}
-                                      </p>
-                                    ))}
-                                  </>
-                                );
-                              })()}
-                            </div>
-                          )}
-
-                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm flex-1">
-                              <div>
-                                <p className="text-text-secondary text-xs">Date</p>
-                                <p className="font-medium" data-testid="bet-card-date">{formatDate(bet.date)}</p>
-                              </div>
-                              <div>
-                                <p className="text-text-secondary text-xs">Odds</p>
-                                <p className="font-medium" data-testid="bet-card-odds">
-                                  {bet.odds > 0 ? "+" : ""}
-                                  {bet.odds}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-text-secondary text-xs">Wager</p>
-                                <p className="font-medium" data-testid="bet-card-wager">
-                                  {formatCurrency(bet.wager_amount)}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-text-secondary text-xs">Return</p>
-                                <p
-                                  className={`font-medium ${
-                                    bet.status === "won"
-                                      ? "text-profit"
-                                      : bet.status === "lost"
-                                      ? "text-loss"
-                                      : "text-text-secondary"
-                                  }`}
-                                  data-testid="bet-card-return"
-                                >
-                                  {bet.status === "pending"
-                                    ? "Pending"
-                                    : bet.status === "push"
-                                    ? "Push"
-                                    : bet.status === "won" && bet.return_amount
-                                    ? formatCurrency(bet.return_amount) // Show profit only
-                                    : bet.status === "lost"
-                                    ? `-${formatCurrency(bet.wager_amount)}`
-                                    : "-"}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Add bet to game button */}
-                            {gameName && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full lg:w-auto flex-shrink-0"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleAddBetToGame(gameName, bet.date, leagueName);
-                                }}
-                                data-testid="add-bet-to-game-button"
-                              >
-                                <Plus className="h-4 w-4 mr-1" />
-                                <span className="hidden sm:inline">Add Bet to Game</span>
-                                <span className="sm:hidden">Add to Game</span>
-                              </Button>
-                            )}
-                          </div>
-                        </div>
+                          bet={bet as any}
+                          customColumns={customColumns}
+                          betCustomData={betCustomData}
+                          isBulkEditMode={isBulkEditMode}
+                          isSelected={selectedBetIds.has(bet.id)}
+                          onToggleSelection={toggleBetSelection}
+                          onEdit={handleEditBet}
+                          gameName={gameName}
+                          leagueName={leagueName}
+                          onAddBetToGame={handleAddBetToGame}
+                          showGameName={true}
+                        />
                       );
                     }
                   })}
@@ -1485,198 +1146,20 @@ export function NotebookDetailPage() {
                     const leagueName = getLeagueNameFromBet(bet);
 
                     return (
-                    <div
-                      key={bet.id}
-                      data-testid="bet-card"
-                      className={`flex flex-col space-y-3 p-4 border rounded-lg transition-all cursor-pointer ${
-                        isBulkEditMode && selectedBetIds.has(bet.id)
-                          ? "border-accent bg-accent/5"
-                          : "border-border hover:border-accent/50 hover:bg-surface-secondary/30"
-                      }`}
-                      onClick={() => {
-                        if (isBulkEditMode) {
-                          toggleBetSelection(bet.id);
-                        } else {
-                          handleEditBet(bet);
-                        }
-                      }}
-                    >
-                      <div
-                        className="flex items-start justify-between"
-                      >
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          {isBulkEditMode && (
-                            <input
-                              type="checkbox"
-                              checked={selectedBetIds.has(bet.id)}
-                              onChange={() => toggleBetSelection(bet.id)}
-                              onClick={(e) => e.stopPropagation()}
-                              className="h-4 w-4 mt-1 rounded border-border accent-accent cursor-pointer flex-shrink-0"
-                              data-testid="bet-card-checkbox"
-                            />
-                          )}
-                          <div className="flex-1 min-w-0">
-                          {gameName && (
-                            <p className="text-xs text-accent font-medium mb-1">
-                              {gameName}
-                            </p>
-                          )}
-                          <h3 className="font-medium text-text-primary" data-testid="bet-card-description">
-                            {bet.description}
-                          </h3>
-                        </div>
-                        </div>
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-md ${getStatusColorClass(
-                            bet.status
-                          )} bg-surface-secondary/30`}
-                          data-testid="bet-card-status"
-                        >
-                          {bet.status.charAt(0).toUpperCase() +
-                            bet.status.slice(1)}
-                        </span>
-                      </div>
-
-                      {customColumns && customColumns.length > 0 && (
-                        <div className="space-y-2">
-                          {(() => {
-                            // Get non-game custom fields with values
-                            const fieldsWithValues = customColumns
-                              .filter(
-                                (col, idx, arr) =>
-                                  arr.findIndex(
-                                    (c) =>
-                                      c.column_name.toLowerCase() ===
-                                      col.column_name.toLowerCase()
-                                  ) === idx
-                              )
-                              .map((col) => {
-                                const value = betCustomData[bet.id]?.[col.id];
-                                if (!value) return null;
-                                return {
-                                  ...col,
-                                  value,
-                                  category: categorizeCustomField(
-                                    col.column_name
-                                  ),
-                                };
-                              })
-                              .filter(
-                                (field): field is NonNullable<typeof field> =>
-                                  field !== null
-                              )
-                              .filter(
-                                (field) => field.category !== "game"
-                              )
-                              .sort(
-                                (a, b) =>
-                                  getCustomFieldPriority(a.category) -
-                                  getCustomFieldPriority(b.category)
-                              );
-
-                            const badgeFields = fieldsWithValues.filter((f) => f.category !== "notes");
-                            const notesFields = fieldsWithValues.filter((f) => f.category === "notes");
-
-                            if (fieldsWithValues.length === 0) return null;
-
-                            return (
-                              <>
-                                {badgeFields.length > 0 && (
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {badgeFields.map((field) => (
-                                      <span
-                                        key={field.id}
-                                        className={getCustomFieldStyles(
-                                          field.category,
-                                          false
-                                        )}
-                                        title={`${capitalizeFirst(
-                                          field.column_name
-                                        )}: ${field.value}`}
-                                      >
-                                        {field.value}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-                                {notesFields.map((field) => (
-                                  <p
-                                    key={field.id}
-                                    className="text-xs text-text-secondary italic leading-relaxed"
-                                    title={capitalizeFirst(field.column_name)}
-                                  >
-                                    {field.value}
-                                  </p>
-                                ))}
-                              </>
-                            );
-                          })()}
-                        </div>
-                      )}
-
-                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm flex-1">
-                          <div>
-                            <p className="text-text-secondary text-xs">Date</p>
-                            <p className="font-medium" data-testid="bet-card-date">{formatDate(bet.date)}</p>
-                          </div>
-                          <div>
-                            <p className="text-text-secondary text-xs">Odds</p>
-                            <p className="font-medium" data-testid="bet-card-odds">
-                              {bet.odds > 0 ? "+" : ""}
-                              {bet.odds}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-text-secondary text-xs">Wager</p>
-                            <p className="font-medium" data-testid="bet-card-wager">
-                              {formatCurrency(bet.wager_amount)}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-text-secondary text-xs">Return</p>
-                            <p
-                              className={`font-medium ${
-                                bet.status === "won"
-                                  ? "text-profit"
-                                  : bet.status === "lost"
-                                  ? "text-loss"
-                                  : "text-text-secondary"
-                              }`}
-                              data-testid="bet-card-return"
-                            >
-                              {bet.status === "pending"
-                                ? "Pending"
-                                : bet.status === "push"
-                                ? "Push"
-                                : bet.status === "won" && bet.return_amount
-                                ? formatCurrency(bet.return_amount) // Show profit only
-                                : bet.status === "lost"
-                                ? `-${formatCurrency(bet.wager_amount)}`
-                                : "-"}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Add bet to game button */}
-                        {gameName && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full lg:w-auto flex-shrink-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddBetToGame(gameName, bet.date, leagueName);
-                            }}
-                            data-testid="add-bet-to-game-button"
-                          >
-                            <Plus className="h-4 w-4 mr-1" />
-                            <span className="hidden sm:inline">Add Bet to Game</span>
-                            <span className="sm:hidden">Add to Game</span>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                      <BetCard
+                        key={bet.id}
+                        bet={bet}
+                        customColumns={customColumns}
+                        betCustomData={betCustomData}
+                        isBulkEditMode={isBulkEditMode}
+                        isSelected={selectedBetIds.has(bet.id)}
+                        onToggleSelection={toggleBetSelection}
+                        onEdit={handleEditBet}
+                        gameName={gameName}
+                        leagueName={leagueName}
+                        onAddBetToGame={handleAddBetToGame}
+                        showGameName={true}
+                      />
                     );
                   })}
                 </div>
