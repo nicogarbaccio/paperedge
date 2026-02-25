@@ -89,7 +89,7 @@ export function NotebookDetailPage() {
     deleteBet,
     upsertBetCustomData,
     updateBetWithCustomData,
-    bulkUpdateBets,
+    bulkUpdateWagerAmount,
     bulkUpsertCustomData,
     refetch,
   } = useNotebook(isValidNotebookId ? id || "" : "");
@@ -497,7 +497,7 @@ export function NotebookDetailPage() {
 
   const handleBulkApplyBetSize = async (wagerAmount: number) => {
     const betIds = Array.from(selectedBetIds);
-    await bulkUpdateBets(betIds, { wager_amount: wagerAmount });
+    await bulkUpdateWagerAmount(betIds, wagerAmount);
     toast({
       title: "Bulk update applied",
       description: `Updated bet size for ${betIds.length} ${betIds.length === 1 ? "bet" : "bets"}.`,

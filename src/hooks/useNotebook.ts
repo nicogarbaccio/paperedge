@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/authStore'
-import { calculateTotalPL } from '@/lib/betting'
+import { calculateTotalPL, calculateProfit, isValidAmericanOdds } from '@/lib/betting'
 
 export interface NotebookDetail {
   id: string
@@ -395,6 +395,45 @@ export function useNotebook(notebookId: string) {
     }
   }
 
+  const bulkUpdateWagerAmount = async (betIds: string[], wagerAmount: number) => {
+    try {
+      if (betIds.length === 0) return
+
+      const now = new Date().toISOString()
+      const selectedBets = bets.filter((b) => betIds.includes(b.id))
+
+      // Split bets: won bets need return_amount recalculation
+      const wonBets = selectedBets.filter((b) => b.status === 'won')
+      const otherBetIds = selectedBets.filter((b) => b.status !== 'won').map((b) => b.id)
+
+      // Update non-won bets in one batch
+      if (otherBetIds.length > 0) {
+        const { error } = await supabase
+          .from('bets')
+          .update({ wager_amount: wagerAmount, updated_at: now })
+          .in('id', otherBetIds)
+        if (error) throw error
+      }
+
+      // Update won bets individually with recalculated return_amount
+      for (const bet of wonBets) {
+        const newReturn = isValidAmericanOdds(bet.odds)
+          ? calculateProfit(bet.odds, wagerAmount)
+          : bet.return_amount
+        const { error } = await supabase
+          .from('bets')
+          .update({ wager_amount: wagerAmount, return_amount: newReturn, updated_at: now })
+          .eq('id', bet.id)
+        if (error) throw error
+      }
+
+      await fetchNotebook()
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Operation failed"
+      throw new Error(errorMessage)
+    }
+  }
+
   const bulkUpsertCustomData = async (betIds: string[], columnId: string, value: string) => {
     try {
       const rows = betIds.map((betId) => ({
@@ -465,6 +504,7 @@ export function useNotebook(notebookId: string) {
     upsertBetCustomData,
     updateBetWithCustomData,
     bulkUpdateBets,
+    bulkUpdateWagerAmount,
     bulkUpsertCustomData,
     createColumn,
     updateColumn,
