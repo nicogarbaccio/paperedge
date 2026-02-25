@@ -46,6 +46,14 @@ export function BetCard({
   const displayGameName = showGameName ? gameName : null;
   const hasAddToGame = displayGameName && onAddBetToGame;
 
+  // Calculate potential profit based on American odds
+  const toWin =
+    bet.odds > 0
+      ? bet.wager_amount * (bet.odds / 100)
+      : bet.odds < 0
+      ? bet.wager_amount * (100 / Math.abs(bet.odds))
+      : 0;
+
   const { gridFields, notesFields } = processCustomFields(
     customColumns,
     betCustomData[bet.id] || {}
@@ -118,7 +126,7 @@ export function BetCard({
         </div>
       </div>
 
-      {/* Unified grid: custom fields + metrics */}
+      {/* Custom fields + date grid */}
       <div
         className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3 text-sm"
         data-testid="bet-custom-fields-grid"
@@ -130,41 +138,53 @@ export function BetCard({
             {formatDate(bet.date)}
           </p>
         </div>
-        <div>
-          <p className="text-text-secondary text-xs">Odds</p>
-          <p className="font-medium" data-testid="bet-card-odds">
+      </div>
+
+      {/* Key metrics strip: Odds, Wager, To Win */}
+      <div className="flex items-center gap-3 sm:gap-4 bg-surface-secondary/40 rounded-lg px-4 py-2.5">
+        <div className="flex-1 min-w-0">
+          <p className="text-text-secondary text-[10px] uppercase tracking-wider font-medium">Odds</p>
+          <p
+            className={`text-base font-semibold tabular-nums ${
+              bet.odds > 0 ? 'text-profit' : bet.odds < 0 ? 'text-amber-400' : 'text-text-primary'
+            }`}
+            data-testid="bet-card-odds"
+          >
             {bet.odds > 0 ? '+' : ''}
             {bet.odds}
           </p>
         </div>
-        <div>
-          <p className="text-text-secondary text-xs">Wager</p>
-          <p className="font-medium" data-testid="bet-card-wager">
+        <div className="w-px h-8 bg-border/50" />
+        <div className="flex-1 min-w-0">
+          <p className="text-text-secondary text-[10px] uppercase tracking-wider font-medium">Wager</p>
+          <p className="text-base font-semibold text-text-primary tabular-nums" data-testid="bet-card-wager">
             {formatCurrency(bet.wager_amount)}
           </p>
         </div>
-        <div>
-          <p className="text-text-secondary text-xs">Return</p>
-          <p
-            className={`font-medium ${
-              bet.status === 'won'
-                ? 'text-profit'
-                : bet.status === 'lost'
-                ? 'text-loss'
-                : 'text-text-secondary'
-            }`}
-            data-testid="bet-card-return"
-          >
-            {bet.status === 'pending'
-              ? 'Pending'
-              : bet.status === 'push'
-              ? 'Push'
-              : bet.status === 'won' && bet.return_amount
-              ? formatCurrency(bet.return_amount)
-              : bet.status === 'lost'
-              ? `-${formatCurrency(bet.wager_amount)}`
-              : '-'}
-          </p>
+        <div className="w-px h-8 bg-border/50" />
+        <div className="flex-1 min-w-0">
+          {bet.status === 'won' && bet.return_amount != null ? (
+            <>
+              <p className="text-text-secondary text-[10px] uppercase tracking-wider font-medium">Profit</p>
+              <p className="text-base font-semibold text-profit tabular-nums" data-testid="bet-card-return">
+                +{formatCurrency(bet.return_amount)}
+              </p>
+            </>
+          ) : bet.status === 'lost' ? (
+            <>
+              <p className="text-text-secondary text-[10px] uppercase tracking-wider font-medium">Loss</p>
+              <p className="text-base font-semibold text-loss tabular-nums" data-testid="bet-card-return">
+                -{formatCurrency(bet.wager_amount)}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-text-secondary text-[10px] uppercase tracking-wider font-medium">To Win</p>
+              <p className="text-base font-semibold text-profit tabular-nums" data-testid="bet-card-to-win">
+                {formatCurrency(toWin)}
+              </p>
+            </>
+          )}
         </div>
       </div>
 
